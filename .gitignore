@@ -1,0 +1,13 @@
+# IntelliJ
+.idea/
+*.iml
+
+# Custom scripts
+scripts/ignored
+
+# Maven compile output directory
+target/
+
+# Custom directories holding data for/from analysis
+results/
+data/

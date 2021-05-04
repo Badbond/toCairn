@@ -1,0 +1,1398 @@
+{
+	"info": {
+		"_postman_id": "b2d5fff9-0a4d-4524-844a-4421bf205249",
+		"name": "toCairn",
+		"description": "Endpoints for the toCairn proof of concept application created for the master's thesis by Pieter Dirk Soels. See [GitHub repository](https://github.com/Badbond/toCairn).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Creating and configuring evaluations",
+			"item": [
+				{
+					"name": "Create MOECA Evaluation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    ",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"id\", jsonData.id);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{   \n    \"name\": \"<<Name for the evaluation>>\",\n    \"solverConfiguration\": {\n        \"type\": \"moeca\",\n        \"metrics\": [\"<<List of Metrics to perform>>\"],\n        \"minClusterAmount\": \"<<Optional minimum amount of clusters to allow in the solutions, represented as a number. Omitting this value allows cluster sizes from 2 up to maxClusterAmount. Only benefits in optimization with CLUSTER_LABEL encoding.>>\",\n        \"maxClusterAmount\": \"<<Optional maximum amount of clusters to allow in the solutions, represented as a number. Omitting this value allows cluster sizes from minClusterAmount up to the number of other classes.  Only benefits in optimization with CLUSTER_LABEL encoding.>>\",\n        \"algorithm\": \"<<Multi objective evolutionary algorithm to use>>\",\n        \"maxEvaluations\": \"<<Amount of evaluations to perform at most, represented as a number (not a string)>>\",\n        \"maxTime\": \"<<Optional amount of milliseconds to run at most. Not providing this value results in running until maxEvaluations has been reached>>\",\n        \"encodingType\": \"<<Multi objective evolutionary encoding to use; either CLUSTER_LABEL or GRAPH_ADJACENCY>>\",\n        \"populationSize\": \"<<Number indicating how many solutions should be in the population. Default: 100.>>\",\n        \"additionalProperties\": {\n            \"key\": \"<<Map containing additional properties to set in the MOEAFramework. E.g. override operators and their settings.>>\"\n        }\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/evaluation",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"evaluation"
+							]
+						},
+						"description": "Creates an evaluation object configured to perform identification using a multi objective evolutionary clustering algorithm."
+					},
+					"response": [
+						{
+							"name": "Create MOECA Evaluation",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{   \n    \"name\": \"My MOECA clusterings of application X\",\n    \"solverConfiguration\": {\n        \"type\": \"moeca\",\n        \"minClusterAmount\": 5,\n        \"maxClusterAmount\": 10,\n        \"metrics\": [\n            \"DATA_AUTONOMY\", \n            \"REUSABLE\", \n            \"DECOUPLED_COHESIVE\", \n            \"LIMITED_COMMUNICATION_OVERHEAD\", \n            \"MODULARISED_FEATURES\"\n        ],\n        \"algorithm\": \"NSGAII\",\n        \"maxEvaluations\": 1000000,\n        \"maxTime\": 21600000,\n        \"encodingType\": \"CLUSTER_LABEL\",\n        \"populationSize\": 10,\n        \"additionalProperties\": {\n            \"operator\": \"pm+um\",\n            \"pm.rate\": \"0.02\",\n            \"um.rate\": \"0.02\"\n        }\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/evaluation",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"evaluation"
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				},
+				{
+					"name": "Create AHCA Evaluation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    ",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"id\", jsonData.id);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{   \n   \"name\": \"<<Name for the evaluation>>\",\n    \"solverConfiguration\": {\n        \"type\": \"ahca\",\n        \"metrics\": [\"<<List of Metrics to perform>>\"],\n        \"minClusterAmount\": \"<<The minimum amount of desired clusters to step the clustering algorithm at, represented as a number. 2 by default.>>\",\n        \"maxClusterAmount\": \"<<The maximum amount of desired clusters to step the clustering algorithm at, represented as a number. The amount of classes to cluster by default.>>\",\n        \"optimisationOnSharedEdges\": \"<<Whether to optimise the clustering algorithm to at first only merge microservices sharing an edge. Default: true>>\",\n        \"normaliseMetrics\": \"<<Whether to normalise the metrics based on their maximum value in the iteration. Note, for this we need to store all clusterings in an iteration which can have scaling issues in terms of memory usage when considering many clusterings. We only normalise when having more than two values. Maximum values of 0 result in division by 1.>>\",\n        \"weights\": [\"<<List of weights matching the number of (underlying) metrics for the given metrics>>\"]\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/evaluation",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"evaluation"
+							]
+						},
+						"description": "Creates an evaluation object configured to perform identification using an agglomerative hierarchical clustering algorithm."
+					},
+					"response": [
+						{
+							"name": "Create AHCA Evaluation",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{   \n   \"name\": \"My AHCA clusterings of application X\",\n    \"solverConfiguration\": {\n        \"type\": \"ahca\",\n        \"metrics\": [\n            \"DATA_AUTONOMY\", \n            \"FOCUSED_ON_ONE\", \n            \"BEHAVIORAL_AUTONOMY\"\n        ],\n        \"minClusterAmount\": 7,\n        \"maxClusterAmount\": 10,\n        \"optimisationOnSharedEdges\": false,\n        \"normaliseMetrics\": true,\n        \"weights\": [1,1,1,1]\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/evaluation",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"evaluation"
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				},
+				{
+					"name": "Delete Evaluation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"    ",
+									"    // Reset the ID in the environment",
+									"    pm.collectionVariables.set(\"id\", \"\");",
+									"    pm.collectionVariables.set(\"resultId\", \"\");",
+									"    pm.collectionVariables.set(\"solutionId\", \"\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/evaluation/{{id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"evaluation",
+								"{{id}}"
+							]
+						},
+						"description": "Performs a cascade delete for a given evaluation object.\n\nThis deletes all results, solutions, microservices, configuration, classes and relationships associated with this evaluation object."
+					},
+					"response": [
+						{
+							"name": "Delete Evaluation",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/evaluation/24ba43ac-6e53-43ab-b524-7c32cae714a7",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"evaluation",
+										"24ba43ac-6e53-43ab-b524-7c32cae714a7"
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				},
+				{
+					"name": "Delete All Evaluations",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"    ",
+									"    // Reset the ID in the environment",
+									"    pm.collectionVariables.set(\"id\", \"\");",
+									"    pm.collectionVariables.set(\"resultId\", \"\");",
+									"    pm.collectionVariables.set(\"solutionId\", \"\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/evaluation/all",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"evaluation",
+								"all"
+							]
+						},
+						"description": "Performs a cascade delete for a given evaluation object.\n\nThis deletes all results, solutions, microservices, configuration, classes and relationships associated with this evaluation object."
+					},
+					"response": [
+						{
+							"name": "Delete Evaluation",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/evaluation/all",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"evaluation",
+										"all"
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				},
+				{
+					"name": "Update Evaluation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    ",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"id\", jsonData.id);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{   \n    \"name\": \"<<Updated name for the evaluation>>\",\n    \"status\": \"<<Status of the configuration. Can be used in case the application was stopped during clustering to reset the evaluation to 'PENDING'.>>\",\n    \"solverConfiguration\": \"<<Same object structure as POST endpoints. Note, all values need to be present since the endpoint is PUT not PATCH otherwise they will be overridden.>>\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/evaluation/{{id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"evaluation",
+								"{{id}}"
+							]
+						},
+						"description": "Updates (the configuration of) an evaluation object."
+					},
+					"response": [
+						{
+							"name": "Update Evaluation",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{   \n    \"name\": \"My updated AHCA clusterings of application X\",\n    \"status\": \"PENDING\",\n    \"solverConfiguration\": {\n        \"type\": \"ahca\",\n        \"weights\": [1,1],\n        \"metrics\": [ \n            \"FOCUSED_ON_ONE\", \n            \"BEHAVIORAL_AUTONOMY\"\n        ]\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/evaluation/24ba43ac-6e53-43ab-b524-7c32cae714a7",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"evaluation",
+										"24ba43ac-6e53-43ab-b524-7c32cae714a7"
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				},
+				{
+					"name": "Delete Specific Result",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"    ",
+									"    pm.collectionVariables.set(\"resultId\", \"\");",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/result/{{resultId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"result",
+								"{{resultId}}"
+							]
+						},
+						"description": "Deletes a specific evaluation result.\n\nThis performs a cascading delete to the solutions and microservices associated with this result. This does not delete the input graph."
+					},
+					"response": [
+						{
+							"name": "Delete Specific Result",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/result/c9c139fd-15bd-443e-8779-b12a37e5085f",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"result",
+										"c9c139fd-15bd-443e-8779-b12a37e5085f"
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				},
+				{
+					"name": "Create custom solution",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"    ",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"solutionId\", jsonData.id);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"microservices\": [\n        {\n            \"fqns\": [\n                \"<<List of fully qualified names of the classes in this microservice.>>\"\n            ]\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/evaluation/{{id}}/solution",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"evaluation",
+								"{{id}}",
+								"solution"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Create custom solution",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"microservices\": [\n    {\n        \"fqns\": [\n            \"some.package.classOne\",\n            \"some.package.classTwo\",\n            \"some.package.classThree\",\n            \"some.package.classFour\",\n            \"some.another.package.classExtra\"\n        ]\n    },\n    {\n        \"fqns\": [\n            \"some.another.package.classOne\",\n            \"some.another.package.classTwo\",\n            \"some.another.package.classThree\",\n            \"some.another.package.classFour\",\n            \"some.another.package.classFive\"\n        ]\n    }\n  ]\n} \n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/evaluation/24ba43ac-6e53-43ab-b524-7c32cae714a7/solution",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"evaluation",
+										"24ba43ac-6e53-43ab-b524-7c32cae714a7",
+										"solution"
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				},
+				{
+					"name": "Calculate metrics for solution",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/evaluation/{{id}}/solution/{{solutionId}}/calculateMetrics",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"evaluation",
+								"{{id}}",
+								"solution",
+								"{{solutionId}}",
+								"calculateMetrics"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Calculate metrics for solution",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/evaluation/24ba43ac-6e53-43ab-b524-7c32cae714a7/solution/22174d26-066b-4429-a8ee-2c6f3f5b2175/calculateMetrics",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"evaluation",
+										"24ba43ac-6e53-43ab-b524-7c32cae714a7",
+										"solution",
+										"22174d26-066b-4429-a8ee-2c6f3f5b2175",
+										"calculateMetrics"
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				}
+			],
+			"description": "Endpoints for creating, configuring and deleting evaluations. Furthermore contains an endpoint to delete a specific evaluation result."
+		},
+		{
+			"name": "Performing analyses",
+			"item": [
+				{
+					"name": "Perform Source Analysis",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"pathToProjectZip\": \"<<Path to Java source code on server filesystem>>\",\n    \"pathToJaCoCoXml\": \"<<Optional path to Jacoco XML report on server filesystem>>\",\n    \"languageLevel\": \"<<Java version of source code>>\",\n    \"topPackageRegex\": \"<<Top level common package>>\",\n    \"includeInnerClasses\": \"<<Boolean to indicate whether to include inner classes. Default true.>>\",\n    \"removeIsolatedClasses\": \"<<Whether to remove isolated classes from analysis. Default false.>>\",\n    \"dataClassFqnRegexes\": [\n        \"<<List of regexes to match fully qualified names of classes to mark as data. Works in conjunction with 'dataClassAnnotationRegexes'.>>\"\n    ],\n    \"dataClassAnnotationRegexes\": [\n        \"<<List of regexes to match class annotations for to mark as data. Works in conjunction with 'dataClassFqnRegexes'.>>\"\n    ],\n    \"pathIncludeRegexes\": [\n        \"<<List of regexes based on file path to include classes upon. Has precedence over fqnExcludeRegexes.>>\"\n    ],\n    \"fqnExcludeRegexes\": [\n        \"<<List of regexes based on FQN to exclude classes upon>>\"\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/evaluation/{{id}}/analysis/source",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"evaluation",
+								"{{id}}",
+								"analysis",
+								"source"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Perform Source Analysis",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"pathToProjectZip\": \"/tmp/tocairn/code.zip\",\n    \"pathToJaCoCoXml\": \"/tmp/tocairn/jacoco.xml\",\n    \"languageLevel\": \"JAVA_11\",\n    \"topPackageRegex\": \"me\\\\.soels\\\\.tocairn\",\n    \"includeInnerClasses\": false,\n    \"removeIsolatedClasses\": true,\n    \"pathIncludeRegexes\": [\n        \".*\\\\/me\\\\/soels\\\\/tocairn\\\\/.*\"\n    ],\n    \"fqnExcludeRegexes\": [\n        \".*Application\"\n    ],\n    \"dataClassFqnRegexes\": [\n        \".*/model/.*\",\n        \".*Entity\"\n    ],\n    \"dataClassAnnotationRegexes\": [\n        \"Immutable\"\n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/evaluation/24ba43ac-6e53-43ab-b524-7c32cae714a7/analysis/source",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"evaluation",
+										"24ba43ac-6e53-43ab-b524-7c32cae714a7",
+										"analysis",
+										"source"
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				},
+				{
+					"name": "Perform Dynamic Analysis",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"pathToJfrDirectory\": \"<<Path to directory on server filesystem containing one or more JFR analysis files>>\",\n    \"namespace\": \"<<Top level package in source code>>\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/evaluation/{{id}}/analysis/dynamic",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"evaluation",
+								"{{id}}",
+								"analysis",
+								"dynamic"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Perform Dynamic Analysis",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"pathToJfrDirectory\": \"/tmp/tocairn/jfr/\",\n    \"namespace\": \"me.soels\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/evaluation/24ba43ac-6e53-43ab-b524-7c32cae714a7/analysis/dynamic",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"evaluation",
+										"24ba43ac-6e53-43ab-b524-7c32cae714a7",
+										"analysis",
+										"dynamic"
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				}
+			],
+			"description": "Endpoints to perform analyses. These endpoints create or enhance the class dependency diagram. The endpoints require specific artefacts to be present on the server's file system."
+		},
+		{
+			"name": "Retrieve data",
+			"item": [
+				{
+					"name": "Get Nodes",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/evaluation/{{id}}/graph/nodes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"evaluation",
+								"{{id}}",
+								"graph",
+								"nodes"
+							]
+						},
+						"description": "Retrieve the nodes in the class dependency graph for the given evaluation."
+					},
+					"response": [
+						{
+							"name": "Get Nodes",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/evaluation/24ba43ac-6e53-43ab-b524-7c32cae714a7/graph/nodes",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"evaluation",
+										"24ba43ac-6e53-43ab-b524-7c32cae714a7",
+										"graph",
+										"nodes"
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				},
+				{
+					"name": "Get Edges",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/evaluation/{{id}}/graph/edges",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"evaluation",
+								"{{id}}",
+								"graph",
+								"edges"
+							]
+						},
+						"description": "Retrieve the edges in the class dependency graph for the given evaluation."
+					},
+					"response": [
+						{
+							"name": "Get Edges",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/evaluation/24ba43ac-6e53-43ab-b524-7c32cae714a7/graph/edges",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"evaluation",
+										"24ba43ac-6e53-43ab-b524-7c32cae714a7",
+										"graph",
+										"edges"
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				},
+				{
+					"name": "Get Evaluations",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    ",
+									"    var jsonData = pm.response.json();",
+									"    if(jsonData.length != 0) {",
+									"        pm.collectionVariables.set(\"id\", jsonData[0].id);",
+									"    }",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/evaluation",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"evaluation"
+							]
+						},
+						"description": "Retrieve all evaluations configured.\n\nThis returns the evaluation and associated configuration as well as the ids of the results associated with this evaluation object.\n\nThis sets the 'id' variable to the top most evaluation (if present) to be used in other endpoints."
+					},
+					"response": [
+						{
+							"name": "Get Evaluations",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/evaluation",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"evaluation"
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				},
+				{
+					"name": "Get Evaluation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/evaluation/{{id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"evaluation",
+								"{{id}}"
+							]
+						},
+						"description": "Retrieve a specific evaluation, its configuration and the ids to the results associated with this evaluation."
+					},
+					"response": [
+						{
+							"name": "Get Evaluation",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/evaluation/24ba43ac-6e53-43ab-b524-7c32cae714a7",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"evaluation",
+										"24ba43ac-6e53-43ab-b524-7c32cae714a7"
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				},
+				{
+					"name": "Get Specific Result And Solutions",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"",
+									"    var jsonData = pm.response.json();",
+									"    if(jsonData.solutionIds.length != 0) {",
+									"        pm.collectionVariables.set(\"solutionId\", jsonData.solutionIds[0]);",
+									"    }",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/result/{{resultId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"result",
+								"{{resultId}}"
+							]
+						},
+						"description": "Retrieve all solutions for a given evaluation result.\n\nThis sets the 'solutionId' variable to the top most solution (if present) to be used in other endpoints."
+					},
+					"response": [
+						{
+							"name": "Get Specific Result And Solutions",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/result/c9c139fd-15bd-443e-8779-b12a37e5085f",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"result",
+										"c9c139fd-15bd-443e-8779-b12a37e5085f"
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				},
+				{
+					"name": "Get Solution",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/solution/{{solutionId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"solution",
+								"{{solutionId}}"
+							]
+						},
+						"description": "Retrieve all microservices and other metadata associated with the given solution."
+					},
+					"response": [
+						{
+							"name": "Get Solution",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/solution/22174d26-066b-4429-a8ee-2c6f3f5b2175",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"solution",
+										"22174d26-066b-4429-a8ee-2c6f3f5b2175"
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				},
+				{
+					"name": "Get Results From Evaluation",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"",
+									"    var jsonData = pm.response.json();",
+									"    if(jsonData.length != 0) {",
+									"        pm.collectionVariables.set(\"resultId\", jsonData[0].id);",
+									"    }",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/evaluation/{{id}}/result",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"evaluation",
+								"{{id}}",
+								"result"
+							]
+						},
+						"description": "Retrieve all results for a given evaluation.\n\nThis returns the evaluation results as well as the ids of the solutions associated with these results.\n\nThis sets the 'resultId' variable to the top most evaluation result (if present) to be used in other endpoints."
+					},
+					"response": [
+						{
+							"name": "Get Results From Evaluation",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/evaluation/24ba43ac-6e53-43ab-b524-7c32cae714a7/result",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"evaluation",
+										"24ba43ac-6e53-43ab-b524-7c32cae714a7",
+										"result"
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				}
+			],
+			"description": "Endpoint to retrieve data from the database. This furthermore contains to endpoints to retrieve the vertices in the class dependency graph as well as an endpoint to retrieve the edges such that one can create a custom visualisation for it."
+		},
+		{
+			"name": "Performing microservice identification",
+			"item": [
+				{
+					"name": "Run Evaluation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "<<Name given to the result once completed>>",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/evaluation/{{id}}/run",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"evaluation",
+								"{{id}}",
+								"run"
+							]
+						},
+						"description": "Perform the microservice boundary identification based on the configuration and graph associated with the given evaluation.\n\nFurthermore, a 'name' form parameter can be given for identification purposes when the result has been finished.\n\nThis endpoint runs asynchronously. Therefore, the logs might need to be investigated in case of an error."
+					},
+					"response": [
+						{
+							"name": "Run Evaluation",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "name",
+											"value": "My first microservice boundary identification result of application X",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/evaluation/24ba43ac-6e53-43ab-b524-7c32cae714a7/run",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"evaluation",
+										"24ba43ac-6e53-43ab-b524-7c32cae714a7",
+										"run"
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				},
+				{
+					"name": "Continue Evaluation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "name",
+									"value": "<<Name given to the result once completed>>",
+									"type": "text"
+								},
+								{
+									"key": "all",
+									"value": "<<For MOECA, whether to initialise the entire population with the given solution>>",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/evaluation/{{id}}/solution/{{solutionId}}/continue",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"evaluation",
+								"{{id}}",
+								"solution",
+								"{{solutionId}}",
+								"continue"
+							]
+						},
+						"description": "Perform the microservice boundary identification based on the configuration and graph associated with the given evaluation.\n\nThis starts the evaluation from a given solution.\n\nFurthermore, a 'name' form parameter can be given for identification purposes when the result has been finished.\n\nThis endpoint runs asynchronously. Therefore, the logs might need to be investigated in case of an error."
+					},
+					"response": [
+						{
+							"name": "Continue Evaluation",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "name",
+											"value": "My first microservice boundary identification result of application X using MOECA",
+											"type": "text"
+										},
+										{
+											"key": "all",
+											"value": "true",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/evaluation/24ba43ac-6e53-43ab-b524-7c32cae714a7/solution/22174d26-066b-4429-a8ee-2c6f3f5b2175/continue",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"evaluation",
+										"24ba43ac-6e53-43ab-b524-7c32cae714a7",
+										"solution",
+										"22174d26-066b-4429-a8ee-2c6f3f5b2175",
+										"continue"
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				}
+			],
+			"description": "Endpoint to run the microservice boundary identification for a specific configured evaluation."
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "id",
+			"value": ""
+		},
+		{
+			"key": "resultId",
+			"value": ""
+		},
+		{
+			"key": "solutionId",
+			"value": ""
+		}
+	]
+}

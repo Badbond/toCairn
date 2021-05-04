@@ -1,0 +1,19 @@
+spring:
+  # Neo4j properties for local development
+  neo4j:
+    uri: bolt://localhost:7687
+    authentication:
+      username: neo4j
+      password: password
+  data:
+    neo4j.database: tocairn
+
+
+  # Configuration of ObjectMapper
+  jackson:
+    default-property-inclusion: non_null
+
+# To log DEBUG statements from this application set (TRACE resp.):
+# logging=DEBUG
+# To log Neo4J queries executed uncomment:
+# logging.level.org.springframework.data.neo4j=DEBUG:

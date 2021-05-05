@@ -40,7 +40,7 @@ public class TestingMOEA {
         //  This is hardcoded in the AlgorithmProviders. Therefore, we need to think of some injection (e.g. aspects /
         //  custom providers). See https://github.com/MOEAFramework/MOEAFramework/issues/51#issuecomment-223448440
         NondominatedPopulation result = new Executor()
-                .withProblem(new ClusteringProblem(objectives, input, EncodingType.CLUSTER_LABEL))
+                .withProblem(new ClusteringProblem(objectives, input, EncodingType.GRAPH_ADJECENCY))
                 .withAlgorithm("NSGAII")
                 .withMaxEvaluations(10000)
                 .run();

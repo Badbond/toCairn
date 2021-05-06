@@ -38,7 +38,7 @@ public class MOEAExperiment {
         //      - Allow duplicated objectives (same result, different clustering, is still interesting)
         NondominatedPopulation result = new Executor()
                 // Quick experimenting shows that as of 2021-05-06 cluster label was 14K nano sec per eval avg and
-                // graph adjacency was 27K. However, graph adjacency has tighter clustering in initial population.
+                // graph adjacency was 27K. However, graph adjacency has tighter (random) clustering in initial population.
                 .withProblem(new ClusteringProblem(objectives, input, EncodingType.CLUSTER_LABEL))
                 .withAlgorithm("NSGAII")
                 // TODO: Operators; crossover & mutation. By default for NSGA-II it is Simulated Binary Crossover (SBX) and Polynomial Mutation (PM).

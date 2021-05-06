@@ -4,9 +4,7 @@ import org.moeaframework.core.Solution;
 import org.moeaframework.core.variable.EncodingUtils;
 import org.moeaframework.problem.AbstractProblem;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static me.soels.thesis.EncodingType.ENCODING_TYPE_ATTRIBUTE_KEY;
 
@@ -14,6 +12,7 @@ public class ClusteringProblem extends AbstractProblem {
     private final List<Objective> objectives;
     private final ApplicationInput applicationInput;
     private final EncodingType encodingType;
+    private int count;
 
     /**
      * Constructs a new instance of the clustering problem
@@ -31,6 +30,10 @@ public class ClusteringProblem extends AbstractProblem {
 
     @Override
     public void evaluate(Solution solution) {
+        if (count % 1000 == 0) {
+            System.out.println("Evaluated " + count + " times");
+        }
+        count++;
         var decodedClustering = decodeToClusters(solution);
 
         for (int i = 0; i < objectives.size(); i++) {
@@ -76,37 +79,41 @@ public class ClusteringProblem extends AbstractProblem {
     }
 
     private Clustering decodeGraphAdjacencyEncoding(int[] variables) {
-        var nodeIndexClusterPair = new LinkedHashMap<Integer, Integer>();
+        // TODO: Does graph adjacency need constraints to only allow edges based on available edges? Does that make sense?
+        var nodeClusterPair = new LinkedHashMap<Integer, Integer>(variables.length);
+        var clustersToMerge = new TreeMap<Integer, Integer>(Comparator.reverseOrder());
         var result = new Clustering();
         int clusterCount = 0;
+
         for (int i = 0; i < variables.length; i++) {
             var linkedNode = variables[i];
-            var existingCurrent = Optional.ofNullable(nodeIndexClusterPair.get(i));
-            var existingLinked = Optional.ofNullable(nodeIndexClusterPair.get(linkedNode));
+            var existingCurrent = Optional.ofNullable(nodeClusterPair.get(i));
+            var existingLinked = Optional.ofNullable(nodeClusterPair.get(linkedNode));
 
-            // TODO: Simplify branches as suggested, but do document the condition as it is important for understanding.
             if (existingCurrent.isPresent() && existingLinked.isEmpty()) {
                 // We have not yet seen the linked node, but for the current node a cluster was already created.
                 // Add linked node to existing cluster
-                nodeIndexClusterPair.put(linkedNode, existingCurrent.get());
+                nodeClusterPair.put(linkedNode, existingCurrent.get());
             } else if (existingCurrent.isEmpty() && existingLinked.isPresent()) {
                 // We have not yet seen the current node, but for the linked node a cluster was already created.
                 // Add current node to existing cluster
-                nodeIndexClusterPair.put(i, existingLinked.get());
-            } else if (existingCurrent.isEmpty() && existingLinked.isEmpty()) {
+                nodeClusterPair.put(i, existingLinked.get());
+            } else if (existingCurrent.isEmpty()) {
                 // We have not seen either node, create a new cluster for both
-                nodeIndexClusterPair.put(i, clusterCount);
-                nodeIndexClusterPair.put(linkedNode, clusterCount);
+                nodeClusterPair.put(i, clusterCount);
+                nodeClusterPair.put(linkedNode, clusterCount);
                 clusterCount++;
-            } else if (existingCurrent.isPresent() && existingLinked.isPresent() && !existingCurrent.get().equals(existingLinked.get())) {
-                // TODO: Merge clusters :-(
-                // TODO: Maybe we can order by value instead of key! That way, the directions is always in increasing order and perhaps we don't need to catch this case?
-                throw new IllegalStateException("Not supported");
-            } else {
-                // TODO: Check if this a reachable branch or not. It should not...
-                throw new IllegalStateException("Don't know what to do here. Please investigate");
-            }
+            } else if (!existingCurrent.get().equals(existingLinked.get())) {
+                // We already have two different clusters for both the current and linked node. These should be merged.
+                clustersToMerge.put(Math.max(existingCurrent.get(), existingLinked.get()),
+                        Math.min(existingCurrent.get(), existingLinked.get()));
+            } // The else condition results in the two nodes being present and already being part of the same cluster.
         }
+
+        // TODO: Perhaps we can do this more efficiently within the previous loop.
+        nodeClusterPair.forEach((index, cluster) -> result.addToCluster(cluster, applicationInput.getClasses().get(index)));
+        clustersToMerge.forEach(result::mergeCluster);
+        result.normalize();
         return result;
     }
 
@@ -128,7 +135,8 @@ public class ClusteringProblem extends AbstractProblem {
         solution.setAttribute(ENCODING_TYPE_ATTRIBUTE_KEY, encodingType);
 
         for (int i = 0; i < getNumberOfVariables(); i++) {
-            solution.setVariable(i, EncodingUtils.newInt(0, getNumberOfVariables()));
+            // TODO: Investigate if binary int is more efficient; do watch out for exclusive/inclusive bounds
+            solution.setVariable(i, EncodingUtils.newInt(0, getNumberOfVariables() - 1));
         }
         return solution;
     }

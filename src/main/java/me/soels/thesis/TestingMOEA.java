@@ -16,9 +16,10 @@ package me.soels.thesis;/* Copyright 2009-2020 David Hadka
  * along with the MOEA Framework.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.moeaframework.Executor;
 import org.moeaframework.core.NondominatedPopulation;
-import org.moeaframework.core.Solution;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,6 +33,7 @@ public class TestingMOEA {
     public static void main(String[] args) {
         var objectives = List.of(new CohesionObjective(), new CouplingObjective());
         var input = new ApplicationInput();
+        var start = System.currentTimeMillis();
 
         // TODO:
         //  Instead of random, we want to make smarter initialization by doing the following:
@@ -39,26 +41,37 @@ public class TestingMOEA {
         //      - Unvisited classes get assigned a random cluster.
         //  This is hardcoded in the AlgorithmProviders. Therefore, we need to think of some injection (e.g. aspects /
         //  custom providers). See https://github.com/MOEAFramework/MOEAFramework/issues/51#issuecomment-223448440
+
+        // TODO:
+        //  Further investigate control over duplicates. Desirable:
+        //      - Being able to normalize the solution
+        //      - Have non-duplicated solutions
+        //      - Allow duplicated objectives (same result, different clustering)
         NondominatedPopulation result = new Executor()
                 .withProblem(new ClusteringProblem(objectives, input, EncodingType.GRAPH_ADJECENCY))
                 .withAlgorithm("NSGAII")
                 .withMaxEvaluations(10000)
                 .run();
 
-        //display the results
+
+        // Display the results
+        var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);
+        System.out.println("Processing took: " + duration + " (H:m:s.millis)");
         printResults(result, objectives);
     }
 
     private static void printResults(NondominatedPopulation result, List<Objective> objectives) {
-        var objectivesString = objectives.stream()
+        var objectivesNames = objectives.stream()
                 .map(objective -> objective.getClass().getSimpleName())
-                .collect(Collectors.joining("  "));
-        System.out.format(objectivesString + "%n");
+                .collect(Collectors.toList());
+        System.out.format(StringUtils.join(objectivesNames, "  ") + "%n");
 
-        for (Solution solution : result) {
-            Object[] objectivesResult = new Object[]{solution.getObjectives()};
-            System.out.format("%.4f      ".repeat(objectives.size()) + "%n", objectivesResult);
+        for (var solution : result) {
+            for (int i = 0; i < objectivesNames.size(); i++) {
+                var spacing = " ".repeat(objectivesNames.get(i).length() - 6) + "  ";
+                System.out.format("%.4f" + spacing, solution.getObjective(i));
+            }
+            System.out.println();
         }
     }
-
 }

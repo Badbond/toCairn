@@ -141,7 +141,6 @@ public class ClusteringProblem extends AbstractProblem {
      */
     @Override
     public Solution newSolution() {
-        // TODO: Investigate what FutureSolution does and whether it would improve performance
         var solution = new Solution(getNumberOfVariables(), getNumberOfObjectives());
 
         for (int i = 0; i < getNumberOfVariables(); i++) {

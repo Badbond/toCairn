@@ -8,7 +8,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 import org.moeaframework.Executor;
 import org.moeaframework.core.NondominatedPopulation;
-import org.moeaframework.core.spi.AlgorithmProvider;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -42,6 +41,7 @@ public class MOEAExperiment {
                 // graph adjacency was 27K. However, graph adjacency has tighter clustering in initial population.
                 .withProblem(new ClusteringProblem(objectives, input, EncodingType.CLUSTER_LABEL))
                 .withAlgorithm("NSGAII")
+                // TODO: Operators; crossover & mutation. By default for NSGA-II it is Simulated Binary Crossover (SBX) and Polynomial Mutation (PM).
                 .distributeOnAllCores()
                 .withMaxEvaluations(10000)
                 .run();
@@ -53,11 +53,8 @@ public class MOEAExperiment {
     }
 
     private ApplicationInput prepareInput() {
-        var result = new ApplicationInput();
         var graph = getGraph();
-        result.getClasses().addAll(graph.getKey());
-        result.getEdges().addAll(graph.getValue());
-        return result;
+        return new ApplicationInput(graph.getKey(), graph.getValue());
     }
 
     private Pair<List<String>, List<Pair<String, String>>> getGraph() {

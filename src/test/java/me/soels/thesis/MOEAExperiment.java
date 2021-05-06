@@ -1,4 +1,5 @@
-import me.soels.thesis.*;
+package me.soels.thesis;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -7,6 +8,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 import org.moeaframework.Executor;
 import org.moeaframework.core.NondominatedPopulation;
+import org.moeaframework.core.spi.AlgorithmProvider;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -17,21 +19,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class MOEAExperiment {
-    private static void printResults(NondominatedPopulation result, List<Objective> objectives) {
-        var objectivesNames = objectives.stream()
-                .map(objective -> objective.getClass().getSimpleName())
-                .collect(Collectors.toList());
-        System.out.format(StringUtils.join(objectivesNames, "  ") + "%n");
-
-        for (var solution : result) {
-            for (int i = 0; i < objectivesNames.size(); i++) {
-                var spacing = " ".repeat(objectivesNames.get(i).length() - 6) + "  ";
-                System.out.format("%.4f" + spacing, solution.getObjective(i));
-            }
-            System.out.println();
-        }
-    }
-
     @Test
     public void runExperiment() {
         var objectives = List.of(new CohesionObjective(), new CouplingObjective());
@@ -51,7 +38,9 @@ public class MOEAExperiment {
         //      - Have non-duplicated solutions (results in same clustering)
         //      - Allow duplicated objectives (same result, different clustering, is still interesting)
         NondominatedPopulation result = new Executor()
-                .withProblem(new ClusteringProblem(objectives, input, EncodingType.GRAPH_ADJECENCY))
+                // Quick experimenting shows that as of 2021-05-06 cluster label was 14K nano sec per eval avg and
+                // graph adjacency was 27K. However, graph adjacency has tighter clustering in initial population.
+                .withProblem(new ClusteringProblem(objectives, input, EncodingType.CLUSTER_LABEL))
                 .withAlgorithm("NSGAII")
                 .withMaxEvaluations(10000)
                 .run();
@@ -69,7 +58,6 @@ public class MOEAExperiment {
         result.getEdges().addAll(graph.getValue());
         return result;
     }
-
 
     private Pair<List<String>, List<Pair<String, String>>> getGraph() {
         var graphLines = getGraphString().split("\n");
@@ -96,6 +84,21 @@ public class MOEAExperiment {
             return IOUtils.toString(stream, StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new IllegalStateException("Could not convert InputStream to String", e);
+        }
+    }
+
+    private void printResults(NondominatedPopulation result, List<Objective> objectives) {
+        var objectivesNames = objectives.stream()
+                .map(objective -> objective.getClass().getSimpleName())
+                .collect(Collectors.toList());
+        System.out.format(StringUtils.join(objectivesNames, "  ") + "%n");
+
+        for (var solution : result) {
+            for (int i = 0; i < objectivesNames.size(); i++) {
+                var spacing = " ".repeat(objectivesNames.get(i).length() - 6) + "  ";
+                System.out.format("%.4f" + spacing, solution.getObjective(i));
+            }
+            System.out.println();
         }
     }
 }

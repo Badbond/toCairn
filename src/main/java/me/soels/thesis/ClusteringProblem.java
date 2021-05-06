@@ -51,7 +51,6 @@ public class ClusteringProblem extends AbstractProblem {
         }
     }
 
-
     /**
      * Decodes the genes in the solution to the clusters identified.
      * <p>
@@ -136,6 +135,7 @@ public class ClusteringProblem extends AbstractProblem {
      * linked to any of the n classes, where n is the amount of classes.
      *
      * @return the solution structure
+     * @see EncodingType
      */
     @Override
     public Solution newSolution() {

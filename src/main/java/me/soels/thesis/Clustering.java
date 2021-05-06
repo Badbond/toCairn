@@ -1,10 +1,17 @@
 package me.soels.thesis;
 
+import org.moeaframework.core.Solution;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * The clustering as decoded from the {@link Solution} based on {@link EncodingType}.
+ * <p>
+ * This clustering exposes a list of clusters containing the nodes as given in {@link ApplicationInput#getClasses()}.
+ */
 public final class Clustering {
     private final Map<Integer, List<String>> clustering = new HashMap<>();
 

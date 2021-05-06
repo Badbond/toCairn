@@ -18,7 +18,6 @@
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <jmetal.version>5.10</jmetal.version>
         <moeaframework.version>2.13</moeaframework.version>
     </properties>
 
@@ -27,41 +26,6 @@
             <groupId>org.moeaframework</groupId>
             <artifactId>moeaframework</artifactId>
             <version>${moeaframework.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.uma.jmetal</groupId>
-            <artifactId>jmetal-core</artifactId>
-            <version>${jmetal.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.uma.jmetal</groupId>
-            <artifactId>jmetal-example</artifactId>
-            <version>${jmetal.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.uma.jmetal</groupId>
-            <artifactId>jmetal-problem</artifactId>
-            <version>${jmetal.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.uma.jmetal</groupId>
-            <artifactId>jmetal-algorithm</artifactId>
-            <version>${jmetal.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.uma.jmetal</groupId>
-            <artifactId>jmetal-lab</artifactId>
-            <version>${jmetal.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.uma.jmetal</groupId>
-            <artifactId>jmetal-lab</artifactId>
-            <version>${jmetal.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.uma.jmetal</groupId>
-            <artifactId>jmetal-auto</artifactId>
-            <version>${jmetal.version}</version>
         </dependency>
     </dependencies>
 </project>

@@ -1,0 +1,101 @@
+import me.soels.thesis.*;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.junit.Test;
+import org.moeaframework.Executor;
+import org.moeaframework.core.NondominatedPopulation;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class MOEAExperiment {
+    private static void printResults(NondominatedPopulation result, List<Objective> objectives) {
+        var objectivesNames = objectives.stream()
+                .map(objective -> objective.getClass().getSimpleName())
+                .collect(Collectors.toList());
+        System.out.format(StringUtils.join(objectivesNames, "  ") + "%n");
+
+        for (var solution : result) {
+            for (int i = 0; i < objectivesNames.size(); i++) {
+                var spacing = " ".repeat(objectivesNames.get(i).length() - 6) + "  ";
+                System.out.format("%.4f" + spacing, solution.getObjective(i));
+            }
+            System.out.println();
+        }
+    }
+
+    @Test
+    public void runExperiment() {
+        var objectives = List.of(new CohesionObjective(), new CouplingObjective());
+        var input = prepareInput();
+        var start = System.currentTimeMillis();
+
+        // TODO:
+        //  Instead of random, we want to make smarter initialization by doing the following:
+        //      - Select n random classes and start traversing every class not already visited
+        //      - Unvisited classes get assigned a random cluster.
+        //  This is hardcoded in the AlgorithmProviders. Therefore, we need to think of some injection (e.g. aspects /
+        //  custom providers). See https://github.com/MOEAFramework/MOEAFramework/issues/51#issuecomment-223448440
+
+        // TODO:
+        //  Further investigate control over duplicates. Desirable:
+        //      - Being able to normalize the solution
+        //      - Have non-duplicated solutions (results in same clustering)
+        //      - Allow duplicated objectives (same result, different clustering, is still interesting)
+        NondominatedPopulation result = new Executor()
+                .withProblem(new ClusteringProblem(objectives, input, EncodingType.GRAPH_ADJECENCY))
+                .withAlgorithm("NSGAII")
+                .withMaxEvaluations(10000)
+                .run();
+
+        // Display the results
+        var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);
+        System.out.println("Processing took: " + duration + " (H:m:s.millis)");
+        printResults(result, objectives);
+    }
+
+    private ApplicationInput prepareInput() {
+        var result = new ApplicationInput();
+        var graph = getGraph();
+        result.getClasses().addAll(graph.getKey());
+        result.getEdges().addAll(graph.getValue());
+        return result;
+    }
+
+
+    private Pair<List<String>, List<Pair<String, String>>> getGraph() {
+        var graphLines = getGraphString().split("\n");
+        var classMapping = new LinkedHashMap<String, String>();
+        var edges = new ArrayList<Pair<String, String>>();
+        for (var line : graphLines) {
+            var split = Arrays.stream(line.split(","))
+                    .map(StringUtils::trim)
+                    .collect(Collectors.toList());
+            classMapping.putIfAbsent(split.get(0), "Class" + classMapping.size());
+            classMapping.putIfAbsent(split.get(1), "Class" + classMapping.size());
+            edges.add(new ImmutablePair<>(classMapping.get(split.get(0)), classMapping.get(split.get(1))));
+        }
+        return new ImmutablePair<>(new ArrayList<>(classMapping.values()), edges);
+    }
+
+    private String getGraphString() {
+        try {
+            // Based off of https://infranodus.com/diseases/diseases
+            var stream = this.getClass().getClassLoader().getResourceAsStream("graph.csv");
+            if (stream == null) {
+                throw new IllegalStateException("Could not find graph.csv file");
+            }
+            return IOUtils.toString(stream, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not convert InputStream to String", e);
+        }
+    }
+}

@@ -10,33 +10,33 @@ public final class Clustering {
 
     /**
      * Retrieve the clustering.
-     * <p>
-     * TODO:
-     * Make comment that this automatically results in index normalization but that for proper normalization,
-     * the nodes have to be added in the correct order as well. Or even better, make this less error-prone.
      *
-     * @return the normalized clustering
+     * @return the clustering
      */
     public List<List<String>> getClustering() {
         return new ArrayList<>(clustering.values());
     }
 
     /**
-     * @param index
-     * @param node
+     * Add the given node to the specified cluster.
+     *
+     * @param node          the node to add
+     * @param clusterNumber the cluster to add the node to
      */
-    public void addToCluster(int index, String node) {
-        var cluster = clustering.get(index);
+    public void addToCluster(String node, int clusterNumber) {
+        var cluster = clustering.get(clusterNumber);
         if (cluster == null) {
             cluster = new ArrayList<>();
         }
         cluster.add(node);
-        clustering.put(index, cluster);
+        clustering.put(clusterNumber, cluster);
     }
 
     /**
-     * @param source
-     * @param target
+     * Merge the given {@code source} cluster into the given {@code target} cluster.
+     *
+     * @param source the nodes to transfer
+     * @param target the cluster to add the nodes to
      */
     public void mergeCluster(int source, int target) {
         if (!clustering.containsKey(source)) {
@@ -50,7 +50,7 @@ public final class Clustering {
     }
 
     /**
-     * Normalizes the clusters to be of increasing order by key
+     * Normalizes the clusters to be of increasing order by key.
      */
     public void normalize() {
         for (int i = 0; i < clustering.size(); i++) {

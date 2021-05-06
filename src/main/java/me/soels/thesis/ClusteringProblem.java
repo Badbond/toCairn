@@ -1,8 +1,10 @@
 package me.soels.thesis;
 
+import org.moeaframework.Executor;
 import org.moeaframework.core.Solution;
 import org.moeaframework.core.variable.EncodingUtils;
 import org.moeaframework.problem.AbstractProblem;
+import org.moeaframework.util.distributed.DistributedProblem;
 
 import java.util.*;
 
@@ -11,6 +13,8 @@ import java.util.*;
  * <p>
  * This model is responsible for defining the encoding of genes used by the evolutionary algorithm. This is configurable
  * through the {@link EncodingType} provided.
+ * <p>
+ * This problem can be parallelized using {@link DistributedProblem} or {@link Executor#distributeOnAllCores()}.
  *
  * @see EncodingType
  */
@@ -45,7 +49,6 @@ public class ClusteringProblem extends AbstractProblem {
     public void evaluate(Solution solution) {
         var decodedClustering = decodeToClusters(solution);
 
-        // TODO: Parallelize
         for (int i = 0; i < objectives.size(); i++) {
             solution.setObjective(i, objectives.get(i).calculate(decodedClustering, applicationInput));
         }
@@ -87,7 +90,6 @@ public class ClusteringProblem extends AbstractProblem {
     }
 
     private Clustering decodeGraphAdjacencyEncoding(int[] variables) {
-        // TODO: Does graph adjacency need constraints to only allow edges based on available edges? Does that make sense?
         var nodeClusterPair = new LinkedHashMap<Integer, Integer>(variables.length);
         var clustersToMerge = new TreeMap<Integer, Integer>(Comparator.reverseOrder());
         var result = new Clustering();

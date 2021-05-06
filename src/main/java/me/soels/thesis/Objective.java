@@ -6,6 +6,9 @@ package me.soels.thesis;
  * <p>
  * For example, the data autonomy objective would provide a value on the given clustering to indicate how well this
  * clustering is representing data autonomy.
+ * <p>
+ * Note that the objectives that should be evaluated should be represented as a minimization problem. If it is not,
+ * it should be negated.
  */
 public interface Objective {
     /**

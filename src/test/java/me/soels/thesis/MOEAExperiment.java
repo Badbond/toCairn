@@ -42,6 +42,7 @@ public class MOEAExperiment {
                 // graph adjacency was 27K. However, graph adjacency has tighter clustering in initial population.
                 .withProblem(new ClusteringProblem(objectives, input, EncodingType.CLUSTER_LABEL))
                 .withAlgorithm("NSGAII")
+                .distributeOnAllCores()
                 .withMaxEvaluations(10000)
                 .run();
 

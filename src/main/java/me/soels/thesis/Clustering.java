@@ -1,5 +1,6 @@
 package me.soels.thesis;
 
+import me.soels.thesis.model.OtherClass;
 import org.moeaframework.core.Solution;
 
 import java.util.ArrayList;
@@ -9,41 +10,39 @@ import java.util.Map;
 
 /**
  * The clustering as decoded from the {@link Solution} based on {@link EncodingType}.
- * <p>
- * This clustering exposes a list of clusters containing the nodes as given in {@link ApplicationInput#getClasses()}.
  */
 public final class Clustering {
-    private final Map<Integer, List<String>> clustering = new HashMap<>();
+    private final Map<Integer, List<OtherClass>> clustering = new HashMap<>();
 
     /**
      * Retrieve the clustering.
      *
      * @return the clustering
      */
-    public List<List<String>> getClustering() {
+    public List<List<OtherClass>> getClustering() {
         return new ArrayList<>(clustering.values());
     }
 
     /**
-     * Add the given node to the specified cluster.
+     * Add the given class to the specified cluster.
      *
-     * @param node          the node to add
-     * @param clusterNumber the cluster to add the node to
+     * @param otherClass    the class to add
+     * @param clusterNumber the cluster to add the class to
      */
-    public void addToCluster(String node, int clusterNumber) {
+    public void addToCluster(OtherClass otherClass, int clusterNumber) {
         var cluster = clustering.get(clusterNumber);
         if (cluster == null) {
             cluster = new ArrayList<>();
         }
-        cluster.add(node);
+        cluster.add(otherClass);
         clustering.put(clusterNumber, cluster);
     }
 
     /**
      * Merge the given {@code source} cluster into the given {@code target} cluster.
      *
-     * @param source the nodes to transfer
-     * @param target the cluster to add the nodes to
+     * @param source the cluster number to extract the classes from
+     * @param target the cluster number to the extracted classes to
      */
     public void mergeCluster(int source, int target) {
         if (!clustering.containsKey(source)) {

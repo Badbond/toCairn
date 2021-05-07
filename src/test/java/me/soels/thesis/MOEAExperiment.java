@@ -1,5 +1,8 @@
 package me.soels.thesis;
 
+import me.soels.thesis.model.AnalysisModel;
+import me.soels.thesis.model.DependenceRelationship;
+import me.soels.thesis.model.OtherClass;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -52,22 +55,24 @@ public class MOEAExperiment {
         printResults(result, objectives);
     }
 
-    private ApplicationInput prepareInput() {
+    private AnalysisModel prepareInput() {
         var graph = getGraph();
-        return new ApplicationInput(graph.getKey(), graph.getValue());
+        return new AnalysisModel(graph.getKey(), graph.getValue());
     }
 
-    private Pair<List<String>, List<Pair<String, String>>> getGraph() {
+    private Pair<List<OtherClass>, List<DependenceRelationship>> getGraph() {
         var graphLines = getGraphString().split("\n");
-        var classMapping = new LinkedHashMap<String, String>();
-        var edges = new ArrayList<Pair<String, String>>();
+        var classMapping = new LinkedHashMap<String, OtherClass>();
+        var edges = new ArrayList<DependenceRelationship>();
         for (var line : graphLines) {
             var split = Arrays.stream(line.split(","))
                     .map(StringUtils::trim)
                     .collect(Collectors.toList());
-            classMapping.putIfAbsent(split.get(0), "Class" + classMapping.size());
-            classMapping.putIfAbsent(split.get(1), "Class" + classMapping.size());
-            edges.add(new ImmutablePair<>(classMapping.get(split.get(0)), classMapping.get(split.get(1))));
+            var classA = new OtherClass("Class" + classMapping.size(), "Class" + classMapping.size());
+            classMapping.putIfAbsent(split.get(0), classA);
+            var classB = new OtherClass("Class" + classMapping.size(), "Class" + classMapping.size());
+            classMapping.putIfAbsent(split.get(1), classB);
+            edges.add(new DependenceRelationship(classA, classB));
         }
         return new ImmutablePair<>(new ArrayList<>(classMapping.values()), edges);
     }
@@ -93,7 +98,8 @@ public class MOEAExperiment {
 
         for (var solution : result) {
             for (int i = 0; i < objectivesNames.size(); i++) {
-                var spacing = " ".repeat(objectivesNames.get(i).length() - 6) + "  ";
+                var numberLength = Double.compare(solution.getObjective(i), 0.0) < 0 ? 7 : 6;
+                var spacing = " ".repeat(objectivesNames.get(i).length() - numberLength) + "  ";
                 System.out.format("%.4f" + spacing, solution.getObjective(i));
             }
             System.out.println();

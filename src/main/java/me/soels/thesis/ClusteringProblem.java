@@ -1,5 +1,6 @@
 package me.soels.thesis;
 
+import me.soels.thesis.model.AnalysisModel;
 import org.moeaframework.Executor;
 import org.moeaframework.core.Solution;
 import org.moeaframework.core.variable.EncodingUtils;
@@ -20,20 +21,20 @@ import java.util.*;
  */
 public class ClusteringProblem extends AbstractProblem {
     private final List<Objective> objectives;
-    private final ApplicationInput applicationInput;
+    private final AnalysisModel analysisModel;
     private final EncodingType encodingType;
 
     /**
      * Constructs a new instance of the clustering problem
      *
-     * @param objectives       the objective functions to evaluate
-     * @param applicationInput the input to cluster
-     * @param encodingType     the type of solution encoding to use
+     * @param objectives    the objective functions to evaluate
+     * @param analysisModel the input to cluster
+     * @param encodingType  the type of solution encoding to use
      */
-    public ClusteringProblem(List<Objective> objectives, ApplicationInput applicationInput, EncodingType encodingType) {
-        super(applicationInput.getClasses().size(), objectives.size());
+    public ClusteringProblem(List<Objective> objectives, AnalysisModel analysisModel, EncodingType encodingType) {
+        super(analysisModel.getAllClasses().size(), objectives.size());
         this.objectives = objectives;
-        this.applicationInput = applicationInput;
+        this.analysisModel = analysisModel;
         this.encodingType = encodingType;
     }
 
@@ -50,14 +51,14 @@ public class ClusteringProblem extends AbstractProblem {
         var decodedClustering = decodeToClusters(solution);
 
         for (int i = 0; i < objectives.size(); i++) {
-            solution.setObjective(i, objectives.get(i).calculate(decodedClustering, applicationInput));
+            solution.setObjective(i, objectives.get(i).calculate(decodedClustering, analysisModel));
         }
     }
 
     /**
      * Decodes the genes in the solution to the clusters identified.
      * <p>
-     * The resulting clusters are also normalized in order of the {@link #applicationInput} nodes with increasing
+     * The resulting clusters are also normalized in order of the {@link #analysisModel} nodes with increasing
      * incremental numbers starting from 0. This is to also make deduplication of redundant solutions possible. For
      * example, both A3-B2-C3 and A9-B3-C9 will map to A0-B1-C0 (in case of cluster-label encoding).
      * TODO: Depending on the deduplication support, we might not need to normalize if it does not benefit us.
@@ -84,7 +85,7 @@ public class ClusteringProblem extends AbstractProblem {
         for (int i = 0; i < variables.length; i++) {
             var clusterNumber = variables[i];
             clusterNormalizationMapping.putIfAbsent(clusterNumber, clusterNormalizationMapping.size());
-            result.addToCluster(applicationInput.getClasses().get(i), clusterNormalizationMapping.get(clusterNumber));
+            result.addToCluster(analysisModel.getOtherClasses().get(i), clusterNormalizationMapping.get(clusterNumber));
         }
         return result;
     }
@@ -121,7 +122,7 @@ public class ClusteringProblem extends AbstractProblem {
         }
 
         // TODO: Perhaps we can do this more efficiently within the previous loop.
-        nodeClusterPair.forEach((index, cluster) -> result.addToCluster(applicationInput.getClasses().get(index), cluster));
+        nodeClusterPair.forEach((index, cluster) -> result.addToCluster(analysisModel.getOtherClasses().get(index), cluster));
         clustersToMerge.forEach(result::mergeCluster);
         result.normalize();
         return result;

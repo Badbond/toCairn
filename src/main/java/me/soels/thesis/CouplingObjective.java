@@ -17,4 +17,4 @@ public class CouplingObjective implements Objective {
 // 4. From taibi2019monolithic: Coupling between microservice (CBM) also based off of Coupling between modules (CBM) from Lindvall et al.
 // 5. From carvalho2020performance: Coupling (based on methods)
 // 6. From jin2018functiona (requires api spec): Interface Number (IFN), Operation Number (OPN), Interaction number (IRN)
-// 7. From bogner2017automatically: Perepletchikov et al. and Shim et al. have Coupling metrics
+// 7. From bogner2017automatically for service-based systems: Perepletchikov et al. and Shim et al. have Coupling metrics. See also section 3.3 and table 2.

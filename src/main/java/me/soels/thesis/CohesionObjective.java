@@ -13,4 +13,6 @@ public class CohesionObjective implements Objective {
 // Possibilities:
 // 1. From li2019dataflow: RelationalCohesion(RC)(Larman,2012)
 // 2. From selmadji2029monolithic: Internal Cohesion
-
+// 3. From carvalho2020performance: Cohesion (based on methods)
+// 4. From jin2018requirement (requires api spec): Cohesion at domain level (CHD), cohesion at message level (CHM)
+// 5. From bogner2017automatically: Perepletchikov et al. and Shim et al. have Cohesion metrics

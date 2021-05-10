@@ -1,10 +1,11 @@
-package me.soels.thesis;
+package me.soels.thesis.objectives;
 
+import me.soels.thesis.encoding.Clustering;
 import me.soels.thesis.model.AnalysisModel;
 
 public class CohesionObjective implements Objective {
     @Override
-    public double calculate(Clustering decodedClustering, AnalysisModel analysisModel) {
+    public double calculate(Clustering clustering, AnalysisModel analysisModel) {
         // TODO: Implement measure of cluster cohesion (control-flow) based on combination of Clustering and ApplicationInput
         return -1 * 0.0;
     }

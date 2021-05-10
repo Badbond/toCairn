@@ -1,6 +1,6 @@
 package me.soels.thesis.model;
 
-import me.soels.thesis.Objective;
+import me.soels.thesis.objectives.Objective;
 
 import java.util.Collections;
 import java.util.List;

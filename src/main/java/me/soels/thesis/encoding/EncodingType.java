@@ -1,4 +1,4 @@
-package me.soels.thesis;
+package me.soels.thesis.encoding;
 
 /**
  * The encoding type used in the problem model for clustering.

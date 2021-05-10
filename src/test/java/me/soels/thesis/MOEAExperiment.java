@@ -1,8 +1,12 @@
 package me.soels.thesis;
 
+import me.soels.thesis.encoding.EncodingType;
 import me.soels.thesis.model.AnalysisModel;
 import me.soels.thesis.model.DependenceRelationship;
 import me.soels.thesis.model.OtherClass;
+import me.soels.thesis.objectives.CohesionObjective;
+import me.soels.thesis.objectives.CouplingObjective;
+import me.soels.thesis.objectives.Objective;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -39,15 +43,15 @@ public class MOEAExperiment {
         //      - Being able to normalize the solution
         //      - Have non-duplicated solutions (results in same clustering)
         //      - Allow duplicated objectives (same result, different clustering, is still interesting)
+        var problemConfig = new ProblemConfiguration(EncodingType.CLUSTER_LABEL, null, 10);
         NondominatedPopulation result = new Executor()
                 // Quick experimenting shows that as of 2021-05-06 cluster label was 14K nano sec per eval avg and
                 // graph adjacency was 27K. However, graph adjacency has tighter (random) clustering in initial population.
-                .withProblem(new ClusteringProblem(objectives, input, EncodingType.CLUSTER_LABEL))
+                .withProblem(new ClusteringProblem(objectives, input, problemConfig))
                 .withAlgorithm("NSGAII")
-                // TODO: Operators; crossover & mutation. By default for NSGA-II it is Simulated Binary Crossover (SBX) and Polynomial Mutation (PM).
                 .distributeOnAllCores()
-                .withMaxEvaluations(10000)
-                .run();
+                .withMaxEvaluations(1000000000)
+                .run(); // 2.4155 2.5429
 
         // Display the results
         var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);
@@ -68,10 +72,8 @@ public class MOEAExperiment {
             var split = Arrays.stream(line.split(","))
                     .map(StringUtils::trim)
                     .collect(Collectors.toList());
-            var classA = new OtherClass("Class" + classMapping.size(), "Class" + classMapping.size());
-            classMapping.putIfAbsent(split.get(0), classA);
-            var classB = new OtherClass("Class" + classMapping.size(), "Class" + classMapping.size());
-            classMapping.putIfAbsent(split.get(1), classB);
+            var classA = classMapping.computeIfAbsent(split.get(0), key -> new OtherClass("Class" + classMapping.size(), "Class" + classMapping.size()));
+            var classB = classMapping.computeIfAbsent(split.get(1), key -> new OtherClass("Class" + classMapping.size(), "Class" + classMapping.size()));
             edges.add(new DependenceRelationship(classA, classB));
         }
         return new ImmutablePair<>(new ArrayList<>(classMapping.values()), edges);

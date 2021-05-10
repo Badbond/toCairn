@@ -1,5 +1,6 @@
-package me.soels.thesis;
+package me.soels.thesis.objectives;
 
+import me.soels.thesis.encoding.Clustering;
 import me.soels.thesis.model.AnalysisModel;
 
 /**

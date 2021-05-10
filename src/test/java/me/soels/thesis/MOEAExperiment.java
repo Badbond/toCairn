@@ -5,7 +5,7 @@ import me.soels.thesis.model.AnalysisModel;
 import me.soels.thesis.model.DependenceRelationship;
 import me.soels.thesis.model.OtherClass;
 import me.soels.thesis.objectives.CohesionObjective;
-import me.soels.thesis.objectives.CouplingObjective;
+import me.soels.thesis.objectives.CouplingBetweenMicroservicesObjective;
 import me.soels.thesis.objectives.Objective;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -25,9 +25,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class MOEAExperiment {
+    private static final String GRAPH_NAME = "simple-graph";
+
     @Test
     public void runExperiment() {
-        var objectives = List.of(new CohesionObjective(), new CouplingObjective());
+        var objectives = List.of(new CohesionObjective(), new CouplingBetweenMicroservicesObjective());
         var input = prepareInput();
         var start = System.currentTimeMillis();
 
@@ -43,15 +45,15 @@ public class MOEAExperiment {
         //      - Being able to normalize the solution
         //      - Have non-duplicated solutions (results in same clustering)
         //      - Allow duplicated objectives (same result, different clustering, is still interesting)
-        var problemConfig = new ProblemConfiguration(EncodingType.CLUSTER_LABEL, null, 10);
+        var problemConfig = new ProblemConfiguration(EncodingType.CLUSTER_LABEL, null, null);
         NondominatedPopulation result = new Executor()
                 // Quick experimenting shows that as of 2021-05-06 cluster label was 14K nano sec per eval avg and
                 // graph adjacency was 27K. However, graph adjacency has tighter (random) clustering in initial population.
                 .withProblem(new ClusteringProblem(objectives, input, problemConfig))
                 .withAlgorithm("NSGAII")
                 .distributeOnAllCores()
-                .withMaxEvaluations(1000000000)
-                .run(); // 2.4155 2.5429
+                .withMaxEvaluations(1000000)
+                .run();
 
         // Display the results
         var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);
@@ -65,15 +67,17 @@ public class MOEAExperiment {
     }
 
     private Pair<List<OtherClass>, List<DependenceRelationship>> getGraph() {
-        var graphLines = getGraphString().split("\n");
+        var graphLines = Arrays.stream(getGraphString().split("\n"))
+                .skip(2)
+                .collect(Collectors.toList());
         var classMapping = new LinkedHashMap<String, OtherClass>();
         var edges = new ArrayList<DependenceRelationship>();
         for (var line : graphLines) {
             var split = Arrays.stream(line.split(","))
                     .map(StringUtils::trim)
                     .collect(Collectors.toList());
-            var classA = classMapping.computeIfAbsent(split.get(0), key -> new OtherClass("Class" + classMapping.size(), "Class" + classMapping.size()));
-            var classB = classMapping.computeIfAbsent(split.get(1), key -> new OtherClass("Class" + classMapping.size(), "Class" + classMapping.size()));
+            var classA = classMapping.computeIfAbsent(split.get(0), key -> new OtherClass("Class" + classMapping.size(), split.get(0)));
+            var classB = classMapping.computeIfAbsent(split.get(1), key -> new OtherClass("Class" + classMapping.size(), split.get(1)));
             edges.add(new DependenceRelationship(classA, classB));
         }
         return new ImmutablePair<>(new ArrayList<>(classMapping.values()), edges);
@@ -81,10 +85,9 @@ public class MOEAExperiment {
 
     private String getGraphString() {
         try {
-            // Based off of https://infranodus.com/diseases/diseases
-            var stream = this.getClass().getClassLoader().getResourceAsStream("graph.csv");
+            var stream = this.getClass().getClassLoader().getResourceAsStream(GRAPH_NAME + ".csv");
             if (stream == null) {
-                throw new IllegalStateException("Could not find graph.csv file");
+                throw new IllegalStateException("Could not find " + GRAPH_NAME + ".csv file");
             }
             return IOUtils.toString(stream, StandardCharsets.UTF_8);
         } catch (IOException e) {

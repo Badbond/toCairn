@@ -1,0 +1,14 @@
+From https://www.tutorialspoint.com/graph_theory/graph_theory_connectivity.htm
+
+A,B,0
+A,D,0
+A,I,0
+B,C,0
+C,E,0
+D,C,0
+E,F,0
+E,H,0
+I,J,0
+J,G,0
+F,G,0
+H,G,0

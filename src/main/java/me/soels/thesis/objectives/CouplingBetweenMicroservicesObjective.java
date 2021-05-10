@@ -12,10 +12,13 @@ import java.util.stream.Collectors;
  * Coupling between microservices as suggested by Taibi, D. & Systä, K. (2019). Based off of Coupling between modules
  * from Lindvall et al. (2003).
  * <p>
+ * The metric is calculated per microservice identified and is averaged over the whole solution as the authors
+ * compared the different solutions that way as well. TODO: Is average fine or should we use euclidean distance?
+ * <p>
  * See related work 'Taibi, D., & Systä, K. (2019, May). From Monolithic Systems to Microservices: A Decomposition
  * Framework based on Process Mining. In <i>CLOSER</i> (pp. 153-164).'
  */
-public class CouplingObjective implements Objective {
+public class CouplingBetweenMicroservicesObjective implements Objective {
     @Override
     public double calculate(Clustering clustering, AnalysisModel analysisModel) {
         Map<Integer, List<Integer>> interClusterDependencies = clustering.getByCluster().entrySet().stream()
@@ -34,7 +37,6 @@ public class CouplingObjective implements Objective {
             addDependency(interClusterDependencies, clusteringByClass.get(classB), clusteringByClass.get(classA));
         }
 
-        // TODO: Is average good? Taibi mentions average in their work for analyzing resulting decompositions.
         return clustering.getByCluster().entrySet().stream()
                 .mapToDouble(entry -> interClusterDependencies.get(entry.getKey()).size() / (double) entry.getValue().size())
                 .average()
@@ -49,6 +51,7 @@ public class CouplingObjective implements Objective {
         // TODO:
         //  If 'external link' is interpreted as microservice, then we should only add once link is not there yet.
         //  If is is interpreted as external API, perhaps calculating class-to-class dependencies is better.
+        //  The former is really odd as simple-graph with 2 clusters will always be 0.2 as it will be counted as 1 link between 5 classes.
         if (!interClusterDependencies.get(clusterB).contains(clusterA)) {
             interClusterDependencies.get(clusterB).add(clusterA);
         }

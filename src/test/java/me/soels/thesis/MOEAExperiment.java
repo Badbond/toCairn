@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class MOEAExperiment {
-    private static final String GRAPH_NAME = "simple-graph";
+    private static final String GRAPH_NAME = "simple-graph-2";
 
     @Test
     public void runExperiment() {

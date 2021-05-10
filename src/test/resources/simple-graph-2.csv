@@ -2,13 +2,15 @@ From https://www.tutorialspoint.com/graph_theory/graph_theory_connectivity.htm
 
 A,B
 A,D
-A,I
+A,C
 B,C
-C,E
-D,C
+B,D
+C,D
+D,E
+B,G
 E,F
+E,G
 E,H
-I,J
-J,G
 F,G
-H,G
+F,H
+G,H

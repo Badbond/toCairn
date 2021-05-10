@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
  * The metric is calculated per microservice identified and is averaged over the whole solution as the authors
  * compared the different solutions that way as well. TODO: Is average fine or should we use euclidean distance?
  * <p>
+ * TODO: It is very hard to get 0.0 out of this metric as the algorithm does not attempt to cluster with only 1 cluster..
+ * <p>
  * See related work 'Taibi, D., & Systä, K. (2019, May). From Monolithic Systems to Microservices: A Decomposition
  * Framework based on Process Mining. In <i>CLOSER</i> (pp. 153-164).'
  */
@@ -52,9 +54,9 @@ public class CouplingBetweenMicroservicesObjective implements Objective {
         //  If 'external link' is interpreted as microservice, then we should only add once link is not there yet.
         //  If is is interpreted as external API, perhaps calculating class-to-class dependencies is better.
         //  The former is really odd as simple-graph with 2 clusters will always be 0.2 as it will be counted as 1 link between 5 classes.
-        if (!interClusterDependencies.get(clusterB).contains(clusterA)) {
-            interClusterDependencies.get(clusterB).add(clusterA);
-        }
+//        if (!interClusterDependencies.get(clusterB).contains(clusterA)) {
+        interClusterDependencies.get(clusterB).add(clusterA);
+//        }
     }
 }
 

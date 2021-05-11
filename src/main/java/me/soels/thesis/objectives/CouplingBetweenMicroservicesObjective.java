@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
  * See related work 'Taibi, D., & Systä, K. (2019, May). From Monolithic Systems to Microservices: A Decomposition
  * Framework based on Process Mining. In <i>CLOSER</i> (pp. 153-164).'
  */
-public class CouplingBetweenMicroservicesObjective implements Objective {
+public class CouplingBetweenMicroservicesObjective implements OnePurposeMetric {
     @Override
     public double calculate(Clustering clustering, AnalysisModel analysisModel) {
         Map<Integer, List<Integer>> interClusterDependencies = clustering.getByCluster().entrySet().stream()

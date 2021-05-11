@@ -3,6 +3,7 @@ package me.soels.thesis;
 import me.soels.thesis.encoding.Clustering;
 import me.soels.thesis.encoding.ClusteringBuilder;
 import me.soels.thesis.encoding.EncodingType;
+import me.soels.thesis.encoding.VariableType;
 import me.soels.thesis.model.AnalysisModel;
 import me.soels.thesis.objectives.Objective;
 import org.moeaframework.Executor;
@@ -12,6 +13,7 @@ import org.moeaframework.problem.AbstractProblem;
 import org.moeaframework.util.distributed.DistributedProblem;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Models the clustering problem.
@@ -28,6 +30,7 @@ public class ClusteringProblem extends AbstractProblem {
     private final List<Objective> objectives;
     private final AnalysisModel analysisModel;
     private final ProblemConfiguration problemConfiguration;
+    private final AtomicInteger count = new AtomicInteger(0);
 
     /**
      * Constructs a new instance of the clustering problem
@@ -67,6 +70,10 @@ public class ClusteringProblem extends AbstractProblem {
 
         for (int i = 0; i < objectives.size(); i++) {
             solution.setObjective(i, objectives.get(i).calculate(decodedClustering, analysisModel));
+        }
+
+        if (count.incrementAndGet() % 10000 == 0) {
+            System.out.println("Evaluations: " + count.get());
         }
     }
 
@@ -162,10 +169,13 @@ public class ClusteringProblem extends AbstractProblem {
         var solution = new Solution(getNumberOfVariables(), getNumberOfObjectives(), 1);
 
         for (int i = 0; i < getNumberOfVariables(); i++) {
-            // TODO:
-            //  Investigate if binary int is more efficient; do watch out for exclusive/inclusive bounds
-            //  Likely: it is more efficient, but float-based integers allow for more mutation/crossover operations.
-            solution.setVariable(i, EncodingUtils.newInt(0, getUpperbound()));
+            // We use floats instead of binary integers as those allow for more mutation/crossover operations,
+            // Preliminary investigation showed there is not much of a performance increase into using binary integers
+            if (problemConfiguration.getVariableType() == VariableType.BINARY_INT) {
+                solution.setVariable(i, EncodingUtils.newBinaryInt(0, getUpperbound()));
+            } else {
+                solution.setVariable(i, EncodingUtils.newInt(0, getUpperbound()));
+            }
         }
         return solution;
     }

@@ -22,5 +22,5 @@ package me.soels.thesis.encoding;
  * All connected points represent a cluster.
  */
 public enum EncodingType {
-    CLUSTER_LABEL, GRAPH_ADJECENCY;
+    CLUSTER_LABEL, GRAPH_ADJECENCY
 }

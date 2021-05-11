@@ -1,6 +1,7 @@
 package me.soels.thesis;
 
 import me.soels.thesis.encoding.EncodingType;
+import me.soels.thesis.encoding.VariableType;
 import me.soels.thesis.model.AnalysisModel;
 import me.soels.thesis.model.DependenceRelationship;
 import me.soels.thesis.model.OtherClass;
@@ -25,10 +26,25 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class MOEAExperiment {
-    private static final String GRAPH_NAME = "simple-graph-2";
+    private static final String GRAPH_NAME = "disease-graph";
 
     @Test
-    public void runExperiment() {
+    public void runExperimentTest() {
+//        System.out.println("Graph Adjacency binary int");
+//        var problemConfig = new ProblemConfiguration(EncodingType.GRAPH_ADJECENCY, VariableType.BINARY_INT, null, null);
+//        runExperiment(problemConfig);
+//        System.out.println("Graph Adjacency float int");
+//        problemConfig = new ProblemConfiguration(EncodingType.GRAPH_ADJECENCY, VariableType.FLOAT_INT, null, null);
+//        runExperiment(problemConfig);
+        System.out.println("Cluster label binary int");
+        var problemConfig = new ProblemConfiguration(EncodingType.CLUSTER_LABEL, VariableType.BINARY_INT, null, null);
+        runExperiment(problemConfig);
+        System.out.println("Cluster label float int");
+        problemConfig = new ProblemConfiguration(EncodingType.CLUSTER_LABEL, VariableType.FLOAT_INT, null, null);
+        runExperiment(problemConfig);
+    }
+
+    private void runExperiment(ProblemConfiguration config) {
         var objectives = List.of(new CohesionObjective(), new CouplingBetweenMicroservicesObjective());
         var input = prepareInput();
         var start = System.currentTimeMillis();
@@ -45,15 +61,21 @@ public class MOEAExperiment {
         //      - Being able to normalize the solution
         //      - Have non-duplicated solutions (results in same clustering)
         //      - Allow duplicated objectives (same result, different clustering, is still interesting)
-        var problemConfig = new ProblemConfiguration(EncodingType.CLUSTER_LABEL, null, null);
         NondominatedPopulation result = new Executor()
-                // Quick experimenting shows that as of 2021-05-06 cluster label was 14K nano sec per eval avg and
-                // graph adjacency was 27K. However, graph adjacency has tighter (random) clustering in initial population.
-                .withProblem(new ClusteringProblem(objectives, input, problemConfig))
+                .withProblem(new ClusteringProblem(objectives, input, config))
                 .withAlgorithm("NSGAII")
                 .distributeOnAllCores()
                 .withMaxEvaluations(1000000)
                 .run();
+        // Adjacency binary int:        02:02:280   01:55:095   01:53:054   02:03:669
+        // Adjacency float int:         00:24:858   00:21:758   00:24:349   00:23:250
+        // Cluster label binary int:    02:19:527   02:15:122   02.16.068   02:17:736   02:17:129   02:10:882   02:13:974
+        // Cluster label float int:     00:26:033   00:26:522   00.26.329   00:27:119   00:25:476   00:25:729   00:26.789
+
+        // Adjacency binary int:        0.0
+        // Adjacency float int:         0.0
+        // Cluster label binary int:    3.9234  3.7054  3.7052  3.7097  3.8512
+        // Cluster label float int:     2.2551  2.4214  2.3813  2.7004  2.3505
 
         // Display the results
         var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);

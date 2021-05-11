@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class MOEAExperiment {
-    private static final String GRAPH_NAME = "disease-graph";
+    private static final String GRAPH_NAME = "disconnected-hexagons";
 
     @Test
     public void runExperimentTest() {

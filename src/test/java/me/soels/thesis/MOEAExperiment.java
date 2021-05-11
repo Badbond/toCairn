@@ -5,8 +5,9 @@ import me.soels.thesis.encoding.VariableType;
 import me.soels.thesis.model.AnalysisModel;
 import me.soels.thesis.model.DependenceRelationship;
 import me.soels.thesis.model.OtherClass;
-import me.soels.thesis.objectives.CohesionObjective;
 import me.soels.thesis.objectives.CouplingBetweenMicroservicesObjective;
+import me.soels.thesis.objectives.CouplingBetweenModuleClassesObjective;
+import me.soels.thesis.objectives.CouplingBetweenModulesObjective;
 import me.soels.thesis.objectives.Objective;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -30,22 +31,18 @@ public class MOEAExperiment {
 
     @Test
     public void runExperimentTest() {
-//        System.out.println("Graph Adjacency binary int");
-//        var problemConfig = new ProblemConfiguration(EncodingType.GRAPH_ADJECENCY, VariableType.BINARY_INT, null, null);
-//        runExperiment(problemConfig);
-//        System.out.println("Graph Adjacency float int");
-//        problemConfig = new ProblemConfiguration(EncodingType.GRAPH_ADJECENCY, VariableType.FLOAT_INT, null, null);
-//        runExperiment(problemConfig);
-        System.out.println("Cluster label binary int");
-        var problemConfig = new ProblemConfiguration(EncodingType.CLUSTER_LABEL, VariableType.BINARY_INT, null, null);
+        var problemConfig = new ProblemConfiguration(EncodingType.GRAPH_ADJECENCY, VariableType.FLOAT_INT, null, null);
         runExperiment(problemConfig);
-        System.out.println("Cluster label float int");
-        problemConfig = new ProblemConfiguration(EncodingType.CLUSTER_LABEL, VariableType.FLOAT_INT, null, null);
+        runExperiment(problemConfig);
+        runExperiment(problemConfig);
+        runExperiment(problemConfig);
+        runExperiment(problemConfig);
+        runExperiment(problemConfig);
         runExperiment(problemConfig);
     }
 
     private void runExperiment(ProblemConfiguration config) {
-        var objectives = List.of(new CohesionObjective(), new CouplingBetweenMicroservicesObjective());
+        List<Objective> objectives = List.of(new CouplingBetweenMicroservicesObjective(), new CouplingBetweenModulesObjective(), new CouplingBetweenModuleClassesObjective());
         var input = prepareInput();
         var start = System.currentTimeMillis();
 

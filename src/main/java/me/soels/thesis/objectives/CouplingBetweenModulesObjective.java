@@ -9,17 +9,17 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Coupling between microservices (CBMs) as suggested by Taibi and Systä (2019) based off of Coupling Between Object
- * (CBO) metric of Chidamber and Kemerer (1994).
+ * Coupling between modules (CBM) as suggested by Lindvall et al. (2003). We map the concept of modules to
+ * microservices.
  * <p>
- * The metric is calculated per microservice identified. We calculate it as an average over the whole solution as Taibi
- * and Systä compared solutions that way as well.
+ * The metric is calculated per microservice identified. We calculate it as an average over the whole solution as Taibi,
+ * D. and Systä, K. used that to compare solutions for their similar metric coupling between microservices (CBMs) as
+ * well. The difference in metrics is CBMs is a ratio to the amount of classes in the module/microservice and.
  * <p>
- * See related work 'Taibi, D., & Systä, K.(2019, May). From Monolithic Systems to Microservices: A Decomposition
- * Framework based on Process Mining. In <i>CLOSER</i> (pp. 153-164).' and 'Chidamber, S. R., & Kemerer, C. F. (1994).
- * A metrics suite for object oriented design. <i>IEEE Transactions on software engineering, 20</i>(6), 476-493.'.
+ * See related work 'Lindvall, M., Tvedt, R. T., & Costa, P. (2003). An empirically-based process for software
+ * architecture evaluation. <i>Empirical Software Engineering, 8</i>(1), 83-108.'.
  */
-public class CouplingBetweenMicroservicesObjective implements OnePurposeMetric {
+public class CouplingBetweenModulesObjective implements OnePurposeMetric {
     @Override
     public double calculate(Clustering clustering, AnalysisModel analysisModel) {
         Map<Integer, List<Integer>> interClusterDependencies = clustering.getByCluster().entrySet().stream()
@@ -35,8 +35,8 @@ public class CouplingBetweenMicroservicesObjective implements OnePurposeMetric {
             }
         }
 
-        return clustering.getByCluster().entrySet().stream()
-                .mapToDouble(entry -> interClusterDependencies.get(entry.getKey()).size() / (double) entry.getValue().size())
+        return clustering.getByCluster().keySet().stream()
+                .mapToDouble(otherClasses -> interClusterDependencies.get(otherClasses).size())
                 .average()
                 .orElseThrow(() -> new IllegalStateException("Could not create average CBM for this solution"));
     }

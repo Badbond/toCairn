@@ -5,10 +5,7 @@ import me.soels.thesis.encoding.VariableType;
 import me.soels.thesis.model.AnalysisModel;
 import me.soels.thesis.model.DependenceRelationship;
 import me.soels.thesis.model.OtherClass;
-import me.soels.thesis.objectives.CouplingBetweenMicroservicesObjective;
-import me.soels.thesis.objectives.CouplingBetweenModuleClassesObjective;
-import me.soels.thesis.objectives.CouplingBetweenModulesObjective;
-import me.soels.thesis.objectives.Objective;
+import me.soels.thesis.objectives.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -17,6 +14,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 import org.moeaframework.Executor;
 import org.moeaframework.core.NondominatedPopulation;
+import org.moeaframework.core.variable.RealVariable;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -42,7 +40,7 @@ public class MOEAExperiment {
     }
 
     private void runExperiment(ProblemConfiguration config) {
-        List<Objective> objectives = List.of(new CouplingBetweenMicroservicesObjective(), new CouplingBetweenModulesObjective(), new CouplingBetweenModuleClassesObjective());
+        List<Objective> objectives = List.of(new CouplingInModuleObjective(), new CouplingBetweenMicroservicesObjective(), new CouplingBetweenModulesObjective(), new CouplingBetweenModuleClassesObjective());
         var input = prepareInput();
         var start = System.currentTimeMillis();
 
@@ -74,10 +72,32 @@ public class MOEAExperiment {
         // Cluster label binary int:    3.9234  3.7054  3.7052  3.7097  3.8512
         // Cluster label float int:     2.2551  2.4214  2.3813  2.7004  2.3505
 
-        // Display the results
+//        Amount of non-dominated solutions: 4
+//        Processing took: 0:00:11.902 (H:m:s.millis)
+//        CouplingInModuleObjective  CouplingBetweenMicroservicesObjective  CouplingBetweenModulesObjective  CouplingBetweenModuleClassesObjective
+//        -0.6000                    0.5500                                 1.3333                           2.6667
+//        Variable values:
+//        A: 3, B: 3, C: 3, D: 3, E: 0, F: 0, G: 0, H: 0, I: 0, J: 6,
+//                -0.8333                    0.6667                                 2.0000                           2.0000
+//        Variable values:
+//        A: 3, B: 3, C: 3, D: 3, E: 0, F: 0, G: 0, H: 0, I: 6, J: 6,
+//                -0.9000                    0.2000                                 1.0000                           3.0000
+//        Variable values:
+//        A: 3, B: 3, C: 3, D: 3, E: 3, F: 6, G: 6, H: 6, I: 6, J: 6,
+//                -0.7778                    0.6111                                 2.0000                           2.6667
+//        Variable values:
+//        A: 6, B: 3, C: 3, D: 3, E: 0, F: 0, G: 0, H: 0, I: 6, J: 6,
+
+
+
+
+                // Display the results
         var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);
+        System.out.println("===================================");
+        System.out.println("Amount of non-dominated solutions: " + result.size());
         System.out.println("Processing took: " + duration + " (H:m:s.millis)");
-        printResults(result, objectives);
+        printSolutionsData(result, objectives, input);
+        System.out.println("===================================");
     }
 
     private AnalysisModel prepareInput() {
@@ -114,7 +134,7 @@ public class MOEAExperiment {
         }
     }
 
-    private void printResults(NondominatedPopulation result, List<Objective> objectives) {
+    private void printSolutionsData(NondominatedPopulation result, List<Objective> objectives, AnalysisModel input) {
         var objectivesNames = objectives.stream()
                 .map(objective -> objective.getClass().getSimpleName())
                 .collect(Collectors.toList());
@@ -127,6 +147,14 @@ public class MOEAExperiment {
                 System.out.format("%.4f" + spacing, solution.getObjective(i));
             }
             System.out.println();
+
+            if (solution.getNumberOfVariables() <= 10) {
+                System.out.println("Variable values:");
+                for (int i = 0; i < solution.getNumberOfVariables(); i++) {
+                    System.out.format("%s: %d, ", input.getAllClasses().get(i).getHumanReadableName(), (int) ((RealVariable) solution.getVariable(i)).getValue());
+                }
+                System.out.println();
+            }
         }
     }
 }

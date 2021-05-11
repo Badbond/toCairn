@@ -1,14 +1,14 @@
 From https://www.tutorialspoint.com/graph_theory/graph_theory_connectivity.htm
 
 A,B
-A,D
-A,I
 B,C
+A,D
 C,E
-D,C
 E,F
+F,G
+H,G
+A,I
+D,C
 E,H
 I,J
 J,G
-F,G
-H,G

@@ -67,7 +67,8 @@ public class ClusteringProblem extends AbstractProblem {
         }
 
         for (int i = 0; i < objectives.size(); i++) {
-            solution.setObjective(i, objectives.get(i).calculate(decodedClustering, analysisModel));
+            double objectiveValue = objectives.get(i).calculate(decodedClustering, analysisModel);
+            solution.setObjective(i, objectiveValue);
         }
     }
 

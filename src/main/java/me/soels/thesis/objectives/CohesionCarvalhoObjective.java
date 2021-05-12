@@ -33,6 +33,12 @@ public class CohesionCarvalhoObjective implements OnePurposeMetric {
         var result = 0.0;
         for (var entry : clusterCohesionSums.entrySet()) {
             double clusterSize = clustering.getByCluster().get(entry.getKey()).size();
+            if (clusterSize <= 1) {
+                // TODO: If clusterSize == 1, this returns Infinity (division by 0).
+                //  would 'setting to 0' be good? We want to prevent clusters without inner connections (be it multiple
+                //  classes or only 1), I guess.
+                continue;
+            }
             // TODO: Did I interpret this function correctly?
             result += entry.getValue() / (clusterSize * (clusterSize - 1)) / 2;
         }

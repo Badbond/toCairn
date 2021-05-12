@@ -1,11 +1,14 @@
 package me.soels.thesis;
 
 import me.soels.thesis.encoding.EncodingType;
+import me.soels.thesis.encoding.VariableDecoder;
 import me.soels.thesis.encoding.VariableType;
 import me.soels.thesis.model.AnalysisModel;
 import me.soels.thesis.model.DependenceRelationship;
 import me.soels.thesis.model.OtherClass;
-import me.soels.thesis.objectives.*;
+import me.soels.thesis.objectives.CohesionCarvalhoObjective;
+import me.soels.thesis.objectives.CouplingBetweenModuleClassesObjective;
+import me.soels.thesis.objectives.Objective;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -14,7 +17,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 import org.moeaframework.Executor;
 import org.moeaframework.core.NondominatedPopulation;
-import org.moeaframework.core.variable.RealVariable;
+import org.moeaframework.core.variable.EncodingUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -25,22 +28,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class MOEAExperiment {
-    private static final String GRAPH_NAME = "disconnected-hexagons";
+    private static final String GRAPH_NAME = "simple-graph-2";
 
     @Test
     public void runExperimentTest() {
         var problemConfig = new ProblemConfiguration(EncodingType.GRAPH_ADJECENCY, VariableType.FLOAT_INT, null, null);
         runExperiment(problemConfig);
-        runExperiment(problemConfig);
-        runExperiment(problemConfig);
-        runExperiment(problemConfig);
-        runExperiment(problemConfig);
-        runExperiment(problemConfig);
-        runExperiment(problemConfig);
     }
 
     private void runExperiment(ProblemConfiguration config) {
-        List<Objective> objectives = List.of(new CouplingInModuleObjective(), new CouplingBetweenMicroservicesObjective(), new CouplingBetweenModulesObjective(), new CouplingBetweenModuleClassesObjective());
+        List<Objective> objectives = List.of(new CouplingBetweenModuleClassesObjective(), new CohesionCarvalhoObjective());
         var input = prepareInput();
         var start = System.currentTimeMillis();
 
@@ -89,14 +86,22 @@ public class MOEAExperiment {
 //        A: 6, B: 3, C: 3, D: 3, E: 0, F: 0, G: 0, H: 0, I: 6, J: 6,
 
 
+//        Amount of non-dominated solutions: 5
+//        Processing took: 0:00:10.841 (H:m:s.millis)
+//        CouplingCarvalhoObjective  CohesionCarvalhoObjective
+//        0.0000                     -1.0000
+//        48.0000                     -3.0000
+//        40.0000                     -2.5000
+//        24.0000                     -2.0000
+//        16.0000                     -1.5000
 
 
-                // Display the results
+        // Display the results
         var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);
         System.out.println("===================================");
         System.out.println("Amount of non-dominated solutions: " + result.size());
         System.out.println("Processing took: " + duration + " (H:m:s.millis)");
-        printSolutionsData(result, objectives, input);
+        printSolutionsData(result, objectives, input, config.getEncodingType());
         System.out.println("===================================");
     }
 
@@ -134,13 +139,14 @@ public class MOEAExperiment {
         }
     }
 
-    private void printSolutionsData(NondominatedPopulation result, List<Objective> objectives, AnalysisModel input) {
+    private void printSolutionsData(NondominatedPopulation result, List<Objective> objectives, AnalysisModel input, EncodingType encodingType) {
         var objectivesNames = objectives.stream()
                 .map(objective -> objective.getClass().getSimpleName())
                 .collect(Collectors.toList());
-        System.out.format(StringUtils.join(objectivesNames, "  ") + "%n");
 
         for (var solution : result) {
+            System.out.println("-----------------------------------");
+            System.out.format(StringUtils.join(objectivesNames, "  ") + "%n");
             for (int i = 0; i < objectivesNames.size(); i++) {
                 var numberLength = Double.compare(solution.getObjective(i), 0.0) < 0 ? 7 : 6;
                 var spacing = " ".repeat(objectivesNames.get(i).length() - numberLength) + "  ";
@@ -148,13 +154,13 @@ public class MOEAExperiment {
             }
             System.out.println();
 
-            if (solution.getNumberOfVariables() <= 10) {
-                System.out.println("Variable values:");
-                for (int i = 0; i < solution.getNumberOfVariables(); i++) {
-                    System.out.format("%s: %d, ", input.getAllClasses().get(i).getHumanReadableName(), (int) ((RealVariable) solution.getVariable(i)).getValue());
-                }
+            var clustering = VariableDecoder.decode(input, EncodingUtils.getInt(solution), encodingType);
+            if (clustering.getByClass().size() <= 12) {
+                System.out.println("Clustering:");
+                clustering.getByClass().forEach((clazz, cluster) -> System.out.format("%s: %d, ", clazz.getHumanReadableName(), cluster));
                 System.out.println();
             }
+            System.out.println("Amount of clusters: " + clustering.getByCluster().size());
         }
     }
 }

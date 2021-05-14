@@ -14,6 +14,7 @@ import java.util.List;
  * <p>
  * The data in this class is to be immutable so that it can be shared among solution evaluations.
  *
+ * @see AnalysisModelBuilder
  * @see Objective
  */
 public final class AnalysisModel {
@@ -23,7 +24,7 @@ public final class AnalysisModel {
     private final List<DataRelationship> dataRelations = null;
     private final List<DependenceRelationship> dependencies;
 
-    public AnalysisModel(List<OtherClass> otherClasses, List<DependenceRelationship> dependencies) {
+    AnalysisModel(List<OtherClass> otherClasses, List<DependenceRelationship> dependencies) {
         this.allClasses = Collections.unmodifiableList(otherClasses);
         this.otherClasses = Collections.unmodifiableList(otherClasses);
         this.dependencies = Collections.unmodifiableList(dependencies);

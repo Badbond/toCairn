@@ -4,6 +4,7 @@ import me.soels.thesis.encoding.EncodingType;
 import me.soels.thesis.encoding.VariableDecoder;
 import me.soels.thesis.encoding.VariableType;
 import me.soels.thesis.model.AnalysisModel;
+import me.soels.thesis.model.AnalysisModelBuilder;
 import me.soels.thesis.model.DependenceRelationship;
 import me.soels.thesis.model.OtherClass;
 import me.soels.thesis.objectives.CohesionCarvalhoObjective;
@@ -72,8 +73,11 @@ public class MOEAExperiment {
     }
 
     private AnalysisModel prepareInput() {
+        var builder = new AnalysisModelBuilder();
         var graph = getGraph();
-        return new AnalysisModel(graph.getKey(), graph.getValue());
+        builder.withOtherClasses(graph.getKey());
+        builder.withDependencies(graph.getValue());
+        return builder.build();
     }
 
     private Pair<List<OtherClass>, List<DependenceRelationship>> getGraph() {

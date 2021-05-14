@@ -37,7 +37,7 @@ public class ClusteringProblem extends AbstractProblem {
      * @param problemConfiguration the configuration for the problem
      */
     public ClusteringProblem(List<Objective> objectives, AnalysisModel analysisModel, ProblemConfiguration problemConfiguration) {
-        super(analysisModel.getAllClasses().size(), objectives.size());
+        super(analysisModel.getOtherClasses().size(), objectives.size());
         this.objectives = objectives;
         this.analysisModel = analysisModel;
         this.problemConfiguration = problemConfiguration;

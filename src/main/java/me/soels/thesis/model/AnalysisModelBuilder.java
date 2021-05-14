@@ -13,10 +13,17 @@ import java.util.List;
  */
 public class AnalysisModelBuilder {
     private final List<OtherClass> otherClasses = Collections.synchronizedList(new ArrayList<>());
+    private final List<DataClass> dataClasses = Collections.synchronizedList(new ArrayList<>());
     private final List<DependenceRelationship> dependencies = Collections.synchronizedList(new ArrayList<>());
+    private final List<DataRelationship> dataRelationships = Collections.synchronizedList(new ArrayList<>());
 
     public AnalysisModelBuilder withOtherClasses(List<OtherClass> otherClasses) {
         this.otherClasses.addAll(otherClasses);
+        return this;
+    }
+
+    public AnalysisModelBuilder withDataClasses(List<DataClass> dataClasses) {
+        this.dataClasses.addAll(dataClasses);
         return this;
     }
 
@@ -25,15 +32,12 @@ public class AnalysisModelBuilder {
         return this;
     }
 
-    public List<OtherClass> getOtherClasses() {
-        return otherClasses;
-    }
-
-    public List<DependenceRelationship> getDependencies() {
-        return dependencies;
+    public AnalysisModelBuilder withDataRelationships(List<DataRelationship> dataRelationships) {
+        this.dataRelationships.addAll(dataRelationships);
+        return this;
     }
 
     public synchronized AnalysisModel build() {
-        return new AnalysisModel(otherClasses, dependencies);
+        return new AnalysisModel(otherClasses, dataClasses, dependencies, dataRelationships);
     }
 }

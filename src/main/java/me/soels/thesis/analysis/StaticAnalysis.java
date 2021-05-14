@@ -7,8 +7,10 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy;
+import com.github.javaparser.utils.SourceRoot;
 import me.soels.thesis.model.*;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -21,6 +23,10 @@ import static me.soels.thesis.analysis.ZipExtractor.extractZip;
 /**
  * Performs static analysis of the given {@code .zip} file containing the application's source files.
  * <p>
+ * With static analysis, we build the model that contains the data classes identified in the application, the other
+ * classes containing business logic, relationships between these other classes and relationships between other classes
+ * and data classes.
+ * <p>
  * We use {@link JavaParser} for building the abstract syntax tree and resolving the type references. Some of this class
  * is based on their book <i>'JavaParser: Visited'</i>.
  */
@@ -28,44 +34,30 @@ public class StaticAnalysis {
     public static void main(String[] args) {
         var input = new StaticAnalysisInput(Path.of("/home/badbond/Downloads/thesis-project-master.zip"), JAVA_11);
         var analysis = new StaticAnalysis();
-        analysis.analyze(new AnalysisModelBuilder(), input);
+        var builder = new AnalysisModelBuilder();
+        analysis.analyze(builder, input);
+        builder.build();
     }
 
     public void analyze(AnalysisModelBuilder modelBuilder, StaticAnalysisInput input) {
+        System.out.println("Starting static analysis on " + input.getPathToZip());
+
         var inputZip = input.getPathToZip();
         if (!inputZip.getFileName().toString().toLowerCase().endsWith(".zip")) {
             throw new IllegalArgumentException("The path does not refer to a .zip file, for path " + inputZip);
         } else if (!Files.exists(inputZip)) {
             throw new IllegalArgumentException("The zip file does not exist for path " + inputZip);
         }
+
         var projectLocation = extractZip(inputZip);
         performAnalysis(modelBuilder, projectLocation, input.getLanguageLevel());
     }
 
     private void performAnalysis(AnalysisModelBuilder modelBuilder, Path projectLocation, ParserConfiguration.LanguageLevel languageLevel) {
         var start = System.currentTimeMillis();
-        var config = new ParserConfiguration().setLanguageLevel(languageLevel);
-        var allTypes = new SymbolSolverCollectionStrategy(config)
-                .collect(projectLocation).getSourceRoots().stream()
-                // Don't include test directories
-                .filter(root -> !root.getRoot().toString().contains("/test/"))
-                // Parse the source roots, resolving the class types
-                .flatMap(root -> root.tryToParseParallelized().stream())
-                // Print problems, filter those resulting in no parse result, and retrieve the types defined in the result
-                .peek(this::printProblems)
-                .filter(parseResult -> parseResult.getResult().isPresent())
-                .flatMap(parseResult -> parseResult.getResult().get().getTypes().stream())
-                // Also include the inner types     TODO: This now excludes enums, do we need those?
-                .flatMap(type -> type.findAll(ClassOrInterfaceDeclaration.class).stream())
-                .collect(Collectors.toList());
-        System.out.println("Found " + allTypes.size() + " classes");
-
-        var allClasses = allTypes.stream()
-                .peek(this::printEmptyQualifiers)
-                .filter(clazz -> clazz.getFullyQualifiedName().isPresent())
-                .collect(Collectors.toList());
-        var dataClasses = identifyDataClasses(allClasses);
-        var otherClasses = allClasses.stream()
+        var allTypes = getAllTypes(projectLocation, languageLevel);
+        var dataClasses = identifyDataClasses(allTypes);
+        var otherClasses = allTypes.stream()
                 .map(clazz -> new OtherClass(clazz.getFullyQualifiedName().get(), clazz.getNameAsString()))
                 .filter(clazz -> dataClasses.stream().noneMatch(dataClazz -> dataClazz.getIdentifier().equals(clazz.getIdentifier())))
                 .collect(Collectors.toList());
@@ -78,6 +70,34 @@ public class StaticAnalysis {
                 .withOtherClasses(otherClasses)
                 .withDependencies(classDependencies)
                 .withDataRelationships(dataRelationships);
+    }
+
+    private List<ClassOrInterfaceDeclaration> getAllTypes(Path projectLocation, ParserConfiguration.LanguageLevel languageLevel) {
+        var config = new ParserConfiguration().setLanguageLevel(languageLevel);
+        return new SymbolSolverCollectionStrategy(config)
+                .collect(projectLocation).getSourceRoots().stream()
+                // Don't include test directories
+                .filter(root -> !root.getRoot().toString().contains("/test/"))
+                // Parse the source roots, resolving the class types. We do not parallelize as that gave errors sometimes.
+                .flatMap(root -> parseRoot(root).stream())
+                // Print problems, filter those resulting in no parse result, and retrieve the types defined in the result
+                .peek(this::printProblems)
+                .filter(parseResult -> parseResult.getResult().isPresent())
+                .flatMap(parseResult -> parseResult.getResult().get().getTypes().stream())
+                // Also include the inner types     TODO: This now excludes enums, do we want those?
+                .flatMap(type -> type.findAll(ClassOrInterfaceDeclaration.class).stream())
+                // Print problems where FQN could not be determined and filter those cases out
+                .peek(this::printEmptyQualifiers)
+                .filter(clazz -> clazz.getFullyQualifiedName().isPresent())
+                .collect(Collectors.toList());
+    }
+
+    private List<ParseResult<CompilationUnit>> parseRoot(SourceRoot root) {
+        try {
+            return root.tryToParse();
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not process one of the file in source root " + root.getRoot(), e);
+        }
     }
 
     private List<DependenceRelationship> resolveClassDependencies() {

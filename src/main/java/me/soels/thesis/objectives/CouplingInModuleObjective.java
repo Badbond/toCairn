@@ -21,7 +21,7 @@ public class CouplingInModuleObjective implements OnePurposeMetric {
         var accumulatedCim = 0.0;
         for (var cluster : clustering.getByCluster().values()) {
             var sumOfDependencies = analysisModel.getDependencies().stream()
-                    .filter(dependency -> cluster.contains(dependency.getFirst()) && cluster.contains(dependency.getSecond()))
+                    .filter(dependency -> cluster.contains(dependency.getCaller()) && cluster.contains(dependency.getCallee()))
                     .count();
             accumulatedCim += sumOfDependencies / (double) cluster.size();
         }

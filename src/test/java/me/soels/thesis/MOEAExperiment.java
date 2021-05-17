@@ -92,7 +92,7 @@ public class MOEAExperiment {
                     .collect(Collectors.toList());
             var classA = classMapping.computeIfAbsent(split.get(0), key -> new OtherClass("Class" + classMapping.size(), split.get(0)));
             var classB = classMapping.computeIfAbsent(split.get(1), key -> new OtherClass("Class" + classMapping.size(), split.get(1)));
-            edges.add(new DependenceRelationship(classA, classB));
+            edges.add(new DependenceRelationship(classA, classB, 1));
         }
         return new ImmutablePair<>(new ArrayList<>(classMapping.values()), edges);
     }

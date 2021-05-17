@@ -6,19 +6,23 @@ import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
+import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy;
 import com.github.javaparser.utils.SourceRoot;
 import me.soels.thesis.model.*;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.github.javaparser.ParserConfiguration.LanguageLevel.JAVA_11;
+import static java.util.stream.Collectors.groupingBy;
 import static me.soels.thesis.analysis.ZipExtractor.extractZip;
+import static me.soels.thesis.model.DataRelationshipType.READ;
 
 /**
  * Performs static analysis of the given {@code .zip} file containing the application's source files.
@@ -55,14 +59,20 @@ public class StaticAnalysis {
 
     private void performAnalysis(AnalysisModelBuilder modelBuilder, Path projectLocation, ParserConfiguration.LanguageLevel languageLevel) {
         var start = System.currentTimeMillis();
+
         var allTypes = getAllTypes(projectLocation, languageLevel);
-        var dataClasses = identifyDataClasses(allTypes);
-        var otherClasses = allTypes.stream()
-                .map(clazz -> new OtherClass(clazz.getFullyQualifiedName().get(), clazz.getNameAsString()))
-                .filter(clazz -> dataClasses.stream().noneMatch(dataClazz -> dataClazz.getIdentifier().equals(clazz.getIdentifier())))
+        var allClasses = allTypes.stream().map(Pair::getKey).collect(Collectors.toList());
+
+        var allRelationships = allTypes.stream()
+                // Only calculate relationships from service classes
+                .filter(pair -> pair.getKey() instanceof OtherClass)
+                .flatMap(pair -> this.resolveClassDependencies((OtherClass) pair.getKey(), allClasses, pair.getValue()).stream())
                 .collect(Collectors.toList());
-        var classDependencies = resolveClassDependencies();
-        var dataRelationships = resolveDataRelationship();
+
+        var otherClasses = filterClasses(allTypes, OtherClass.class);
+        var dataClasses = filterClasses(allTypes, DataClass.class);
+        var dataRelationships = filterRelationships(allRelationships, DataRelationship.class);
+        var classDependencies = filterRelationships(allRelationships, DependenceRelationship.class);
 
         System.out.println("Static analysis took " + (System.currentTimeMillis() - start) + " ms");
 
@@ -72,7 +82,7 @@ public class StaticAnalysis {
                 .withDataRelationships(dataRelationships);
     }
 
-    private List<ClassOrInterfaceDeclaration> getAllTypes(Path projectLocation, ParserConfiguration.LanguageLevel languageLevel) {
+    private List<Pair<AbstractClass, ClassOrInterfaceDeclaration>> getAllTypes(Path projectLocation, ParserConfiguration.LanguageLevel languageLevel) {
         var config = new ParserConfiguration().setLanguageLevel(languageLevel);
         return new SymbolSolverCollectionStrategy(config)
                 .collect(projectLocation).getSourceRoots().stream()
@@ -84,12 +94,64 @@ public class StaticAnalysis {
                 .peek(this::printProblems)
                 .filter(parseResult -> parseResult.getResult().isPresent())
                 .flatMap(parseResult -> parseResult.getResult().get().getTypes().stream())
-                // Also include the inner types     TODO: This now excludes enums, do we want those?
+                // Also include the inner types     TODO: This now excludes enums and annotations, do we want those?
                 .flatMap(type -> type.findAll(ClassOrInterfaceDeclaration.class).stream())
                 // Print problems where FQN could not be determined and filter those cases out
                 .peek(this::printEmptyQualifiers)
                 .filter(clazz -> clazz.getFullyQualifiedName().isPresent())
+                // Create a pair of the type of class and its AST
+                .map(clazz -> Pair.of(identifyClass(clazz), clazz))
                 .collect(Collectors.toList());
+    }
+
+    private AbstractClass identifyClass(ClassOrInterfaceDeclaration clazz) {
+        var fqn = clazz.getFullyQualifiedName()
+                // Should not happen as we already filtered the stream on having FQN present
+                .orElseThrow(() -> new IllegalStateException("Could not retrieve FQN from already filtered class"));
+
+        if (isDataClass(clazz)) {
+            return new DataClass(fqn, clazz.getNameAsString(), null);
+        } else {
+            return new OtherClass(fqn, clazz.getNameAsString());
+        }
+    }
+
+    private boolean isDataClass(ClassOrInterfaceDeclaration clazz) {
+        // TODO: check if class is a data class based on class characteristics
+        return false;
+    }
+
+    private List<Relationship> resolveClassDependencies(OtherClass clazz, List<AbstractClass> allClasses, ClassOrInterfaceDeclaration classDeclaration) {
+        return classDeclaration.findAll(MethodCallExpr.class).stream()
+                // Resolve the method call to discover the type of the callee class
+                .map(MethodCallExpr::resolve)
+                // Group by callee class based on FQN
+                .collect(groupingBy(method -> method.getPackageName() + "." + method.getClassName()))
+                // TODO: Filter only on method calls to classes in application and filter out self.
+                .values().stream()
+                // For every callee class, identify the relationship
+                .map(methodsCalledOfCallee -> identifyRelationship(clazz, methodsCalledOfCallee, allClasses))
+                .collect(Collectors.toList());
+    }
+
+    private Relationship identifyRelationship(OtherClass clazz, List<ResolvedMethodDeclaration> targetMethods, List<AbstractClass> allClasses) {
+        var fqn = targetMethods.get(0).getPackageName() + "." + targetMethods.get(0).getClassName();
+        var target = allClasses.stream()
+                .filter(otherClazz -> fqn.equals(otherClazz.getIdentifier())).findFirst()
+                .orElseThrow(() -> new IllegalStateException("Could not find class " + fqn + " in already parsed classes"));
+
+        if (target instanceof DataClass) {
+            return new DataRelationship(clazz, (DataClass) target, identifyReadWrite(targetMethods), targetMethods.size());
+        } else if (target instanceof OtherClass) {
+            return new DependenceRelationship(clazz, (OtherClass) target, targetMethods.size());
+        } else {
+            throw new IllegalStateException("Could not yet support class type " + target.getClass().getSimpleName());
+        }
+    }
+
+    private DataRelationshipType identifyReadWrite(List<ResolvedMethodDeclaration> targetMethods) {
+        // TODO: Based on getter/setter naming convention / parameter / return type identify the type of data relationship
+        return READ;
     }
 
     private List<ParseResult<CompilationUnit>> parseRoot(SourceRoot root) {
@@ -100,19 +162,20 @@ public class StaticAnalysis {
         }
     }
 
-    private List<DependenceRelationship> resolveClassDependencies() {
-        // TODO: Implement retrieval of class to class dependencies
-        return new ArrayList<>();
+    @SuppressWarnings("unchecked") // We explicitly check the type with the provided class
+    private <T extends AbstractClass> List<T> filterClasses(List<Pair<AbstractClass, ClassOrInterfaceDeclaration>> allClasses, Class<T> expectedClass) {
+        return allClasses.stream()
+                .filter(pair -> pair.getKey().getClass().isAssignableFrom(expectedClass))
+                .map(pair -> (T) pair.getKey())
+                .collect(Collectors.toList());
     }
 
-    private List<DataClass> identifyDataClasses(List<ClassOrInterfaceDeclaration> allTypes) {
-        // TODO: Implement identification of data classes
-        return new ArrayList<>();
-    }
-
-    private List<DataRelationship> resolveDataRelationship() {
-        // TODO: Implement retrieval of class to data relationships
-        return new ArrayList<>();
+    @SuppressWarnings("unchecked") // We explicitly check the type with the provided class
+    private <T extends Relationship> List<T> filterRelationships(List<Relationship> relationships, Class<T> expectedClass) {
+        return relationships.stream()
+                .filter(relationship -> relationship.getClass().isAssignableFrom(expectedClass))
+                .map(relationship -> (T) relationship)
+                .collect(Collectors.toList());
     }
 
     private void printEmptyQualifiers(TypeDeclaration<?> typeDeclaration) {

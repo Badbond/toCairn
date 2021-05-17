@@ -27,8 +27,8 @@ public class CouplingBetweenModuleClassesObjective implements OnePurposeMetric {
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ArrayList<>()));
         var clusteringByClass = clustering.getByClass();
         for (var edge : analysisModel.getDependencies()) {
-            var classA = edge.getFirst();
-            var classB = edge.getSecond();
+            var classA = edge.getCaller();
+            var classB = edge.getCallee();
 
             if (!clusteringByClass.get(classA).equals(clusteringByClass.get(classB))) {
                 interClusterDependencies.get(clusteringByClass.get(classB)).add(clusteringByClass.get(classA));

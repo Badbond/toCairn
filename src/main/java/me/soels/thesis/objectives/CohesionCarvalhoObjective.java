@@ -23,8 +23,8 @@ public class CohesionCarvalhoObjective implements OnePurposeMetric {
         var clusteringByClass = clustering.getByClass();
         var clusterCohesionSums = new HashMap<Integer, Integer>();
         for (var edge : analysisModel.getDependencies()) {
-            var cluster = clusteringByClass.get(edge.getFirst());
-            if (cluster.equals(clusteringByClass.get(edge.getSecond()))) {
+            var cluster = clusteringByClass.get(edge.getCaller());
+            if (cluster.equals(clusteringByClass.get(edge.getCallee()))) {
                 // TODO: Carvalho does not use frequency within method body but extrapolated towards classes, we do
                 //  need to use the amount of methods connecting to other methods to replicate the metric fully.
                 clusterCohesionSums.compute(cluster, (key, value) -> value == null ? 1 : value + 1);

@@ -24,7 +24,7 @@ public class CouplingCarvalhoObjective implements OnePurposeMetric {
         var coupling = 0.0;
         var clusteringByClass = clustering.getByClass();
         for (var edge : analysisModel.getDependencies()) {
-            if (!clusteringByClass.get(edge.getFirst()).equals(clusteringByClass.get(edge.getSecond()))) {
+            if (!clusteringByClass.get(edge.getCaller()).equals(clusteringByClass.get(edge.getCallee()))) {
                 // TODO: Carvalho uses sc(a,b) here which is the number of calls present in A to B, use static freq.
                 coupling++;
             }

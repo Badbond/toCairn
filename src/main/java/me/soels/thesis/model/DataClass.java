@@ -1,7 +1,7 @@
 package me.soels.thesis.model;
 
 public final class DataClass extends AbstractClass {
-    private final int size;
+    private final Integer size;
 
     /**
      * Construct an instance of a data class.
@@ -10,12 +10,12 @@ public final class DataClass extends AbstractClass {
      * @param humanReadableName the human readable name for this data class
      * @param size              the size of the data class in bytes
      */
-    public DataClass(String identifier, String humanReadableName, int size) {
+    public DataClass(String identifier, String humanReadableName, Integer size) {
         super(identifier, humanReadableName);
         this.size = size;
     }
 
-    public int getSize() {
+    public Integer getSize() {
         return size;
     }
 }

@@ -4,6 +4,7 @@ import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.MethodCallExpr;
@@ -16,6 +17,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -122,11 +124,23 @@ public class StaticAnalysis {
     }
 
     private List<Relationship> resolveClassDependencies(OtherClass clazz, List<AbstractClass> allClasses, ClassOrInterfaceDeclaration classDeclaration) {
-        return classDeclaration.findAll(MethodCallExpr.class).stream()
+        // TODO: In the process of seeing whether I need to control the way we traverse the tree for resolving the types
+        //  This could perhaps be cleaned up based on what the outcome will be
+        // We need to iterate this way to resolve statements in a preorder for multiple types of nodes
+        var resolvedMethodCalls = new ArrayList<ResolvedMethodDeclaration>();
+        classDeclaration.walk(Node.TreeTraversal.PREORDER, node -> {
+            // TODO: Are method calls all the nodes that we want to include?
+            if (MethodCallExpr.class.isAssignableFrom(node.getClass())) {
                 // Resolve the method call to discover the type of the callee class
-                .map(MethodCallExpr::resolve)
+                resolvedMethodCalls.add(((MethodCallExpr) node).resolve());
+            }
+        });
+
+        return resolvedMethodCalls.stream()
+                // Filter out targets that have not been observed (e.g. library classes, java internals).
+                .filter(target -> allClasses.stream().anyMatch(c -> c.getIdentifier().equals(getClassFQN(target.getPackageName(), target.getClassName()))))
                 // Group by callee class based on FQN
-                .collect(groupingBy(method -> method.getPackageName() + "." + method.getClassName()))
+                .collect(groupingBy(method -> getClassFQN(method.getPackageName(), method.getClassName())))
                 // TODO: Filter only on method calls to classes in application and filter out self.
                 .values().stream()
                 // For every callee class, identify the relationship
@@ -135,9 +149,10 @@ public class StaticAnalysis {
     }
 
     private Relationship identifyRelationship(OtherClass clazz, List<ResolvedMethodDeclaration> targetMethods, List<AbstractClass> allClasses) {
-        var fqn = targetMethods.get(0).getPackageName() + "." + targetMethods.get(0).getClassName();
+        var fqn = getClassFQN(targetMethods.get(0).getPackageName(), targetMethods.get(0).getClassName());
         var target = allClasses.stream()
-                .filter(otherClazz -> fqn.equals(otherClazz.getIdentifier())).findFirst()
+                .filter(otherClazz -> fqn.equals(otherClazz.getIdentifier()))
+                .findFirst()
                 .orElseThrow(() -> new IllegalStateException("Could not find class " + fqn + " in already parsed classes"));
 
         if (target instanceof DataClass) {
@@ -162,19 +177,17 @@ public class StaticAnalysis {
         }
     }
 
-    @SuppressWarnings("unchecked") // We explicitly check the type with the provided class
     private <T extends AbstractClass> List<T> filterClasses(List<Pair<AbstractClass, ClassOrInterfaceDeclaration>> allClasses, Class<T> expectedClass) {
         return allClasses.stream()
-                .filter(pair -> pair.getKey().getClass().isAssignableFrom(expectedClass))
-                .map(pair -> (T) pair.getKey())
+                .filter(pair -> expectedClass.isAssignableFrom(pair.getKey().getClass()))
+                .map(pair -> expectedClass.cast(pair.getKey()))
                 .collect(Collectors.toList());
     }
 
-    @SuppressWarnings("unchecked") // We explicitly check the type with the provided class
     private <T extends Relationship> List<T> filterRelationships(List<Relationship> relationships, Class<T> expectedClass) {
         return relationships.stream()
-                .filter(relationship -> relationship.getClass().isAssignableFrom(expectedClass))
-                .map(relationship -> (T) relationship)
+                .filter(relationship -> expectedClass.isAssignableFrom(relationship.getClass()))
+                .map(expectedClass::cast)
                 .collect(Collectors.toList());
     }
 
@@ -197,5 +210,9 @@ public class StaticAnalysis {
             System.out.println("Problem(s) in unknown parse result");
         }
         parseResult.getProblems().forEach(problem -> System.out.printf("        %s%n", problem.getVerboseMessage()));
+    }
+
+    private String getClassFQN(String packageName, String className) {
+        return packageName + "." + className;
     }
 }

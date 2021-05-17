@@ -19,8 +19,7 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <moeaframework.version>2.13</moeaframework.version>
-        <javaparser.version>3.22.0</javaparser.version>
-        <githubapi.version>1.128</githubapi.version>
+        <javaparser.version>3.22.1</javaparser.version>
         <commons.version>2.8.0</commons.version>
     </properties>
 

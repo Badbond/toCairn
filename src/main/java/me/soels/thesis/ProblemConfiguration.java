@@ -7,7 +7,8 @@ import java.util.Optional;
 
 public final class ProblemConfiguration {
     private final EncodingType encodingType;
-    // TODO: Early investigation showed less performance and worse results for using binary integers instead of floats. Re-assess and possible remove.
+    // TODO: Early investigation showed less performance and worse results for using binary integers instead of floats.
+    //  Re-assess and possible remove.
     private final VariableType variableType;
     private final Integer clusterCountLowerBound;
     private final Integer clusterCountUpperBound;

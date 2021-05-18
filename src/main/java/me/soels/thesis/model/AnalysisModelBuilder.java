@@ -38,9 +38,6 @@ public class AnalysisModelBuilder {
     }
 
     public synchronized AnalysisModel build() {
-        System.out.printf("Found %d data classes, %d other classes, %d class dependencies, %d data dependencies%n",
-                dataClasses.size(), otherClasses.size(), dependencies.size(), dataRelationships.size());
-
         return new AnalysisModel(otherClasses, dataClasses, dependencies, dataRelationships);
     }
 }

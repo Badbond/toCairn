@@ -7,7 +7,6 @@ import org.moeaframework.core.Solution;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * The clustering as decoded from the {@link Solution} based on {@link EncodingType}.
@@ -29,18 +28,16 @@ public final class Clustering {
                 .map(entry -> Pair.of(entry.getKey(), Collections.unmodifiableList(entry.getValue())))
                 .collect(Collectors.toUnmodifiableMap(Pair::getLeft, Pair::getRight));
 
-        // TODO: This can be inlines nicely but this gave weird results when parsing the AST. Under investigation
-        Stream<Map.Entry<Integer, List<OtherClass>>> sortedByClassStream = clustering.entrySet().stream();
-        Stream<Pair<OtherClass, Integer>> flatMapResult = sortedByClassStream
-                .flatMap(entry -> entry.getValue().stream().map(clazz -> Pair.of(clazz, entry.getKey())));
-        TreeMap<OtherClass, Integer> sortedByClass = flatMapResult.collect(Collectors.toMap(
-                Pair::getKey,
-                Pair::getValue,
-                (u, v) -> {
-                    throw new IllegalStateException(String.format("Duplicate key %s", u));
-                },
-                () -> new TreeMap<>(Comparator.comparing(AbstractClass::getIdentifier))
-        ));
+        var sortedByClass = clustering.entrySet().stream()
+                .flatMap(entry -> entry.getValue().stream().map(clazz -> Pair.of(clazz, entry.getKey())))
+                .collect(Collectors.toMap(
+                        Pair::getKey,
+                        Pair::getValue,
+                        (u, v) -> {
+                            throw new IllegalStateException(String.format("Duplicate key %s", u));
+                        },
+                        () -> new TreeMap<>(Comparator.comparing(AbstractClass::getIdentifier))
+                ));
         // We use by class also for inspection and visualisation and therefore would like it sorted.
         this.byClass = Collections.unmodifiableSortedMap(sortedByClass);
     }

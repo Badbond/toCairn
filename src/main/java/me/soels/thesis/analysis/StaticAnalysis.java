@@ -6,8 +6,10 @@ import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy;
 import com.github.javaparser.utils.SourceRoot;
@@ -21,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.github.javaparser.ParserConfiguration.LanguageLevel.JAVA_11;
 import static java.util.stream.Collectors.groupingBy;
 import static me.soels.thesis.analysis.ZipExtractor.extractZip;
 import static me.soels.thesis.model.DataRelationshipType.READ;
@@ -37,14 +38,9 @@ import static me.soels.thesis.model.DataRelationshipType.READ;
  * is based on their book <i>'JavaParser: Visited'</i>.
  */
 public class StaticAnalysis {
-    public static void main(String[] args) {
-        var input = new StaticAnalysisInput(Path.of("/home/badbond/Downloads/thesis-project-master.zip"), JAVA_11);
-        var analysis = new StaticAnalysis();
-        var builder = new AnalysisModelBuilder();
-        analysis.analyze(builder, input);
-        builder.build();
-    }
+    private int errorCount, count = 0;
 
+    // TODO: Split in class analysis and relationship analysis.
     public void analyze(AnalysisModelBuilder modelBuilder, StaticAnalysisInput input) {
         System.out.println("Starting static analysis on " + input.getPathToZip());
 
@@ -62,19 +58,31 @@ public class StaticAnalysis {
     private void performAnalysis(AnalysisModelBuilder modelBuilder, Path projectLocation, ParserConfiguration.LanguageLevel languageLevel) {
         var start = System.currentTimeMillis();
 
+        System.out.println("Extracting classes");
         var allTypes = getAllTypes(projectLocation, languageLevel);
         var allClasses = allTypes.stream().map(Pair::getKey).collect(Collectors.toList());
+        var allMethodNames = allTypes.stream()
+                .flatMap(pair -> pair.getValue().findAll(MethodDeclaration.class).stream())
+                .map(NodeWithSimpleName::getNameAsString)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+        var otherClasses = filterClasses(allTypes, OtherClass.class);
+        var dataClasses = filterClasses(allTypes, DataClass.class);
+        System.out.println("Found " + allClasses.size() + " classes of which " + dataClasses.size() +
+                " data classes and " + otherClasses.size() + " other classes.");
+        System.out.println("These classes contain " + allMethodNames.size() + " uniquely named methods");
 
+        System.out.println("Extracting relationships");
         var allRelationships = allTypes.stream()
                 // Only calculate relationships from service classes
                 .filter(pair -> pair.getKey() instanceof OtherClass)
-                .flatMap(pair -> this.resolveClassDependencies((OtherClass) pair.getKey(), allClasses, pair.getValue()).stream())
+                .flatMap(pair -> this.resolveClassDependencies((OtherClass) pair.getKey(), allClasses, allMethodNames, pair.getValue()).stream())
                 .collect(Collectors.toList());
-
-        var otherClasses = filterClasses(allTypes, OtherClass.class);
-        var dataClasses = filterClasses(allTypes, DataClass.class);
         var dataRelationships = filterRelationships(allRelationships, DataRelationship.class);
         var classDependencies = filterRelationships(allRelationships, DependenceRelationship.class);
+        System.out.println("Found " + allRelationships.size() + " relationships of which " + dataRelationships.size() +
+                " data relationships and " + classDependencies + " other class dependencies");
 
         System.out.println("Static analysis took " + (System.currentTimeMillis() - start) + " ms");
 
@@ -96,7 +104,8 @@ public class StaticAnalysis {
                 .peek(this::printProblems)
                 .filter(parseResult -> parseResult.getResult().isPresent())
                 .flatMap(parseResult -> parseResult.getResult().get().getTypes().stream())
-                // Also include the inner types     TODO: This now excludes enums and annotations, do we want those?
+                // Also include the inner types
+                // TODO: This now excludes enums and annotations, do we want those?
                 .flatMap(type -> type.findAll(ClassOrInterfaceDeclaration.class).stream())
                 // Print problems where FQN could not be determined and filter those cases out
                 .peek(this::printEmptyQualifiers)
@@ -123,18 +132,30 @@ public class StaticAnalysis {
         return false;
     }
 
-    private List<Relationship> resolveClassDependencies(OtherClass clazz, List<AbstractClass> allClasses, ClassOrInterfaceDeclaration classDeclaration) {
+    // TODO: Remove debug logging
+    private List<Relationship> resolveClassDependencies(OtherClass clazz, List<AbstractClass> allClasses, List<String> allMethodNames, ClassOrInterfaceDeclaration classDeclaration) {
         // TODO: In the process of seeing whether I need to control the way we traverse the tree for resolving the types
         //  This could perhaps be cleaned up based on what the outcome will be
+        System.out.println("Checking class " + classDeclaration.getFullyQualifiedName().get());
+
         // We need to iterate this way to resolve statements in a preorder for multiple types of nodes
         var resolvedMethodCalls = new ArrayList<ResolvedMethodDeclaration>();
         classDeclaration.walk(Node.TreeTraversal.PREORDER, node -> {
-            // TODO: Are method calls all the nodes that we want to include?
-            if (MethodCallExpr.class.isAssignableFrom(node.getClass())) {
+            // TODO: Are method calls all the nodes that we want to include? Perhaps also field access or constructor calls
+            if (MethodCallExpr.class.isAssignableFrom(node.getClass()) && allMethodNames.contains(((MethodCallExpr) node).getNameAsString())) {
+                count++;
                 // Resolve the method call to discover the type of the callee class
-                resolvedMethodCalls.add(((MethodCallExpr) node).resolve());
+                if (classDeclaration.getNameAsString().equals("SomeClass")) {
+                    System.out.println("Processing method " + ((MethodCallExpr) node).getNameAsString());
+                }
+                try {
+                    resolvedMethodCalls.add(((MethodCallExpr) node).resolve());
+                } catch (Exception e) {
+                    errorCount++;
+                }
             }
         });
+        System.out.println("Processed " + count + " methods of which " + errorCount + " errored"); // 30403 - 18560
 
         return resolvedMethodCalls.stream()
                 // Filter out targets that have not been observed (e.g. library classes, java internals).

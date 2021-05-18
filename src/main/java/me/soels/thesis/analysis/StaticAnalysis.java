@@ -4,13 +4,11 @@ import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
-import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy;
 import com.github.javaparser.utils.SourceRoot;
 import me.soels.thesis.model.*;
@@ -19,13 +17,13 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
 import static me.soels.thesis.analysis.ZipExtractor.extractZip;
 import static me.soels.thesis.model.DataRelationshipType.READ;
+import static me.soels.thesis.model.DataRelationshipType.WRITE;
 
 /**
  * Performs static analysis of the given {@code .zip} file containing the application's source files.
@@ -38,7 +36,9 @@ import static me.soels.thesis.model.DataRelationshipType.READ;
  * is based on their book <i>'JavaParser: Visited'</i>.
  */
 public class StaticAnalysis {
-    private int errorCount, count = 0;
+    // TODO: Would rather have injection set up to inject the service instead.
+    private final MethodCallDeclaringClassResolver declaringClassResolver = new MethodCallDeclaringClassResolver();
+    private int count = 0;
 
     // TODO: Split in class analysis and relationship analysis.
     public void analyze(AnalysisModelBuilder modelBuilder, StaticAnalysisInput input) {
@@ -69,9 +69,11 @@ public class StaticAnalysis {
                 .collect(Collectors.toList());
         var otherClasses = filterClasses(allTypes, OtherClass.class);
         var dataClasses = filterClasses(allTypes, DataClass.class);
-        System.out.println("Found " + allClasses.size() + " classes of which " + dataClasses.size() +
-                " data classes and " + otherClasses.size() + " other classes.");
-        System.out.println("These classes contain " + allMethodNames.size() + " uniquely named methods");
+        System.out.printf("Graph nodes results:" +
+                "%n    Total classes:             " + allClasses.size() +
+                "%n    Data classes:              " + dataClasses.size() +
+                "%n    Other classes:             " + otherClasses.size() +
+                "%n    Total method declarations: " + allMethodNames.size() + "%n");
 
         System.out.println("Extracting relationships");
         var allRelationships = allTypes.stream()
@@ -79,11 +81,20 @@ public class StaticAnalysis {
                 .filter(pair -> pair.getKey() instanceof OtherClass)
                 .flatMap(pair -> this.resolveClassDependencies((OtherClass) pair.getKey(), allClasses, allMethodNames, pair.getValue()).stream())
                 .collect(Collectors.toList());
+
         var dataRelationships = filterRelationships(allRelationships, DataRelationship.class);
         var classDependencies = filterRelationships(allRelationships, DependenceRelationship.class);
-        System.out.println("Found " + allRelationships.size() + " relationships of which " + dataRelationships.size() +
-                " data relationships and " + classDependencies + " other class dependencies");
 
+        System.out.printf("Graph edges results:" +
+                "%n    Total matching method calls:   " + declaringClassResolver.getTotalCount() +
+                "%n    Unresolved calls:              " + declaringClassResolver.getErrorCount() +
+                "%n    Resolved calls:                " + declaringClassResolver.getIdentifiedCount() +
+                "%n    To classes within application: " + declaringClassResolver.getCalleeCount() +
+                "%n    Excluding self-reference:      " + count +
+                "%n    Total relationships:           " + allRelationships.size() +
+                "%n    Data relationships:            " + dataRelationships.size() +
+                "%n    Other class dependencies:      " + classDependencies.size() +
+                "%n");
         System.out.println("Static analysis took " + (System.currentTimeMillis() - start) + " ms");
 
         modelBuilder.withDataClasses(dataClasses)
@@ -117,7 +128,6 @@ public class StaticAnalysis {
 
     private AbstractClass identifyClass(ClassOrInterfaceDeclaration clazz) {
         var fqn = clazz.getFullyQualifiedName()
-                // Should not happen as we already filtered the stream on having FQN present
                 .orElseThrow(() -> new IllegalStateException("Could not retrieve FQN from already filtered class"));
 
         if (isDataClass(clazz)) {
@@ -132,62 +142,41 @@ public class StaticAnalysis {
         return false;
     }
 
-    // TODO: Remove debug logging
-    private List<Relationship> resolveClassDependencies(OtherClass clazz, List<AbstractClass> allClasses, List<String> allMethodNames, ClassOrInterfaceDeclaration classDeclaration) {
-        // TODO: In the process of seeing whether I need to control the way we traverse the tree for resolving the types
-        //  This could perhaps be cleaned up based on what the outcome will be
-        System.out.println("Checking class " + classDeclaration.getFullyQualifiedName().get());
-
+    private List<Relationship> resolveClassDependencies(OtherClass caller, List<AbstractClass> allClasses, List<String> allMethodNames, ClassOrInterfaceDeclaration classDeclaration) {
         // We need to iterate this way to resolve statements in a preorder for multiple types of nodes
-        var resolvedMethodCalls = new ArrayList<ResolvedMethodDeclaration>();
-        classDeclaration.walk(Node.TreeTraversal.PREORDER, node -> {
-            // TODO: Are method calls all the nodes that we want to include? Perhaps also field access or constructor calls
-            if (MethodCallExpr.class.isAssignableFrom(node.getClass()) && allMethodNames.contains(((MethodCallExpr) node).getNameAsString())) {
-                count++;
-                // Resolve the method call to discover the type of the callee class
-                if (classDeclaration.getNameAsString().equals("SomeClass")) {
-                    System.out.println("Processing method " + ((MethodCallExpr) node).getNameAsString());
-                }
-                try {
-                    resolvedMethodCalls.add(((MethodCallExpr) node).resolve());
-                } catch (Exception e) {
-                    errorCount++;
-                }
-            }
-        });
-        System.out.println("Processed " + count + " methods of which " + errorCount + " errored"); // 30403 - 18560
-
-        return resolvedMethodCalls.stream()
-                // Filter out targets that have not been observed (e.g. library classes, java internals).
-                .filter(target -> allClasses.stream().anyMatch(c -> c.getIdentifier().equals(getClassFQN(target.getPackageName(), target.getClassName()))))
+        return classDeclaration.findAll(MethodCallExpr.class).stream()
+                // Filter out method names that are definitely not within the application
+                .filter(method -> allMethodNames.contains(method.getNameAsString()))
+                // Try to resolve the method call to get the pair of callee and its method invoked.
+                .flatMap(method -> declaringClassResolver.getDeclaringClass(method, allClasses).stream())
+                // Filter out self invocation
+                .filter(calleePair -> !calleePair.getKey().getIdentifier().equals(caller.getIdentifier()))
                 // Group by callee class based on FQN
-                .collect(groupingBy(method -> getClassFQN(method.getPackageName(), method.getClassName())))
-                // TODO: Filter only on method calls to classes in application and filter out self.
+                .collect(groupingBy(Pair::getKey))
                 .values().stream()
-                // For every callee class, identify the relationship
-                .map(methodsCalledOfCallee -> identifyRelationship(clazz, methodsCalledOfCallee, allClasses))
+                // For every callee, identify the relationship
+                .map(calleePairs -> identifyRelationship(caller, calleePairs))
                 .collect(Collectors.toList());
     }
 
-    private Relationship identifyRelationship(OtherClass clazz, List<ResolvedMethodDeclaration> targetMethods, List<AbstractClass> allClasses) {
-        var fqn = getClassFQN(targetMethods.get(0).getPackageName(), targetMethods.get(0).getClassName());
-        var target = allClasses.stream()
-                .filter(otherClazz -> fqn.equals(otherClazz.getIdentifier()))
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("Could not find class " + fqn + " in already parsed classes"));
+    private Relationship identifyRelationship(OtherClass clazz, List<Pair<AbstractClass, MethodCallExpr>> calleeMethods) {
+        count += calleeMethods.size();
+        var target = calleeMethods.get(0).getKey();
+        var methods = calleeMethods.stream().map(Pair::getValue).collect(Collectors.toList());
 
         if (target instanceof DataClass) {
-            return new DataRelationship(clazz, (DataClass) target, identifyReadWrite(targetMethods), targetMethods.size());
+            return new DataRelationship(clazz, (DataClass) target, identifyReadWrite(methods), calleeMethods.size());
         } else if (target instanceof OtherClass) {
-            return new DependenceRelationship(clazz, (OtherClass) target, targetMethods.size());
+            return new DependenceRelationship(clazz, (OtherClass) target, calleeMethods.size());
         } else {
             throw new IllegalStateException("Could not yet support class type " + target.getClass().getSimpleName());
         }
     }
 
-    private DataRelationshipType identifyReadWrite(List<ResolvedMethodDeclaration> targetMethods) {
-        // TODO: Based on getter/setter naming convention / parameter / return type identify the type of data relationship
-        return READ;
+    private DataRelationshipType identifyReadWrite(List<MethodCallExpr> methodsCalled) {
+        // When our caller has to provide arguments to the callee, we assume it is modifying the state of the callee
+        // with those values.
+        return methodsCalled.stream().anyMatch(method -> method.getArguments().size() > 1) ? WRITE : READ;
     }
 
     private List<ParseResult<CompilationUnit>> parseRoot(SourceRoot root) {
@@ -231,9 +220,5 @@ public class StaticAnalysis {
             System.out.println("Problem(s) in unknown parse result");
         }
         parseResult.getProblems().forEach(problem -> System.out.printf("        %s%n", problem.getVerboseMessage()));
-    }
-
-    private String getClassFQN(String packageName, String className) {
-        return packageName + "." + className;
     }
 }

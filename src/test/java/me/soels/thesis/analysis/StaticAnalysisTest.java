@@ -12,11 +12,13 @@ import static com.github.javaparser.ParserConfiguration.LanguageLevel.JAVA_11;
 public class StaticAnalysisTest {
     @Test
     public void testStaticAnalysis() throws URISyntaxException {
-        var resource = this.getClass().getClassLoader().getResource("./big-project-cleaned.zip");
+        var resource = this.getClass().getClassLoader().getResource("./thesis-project-master.zip");
         var project = Path.of(Objects.requireNonNull(resource).toURI());
         var input = new StaticAnalysisInput(project, JAVA_11);
-        // thesis-project-master.zip (x classes, x unique method names):
-        //
+        // thesis-project-master.zip (28 classes, 64 unique method names):
+        //      TODO: Investigate these two, I had numerous difference before.
+        //      117 total, 17 unresolved, 68 relevant (excl. self-ref), 29 relationships on 3.18.0 -- 2s
+        //      117 total, 17 unresolved, 68 relevant (excl. self-ref), 29 relationships on 3.22.1 -- 1s
         // big-project.zip (2642 classes, 5504 unique method names):
         //      stack overflow error on 3.18
         //      28892 total, 12502 unresolved, 6482 relevant (excl. self-ref), 1760 relationships -- 3m 10s on 3.22.1

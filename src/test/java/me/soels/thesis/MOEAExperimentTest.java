@@ -119,8 +119,7 @@ public class MOEAExperimentTest {
                 .collect(Collectors.toList());
 
         for (var solution : result) {
-            LOGGER.info("-----------------------------------");
-            var objectivesStringBuilder = new StringBuilder("\n")
+            var objectivesStringBuilder = new StringBuilder("-----------------------------------\n")
                     .append(StringUtils.join(objectivesNames, "  "))
                     .append("\n");
             for (int i = 0; i < objectivesNames.size(); i++) {

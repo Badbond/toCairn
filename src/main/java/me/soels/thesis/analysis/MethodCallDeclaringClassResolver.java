@@ -4,6 +4,7 @@ import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.resolution.SymbolResolver;
+import com.github.javaparser.resolution.UnsolvedSymbolException;
 import com.github.javaparser.resolution.types.ResolvedType;
 import me.soels.thesis.model.AbstractClass;
 import org.apache.commons.lang3.tuple.Pair;
@@ -28,10 +29,9 @@ public class MethodCallDeclaringClassResolver {
 
     Optional<Pair<AbstractClass, MethodCallExpr>> getDeclaringClass(MethodCallExpr methodCallExpr, List<AbstractClass> allClasses) {
         var foundCallee = tryGetUsingCompleteResolution(methodCallExpr)
-                .or(() -> tryGetUsingChildNameResolution(methodCallExpr))
-                .or(() -> tryGetUsingRecursion(methodCallExpr, allClasses));
+                .or(() -> tryGetUsingChildNameResolution(methodCallExpr));
 
-        // TODO: Remove debug code.
+        // TODO: Remove debug code or make nicer.
         if (foundCallee.isEmpty()) {
             errorCount++;
         } else {
@@ -46,11 +46,12 @@ public class MethodCallDeclaringClassResolver {
     }
 
     /**
-     * Try resolving the entire methodCallExpr to.
+     * Try resolving the entire methodCallExpr.
      * <p>
      * This allows allows sequential method calls (e.g. {@code a.callA().callB()}) to be resolved properly as the
      * return type is also resolved. Therefore, this should always be tried first. However, this approach is more
-     * error prone as there are more places where symbol resolution could fail, such as the arguments provided.
+     * error prone as there are more places where symbol resolution could fail, such as the arguments provided. This
+     * happens for example with argument types that have been generated compile-time.
      *
      * @param methodCallExpr the expression to fully resolve
      * @return an optional string with the FQN of the class in which the method called is declared
@@ -60,11 +61,7 @@ public class MethodCallDeclaringClassResolver {
             var resolvedMethodCall = methodCallExpr.resolve();
             return Optional.of(resolvedMethodCall.getPackageName() + "." + resolvedMethodCall.getClassName());
         } catch (Exception e) {
-            // Unfortunately, Java symbol resolver is not capable of resolving all method calls and is unmaintained.
-            // Common problem are either based on their parents (the variable used to call a method) or its children
-            // (resolving parameters). We only want to know which class is being called and therefore we retry with
-            // only the variable. If that fails, we can not deduce the callee and we ignore this method call.
-            LOGGER.debug("Could not resolve method " + methodCallExpr.getNameAsString() + " using full resolution", e);
+            LOGGER.trace("Could not resolve method " + methodCallExpr.getNameAsString() + " using full resolution", e);
             return Optional.empty();
         }
     }
@@ -75,6 +72,11 @@ public class MethodCallDeclaringClassResolver {
      * When full resolution fails, for example due to argument symbol solving errors, we can try to only resolve
      * the possibly available {@link NameExpr} in this call expression. This name expression can either be from a
      * variable (e.g. {@code variable.call()} or a class in case of static invocation (e.g. {@code Objects.equal()}).
+     * <p>
+     * Cases in which this generally fails is when the class could not be resolved due to it coming from libraries
+     * that are part of another {@code .jar} or when the referenced class is generated compile-time. In the first case,
+     * we can safely ignore it as that referenced class is not part of the clustering. The second case is very difficult
+     * to resolve without compiling the source code.
      *
      * @param methodCallExpr the expression to fully resolve
      * @return an optional string with the FQN of the class in which the method called is declared
@@ -88,21 +90,26 @@ public class MethodCallDeclaringClassResolver {
                     .map(Expression::calculateResolvedType)
                     .map(ResolvedType::describe);
         } catch (Exception e) {
-            LOGGER.debug("Could not resolve method " + methodCallExpr.getNameAsString() + " using resolution of the child's identifier", e);
+            getSymbolErrorMessage(e).ifPresent(message -> LOGGER.debug("{} for expression {}", message, methodCallExpr));
+            LOGGER.trace("Could not resolve method " + methodCallExpr.getNameAsString() + " using resolution of the child's identifier", e);
             return Optional.empty();
         }
     }
 
-    private Optional<String> tryGetUsingRecursion(MethodCallExpr methodCallExpr, List<AbstractClass> allClasses) {
-        // TODO: Do something with this method. It should not happen as we traverse the tree in pre-order:
-        //  prior methods should already be resolved IF POSSIBLE.
-        return methodCallExpr.getChildNodes().stream()
-                .filter(MethodCallExpr.class::isInstance)
-                .findFirst() // Can only have one method call as direct child
-                .flatMap(childNode -> getDeclaringClass((MethodCallExpr) childNode, allClasses))
-                // TODO: This is incorrect as it will return the type of the previous method call, not of the current one. We need to extract the return type of the child methodCall.
-                .map(result -> result.getKey().getIdentifier());
+    private Optional<String> getSymbolErrorMessage(Throwable e) {
+        if (e instanceof UnsolvedSymbolException) {
+            return Optional.of(e.getMessage());
+        } else if (e.getCause() != null) {
+            return getSymbolErrorMessage(e.getCause());
+        } else {
+            return Optional.empty();
+        }
     }
+
+    // TODO: Another possibility would be to resolve the return type of child MethodCallExpr
+
+    // TODO: Another possibility would be to check all possible accessible classes based on same package + imports and
+    //  see if there is a unique method that we can match
 
     private Optional<AbstractClass> findByAbstractClass(List<AbstractClass> allClasses, String fqn) {
         return allClasses.stream()

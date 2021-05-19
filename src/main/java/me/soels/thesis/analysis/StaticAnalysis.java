@@ -6,7 +6,6 @@ import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy;
@@ -37,6 +36,11 @@ import static me.soels.thesis.model.DataRelationshipType.WRITE;
  * <p>
  * We use {@link JavaParser} for building the abstract syntax tree and resolving the type references. Some of this class
  * is based on their book <i>'JavaParser: Visited'</i>.
+ *
+ * TODO: Explain that we can not resolve dependencies that are constructed runtime (e.g. those dependencies
+ *  that are hidden behind polymorphism and injection. I need to present this as a limitation of static analysis.
+ *  Thus, such existing approaches don't handle that. I won't handle it fully with dynamic analysis and therefore
+ *  My approach also has this limitation.
  */
 public class StaticAnalysis {
     private static final Logger LOGGER = LoggerFactory.getLogger(StaticAnalysis.class);
@@ -121,14 +125,14 @@ public class StaticAnalysis {
                 // Parse the source roots, resolving the class types. We do not parallelize as that gave errors sometimes.
                 .flatMap(root -> parseRoot(root).stream())
                 // Print problems, filter those resulting in no parse result, and retrieve the types defined in the result
-                .peek(this::printProblems)
+                .map(this::printProblems)
                 .filter(parseResult -> parseResult.getResult().isPresent())
                 .flatMap(parseResult -> parseResult.getResult().get().getTypes().stream())
                 // Also include the inner types
                 // TODO: This now excludes enums and annotations, do we want those?
                 .flatMap(type -> type.findAll(ClassOrInterfaceDeclaration.class).stream())
                 // Print problems where FQN could not be determined and filter those cases out
-                .peek(this::printEmptyQualifiers)
+                .map(this::printEmptyQualifiers)
                 .filter(clazz -> clazz.getFullyQualifiedName().isPresent())
                 // Create a pair of the type of class and its AST
                 .map(clazz -> Pair.of(identifyClass(clazz), clazz))
@@ -210,27 +214,29 @@ public class StaticAnalysis {
                 .collect(Collectors.toList());
     }
 
-    private void printEmptyQualifiers(TypeDeclaration<?> typeDeclaration) {
+    private ClassOrInterfaceDeclaration printEmptyQualifiers(ClassOrInterfaceDeclaration typeDeclaration) {
         if (typeDeclaration.getFullyQualifiedName().isEmpty()) {
             // This usually happens with inner types, but as we do symbol solving, it should not happen.
             // In any case, we will exclude these from the analysis as we can not uniquely identify them in the graph.
             LOGGER.warn("Could not construct FQN for type {}. Skipping it.", typeDeclaration.getNameAsString());
         }
+
+        return typeDeclaration;
     }
 
-    private void printProblems(ParseResult<CompilationUnit> parseResult) {
-        if (parseResult.isSuccessful()) {
-            return;
+    private ParseResult<CompilationUnit> printProblems(ParseResult<CompilationUnit> parseResult) {
+        if (!parseResult.isSuccessful()) {
+            var problemString = parseResult.getProblems().stream()
+                    .reduce("", (str, problem) -> str + "\n\t" + problem.getVerboseMessage(), (str1, str2) -> str1 + str2);
+            if (parseResult.getResult().isPresent() && parseResult.getResult().get().getStorage().isPresent()) {
+                LOGGER.warn("Problem(s) in parse result for file {}:{}",
+                        parseResult.getResult().get().getStorage().get().getFileName(),
+                        problemString);
+            } else {
+                LOGGER.warn("Problem(s) in unknown parse result:{}", problemString);
+            }
         }
 
-        var problemString = parseResult.getProblems().stream()
-                .reduce("", (str, problem) -> str + "\n\t" + problem.getVerboseMessage(), (str1, str2) -> str1 + str2);
-        if (parseResult.getResult().isPresent() && parseResult.getResult().get().getStorage().isPresent()) {
-            LOGGER.warn("Problem(s) in parse result for file {}:{}",
-                    parseResult.getResult().get().getStorage().get().getFileName(),
-                    problemString);
-        } else {
-            LOGGER.warn("Problem(s) in unknown parse result:{}", problemString);
-        }
+        return parseResult;
     }
 }

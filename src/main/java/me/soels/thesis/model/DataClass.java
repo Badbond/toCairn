@@ -1,5 +1,7 @@
 package me.soels.thesis.model;
 
+import java.util.Objects;
+
 public final class DataClass extends AbstractClass {
     private final Integer size;
 
@@ -17,5 +19,15 @@ public final class DataClass extends AbstractClass {
 
     public Integer getSize() {
         return size;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), size);
     }
 }

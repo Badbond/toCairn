@@ -29,10 +29,10 @@ public final class AnalysisModel {
                   List<DataClass> dataClasses,
                   List<DependenceRelationship> dependencies,
                   List<DataRelationship> dataRelationships) {
-        var allClasses = new ArrayList<AbstractClass>(otherClasses);
-        allClasses.addAll(dataClasses);
+        var classes = new ArrayList<AbstractClass>(otherClasses);
+        classes.addAll(dataClasses);
 
-        this.allClasses = Collections.unmodifiableList(allClasses);
+        this.allClasses = Collections.unmodifiableList(classes);
         this.dataClasses = Collections.unmodifiableList(dataClasses);
         this.otherClasses = Collections.unmodifiableList(otherClasses);
         this.dependencies = Collections.unmodifiableList(dependencies);

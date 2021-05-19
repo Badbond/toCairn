@@ -21,7 +21,10 @@ import java.util.Optional;
  */
 public class MethodCallDeclaringClassResolver {
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodCallDeclaringClassResolver.class);
-    private int totalCount, identifiedCount, errorCount, calleeCount = 0;
+    private int totalCount = 0;
+    private int identifiedCount = 0;
+    private int errorCount = 0;
+    private int calleeCount = 0;
 
     Optional<Pair<AbstractClass, MethodCallExpr>> getDeclaringClass(MethodCallExpr methodCallExpr, List<AbstractClass> allClasses) {
         var foundCallee = tryGetUsingCompleteResolution(methodCallExpr)
@@ -79,8 +82,8 @@ public class MethodCallDeclaringClassResolver {
     private Optional<String> tryGetUsingChildNameResolution(MethodCallExpr methodCallExpr) {
         try {
             return methodCallExpr.getChildNodes().stream()
-                    .filter(childNode -> childNode instanceof NameExpr)
-                    .map(childNode -> (NameExpr) childNode)
+                    .filter(NameExpr.class::isInstance)
+                    .map(NameExpr.class::cast)
                     .findFirst()
                     .map(Expression::calculateResolvedType)
                     .map(ResolvedType::describe);
@@ -94,7 +97,7 @@ public class MethodCallDeclaringClassResolver {
         // TODO: Do something with this method. It should not happen as we traverse the tree in pre-order:
         //  prior methods should already be resolved IF POSSIBLE.
         return methodCallExpr.getChildNodes().stream()
-                .filter(childNode -> childNode instanceof MethodCallExpr)
+                .filter(MethodCallExpr.class::isInstance)
                 .findFirst() // Can only have one method call as direct child
                 .flatMap(childNode -> getDeclaringClass((MethodCallExpr) childNode, allClasses))
                 // TODO: This is incorrect as it will return the type of the previous method call, not of the current one. We need to extract the return type of the child methodCall.

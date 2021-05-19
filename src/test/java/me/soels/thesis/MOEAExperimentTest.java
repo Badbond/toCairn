@@ -30,9 +30,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class MOEAExperiment {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MOEAExperiment.class);
-    private static final String GRAPH_NAME = "disease-graph";
+public class MOEAExperimentTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MOEAExperimentTest.class);
+    private final VariableDecoder variableDecoder = new VariableDecoder();
+    private static final String GRAPH_NAME = "simple-graph-2";
 
     @Test
     public void runExperimentTest() {
@@ -129,7 +130,7 @@ public class MOEAExperiment {
             }
             LOGGER.info(objectivesStringBuilder.toString());
 
-            var clustering = VariableDecoder.decode(input, EncodingUtils.getInt(solution), encodingType);
+            var clustering = variableDecoder.decode(input, EncodingUtils.getInt(solution), encodingType);
             if (clustering.getByClass().size() <= 12) {
                 var clusteringStringBuilder = new StringBuilder("Clustering:\n");
                 clustering.getByClass().forEach((clazz, cluster) ->

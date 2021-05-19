@@ -74,10 +74,11 @@ public class StaticAnalysis {
         var otherClasses = filterClasses(allTypes, OtherClass.class);
         var dataClasses = filterClasses(allTypes, DataClass.class);
         LOGGER.info("Graph nodes results:" +
-                "\n\tTotal classes:             " + allClasses.size() +
-                "\n\tData classes:              " + dataClasses.size() +
-                "\n\tOther classes:             " + otherClasses.size() +
-                "\n\tTotal method declarations: " + allMethodNames.size());
+                        "\n\tTotal classes:             {}" +
+                        "\n\tData classes:              {}" +
+                        "\n\tOther classes:             {}" +
+                        "\n\tTotal method declarations: {}",
+                allClasses.size(), dataClasses.size(), otherClasses.size(), allMethodNames.size());
 
         LOGGER.info("Extracting relationships");
         var allRelationships = allTypes.stream()
@@ -90,17 +91,20 @@ public class StaticAnalysis {
         var classDependencies = filterRelationships(allRelationships, DependenceRelationship.class);
 
         LOGGER.info("Graph edges results:" +
-                "\n\tTotal matching method calls:   " + declaringClassResolver.getTotalCount() +
-                "\n\tUnresolved calls:              " + declaringClassResolver.getErrorCount() +
-                "\n\tResolved calls:                " + declaringClassResolver.getIdentifiedCount() +
-                "\n\tTo classes within application: " + declaringClassResolver.getCalleeCount() +
-                "\n\tExcluding self-reference:      " + count +
-                "\n\tTotal relationships:           " + allRelationships.size() +
-                "\n\tData relationships:            " + dataRelationships.size() +
-                "\n\tOther class dependencies:      " + classDependencies.size());
+                        "\n\tTotal matching method calls:   {}" +
+                        "\n\tUnresolved calls:              {}" +
+                        "\n\tResolved calls:                {}" +
+                        "\n\tTo classes within application: {}" +
+                        "\n\tExcluding self-reference:      {}" +
+                        "\n\tTotal relationships:           {}" +
+                        "\n\tData relationships:            {}" +
+                        "\n\tOther class dependencies:      {}",
+                declaringClassResolver.getTotalCount(), declaringClassResolver.getErrorCount(),
+                declaringClassResolver.getIdentifiedCount(), declaringClassResolver.getCalleeCount(),
+                count, allRelationships.size(), dataRelationships.size(), classDependencies.size());
 
         var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);
-        LOGGER.info("Static analysis took " + duration + " (H:m:s.millis)");
+        LOGGER.info("Static analysis took {} (H:m:s.millis)", duration);
 
         modelBuilder.withDataClasses(dataClasses)
                 .withOtherClasses(otherClasses)

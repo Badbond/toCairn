@@ -10,7 +10,7 @@ public abstract class Relationship {
     private final AbstractClass caller;
     private final AbstractClass callee;
 
-    public Relationship(AbstractClass caller, AbstractClass callee) {
+    protected Relationship(AbstractClass caller, AbstractClass callee) {
         this.caller = caller;
         this.callee = callee;
     }

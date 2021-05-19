@@ -16,7 +16,7 @@ public class VariableDecoder {
      * @param encodingType  the type of encoding which the variables represents
      * @return the decoded clustering
      */
-    public static Clustering decode(AnalysisModel analysisModel, int[] variables, EncodingType encodingType) {
+    public Clustering decode(AnalysisModel analysisModel, int[] variables, EncodingType encodingType) {
         switch (encodingType) {
             case GRAPH_ADJECENCY:
                 return decodeGraphAdjacency(analysisModel, variables);
@@ -34,10 +34,10 @@ public class VariableDecoder {
      * @param variables     the variables to decode
      * @return the clustering that the given variables represent
      */
-    public static Clustering decodeClusterLabel(AnalysisModel analysisModel, int[] variables) {
+    public Clustering decodeClusterLabel(AnalysisModel analysisModel, int[] variables) {
         var clusteringBuilder = new ClusteringBuilder();
         var clusterNormalizationMapping = new LinkedHashMap<Integer, Integer>();
-        for (int i = 0; i < variables.length; i++) {
+        for (var i = 0; i < variables.length; i++) {
             var clusterNumber = variables[i];
             clusterNormalizationMapping.putIfAbsent(clusterNumber, clusterNormalizationMapping.size());
             clusteringBuilder.addToCluster(analysisModel.getOtherClasses().get(i), clusterNormalizationMapping.get(clusterNumber));
@@ -53,13 +53,13 @@ public class VariableDecoder {
      * @param variables     the variables to decode
      * @return the clustering that the given variables represent
      */
-    public static Clustering decodeGraphAdjacency(AnalysisModel analysisModel, int[] variables) {
+    public Clustering decodeGraphAdjacency(AnalysisModel analysisModel, int[] variables) {
         var clusteringBuilder = new ClusteringBuilder();
         var nodeClusterPair = new TreeMap<Integer, Integer>();
         var clustersToMerge = new TreeMap<Integer, Integer>(Comparator.reverseOrder());
-        int clusterCount = 0;
+        var clusterCount = 0;
 
-        for (int i = 0; i < variables.length; i++) {
+        for (var i = 0; i < variables.length; i++) {
             var linkedNode = variables[i];
             var existingCurrent = Optional.ofNullable(nodeClusterPair.get(i));
             var existingLinked = Optional.ofNullable(nodeClusterPair.get(linkedNode));

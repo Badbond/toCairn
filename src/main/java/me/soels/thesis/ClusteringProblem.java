@@ -28,6 +28,7 @@ public class ClusteringProblem extends AbstractProblem {
     private final List<Objective> objectives;
     private final AnalysisModel analysisModel;
     private final ProblemConfiguration problemConfiguration;
+    private final VariableDecoder variableDecoder = new VariableDecoder();
 
     /**
      * Constructs a new instance of the clustering problem
@@ -54,7 +55,7 @@ public class ClusteringProblem extends AbstractProblem {
     @Override
     public void evaluate(Solution solution) {
         var variables = EncodingUtils.getInt(solution);
-        var decodedClustering = VariableDecoder.decode(analysisModel, variables, problemConfiguration.getEncodingType());
+        var decodedClustering = variableDecoder.decode(analysisModel, variables, problemConfiguration.getEncodingType());
 
         if (problemConfiguration.getClusterCountLowerBound().isPresent() &&
                 decodedClustering.getByCluster().size() < problemConfiguration.getClusterCountLowerBound().get()) {
@@ -66,7 +67,7 @@ public class ClusteringProblem extends AbstractProblem {
             return;
         }
 
-        for (int i = 0; i < objectives.size(); i++) {
+        for (var i = 0; i < objectives.size(); i++) {
             double objectiveValue = objectives.get(i).calculate(decodedClustering, analysisModel);
             solution.setObjective(i, objectiveValue);
         }
@@ -93,7 +94,7 @@ public class ClusteringProblem extends AbstractProblem {
         // The constraint that we evaluate if the number of desired clusters.
         var solution = new Solution(getNumberOfVariables(), getNumberOfObjectives(), 1);
 
-        for (int i = 0; i < getNumberOfVariables(); i++) {
+        for (var i = 0; i < getNumberOfVariables(); i++) {
             // We use floats instead of binary integers as those allow for more mutation/crossover operations,
             // Preliminary investigation showed there is not much of a performance increase into using binary integers
             if (problemConfiguration.getVariableType() == VariableType.BINARY_INT) {

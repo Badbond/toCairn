@@ -50,10 +50,10 @@ public class ZipExtractor {
     }
 
     private static File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {
-        File destFile = new File(destinationDir, zipEntry.getName());
+        var destFile = new File(destinationDir, zipEntry.getName());
 
-        String destDirPath = destinationDir.getCanonicalPath();
-        String destFilePath = destFile.getCanonicalPath();
+        var destDirPath = destinationDir.getCanonicalPath();
+        var destFilePath = destFile.getCanonicalPath();
 
         if (!destFilePath.startsWith(destDirPath + File.separator)) {
             throw new IOException("Entry is outside of the target dir: " + zipEntry.getName());

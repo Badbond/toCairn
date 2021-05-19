@@ -7,6 +7,8 @@ import com.github.javaparser.resolution.SymbolResolver;
 import com.github.javaparser.resolution.types.ResolvedType;
 import me.soels.thesis.model.AbstractClass;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,6 +20,7 @@ import java.util.Optional;
  * being called. There are a few numerous cases which result in different retrieval strategies.
  */
 public class MethodCallDeclaringClassResolver {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MethodCallDeclaringClassResolver.class);
     private int totalCount, identifiedCount, errorCount, calleeCount = 0;
 
     Optional<Pair<AbstractClass, MethodCallExpr>> getDeclaringClass(MethodCallExpr methodCallExpr, List<AbstractClass> allClasses) {
@@ -58,7 +61,7 @@ public class MethodCallDeclaringClassResolver {
             // Common problem are either based on their parents (the variable used to call a method) or its children
             // (resolving parameters). We only want to know which class is being called and therefore we retry with
             // only the variable. If that fails, we can not deduce the callee and we ignore this method call.
-            // TODO: Debug-log nicely  e.printStackTrace();
+            LOGGER.debug("Could not resolve method " + methodCallExpr.getNameAsString() + " using full resolution", e);
             return Optional.empty();
         }
     }
@@ -82,7 +85,7 @@ public class MethodCallDeclaringClassResolver {
                     .map(Expression::calculateResolvedType)
                     .map(ResolvedType::describe);
         } catch (Exception e) {
-            // TODO: Debug-log nicely  e.printStackTrace();
+            LOGGER.debug("Could not resolve method " + methodCallExpr.getNameAsString() + " using resolution of the child's identifier", e);
             return Optional.empty();
         }
     }

@@ -12,7 +12,10 @@ import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy;
 import com.github.javaparser.utils.SourceRoot;
 import me.soels.thesis.model.*;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -36,13 +39,14 @@ import static me.soels.thesis.model.DataRelationshipType.WRITE;
  * is based on their book <i>'JavaParser: Visited'</i>.
  */
 public class StaticAnalysis {
+    private static final Logger LOGGER = LoggerFactory.getLogger(StaticAnalysis.class);
     // TODO: Would rather have injection set up to inject the service instead.
     private final MethodCallDeclaringClassResolver declaringClassResolver = new MethodCallDeclaringClassResolver();
     private int count = 0;
 
     // TODO: Split in class analysis and relationship analysis.
     public void analyze(AnalysisModelBuilder modelBuilder, StaticAnalysisInput input) {
-        System.out.println("Starting static analysis on " + input.getPathToZip());
+        LOGGER.info("Starting static analysis on {}", input.getPathToZip());
 
         var inputZip = input.getPathToZip();
         if (!inputZip.getFileName().toString().toLowerCase().endsWith(".zip")) {
@@ -58,7 +62,7 @@ public class StaticAnalysis {
     private void performAnalysis(AnalysisModelBuilder modelBuilder, Path projectLocation, ParserConfiguration.LanguageLevel languageLevel) {
         var start = System.currentTimeMillis();
 
-        System.out.println("Extracting classes");
+        LOGGER.info("Extracting classes");
         var allTypes = getAllTypes(projectLocation, languageLevel);
         var allClasses = allTypes.stream().map(Pair::getKey).collect(Collectors.toList());
         var allMethodNames = allTypes.stream()
@@ -69,13 +73,13 @@ public class StaticAnalysis {
                 .collect(Collectors.toList());
         var otherClasses = filterClasses(allTypes, OtherClass.class);
         var dataClasses = filterClasses(allTypes, DataClass.class);
-        System.out.printf("Graph nodes results:" +
-                "%n    Total classes:             " + allClasses.size() +
-                "%n    Data classes:              " + dataClasses.size() +
-                "%n    Other classes:             " + otherClasses.size() +
-                "%n    Total method declarations: " + allMethodNames.size() + "%n");
+        LOGGER.info("Graph nodes results:" +
+                "\n\tTotal classes:             " + allClasses.size() +
+                "\n\tData classes:              " + dataClasses.size() +
+                "\n\tOther classes:             " + otherClasses.size() +
+                "\n\tTotal method declarations: " + allMethodNames.size());
 
-        System.out.println("Extracting relationships");
+        LOGGER.info("Extracting relationships");
         var allRelationships = allTypes.stream()
                 // Only calculate relationships from service classes
                 .filter(pair -> pair.getKey() instanceof OtherClass)
@@ -85,17 +89,18 @@ public class StaticAnalysis {
         var dataRelationships = filterRelationships(allRelationships, DataRelationship.class);
         var classDependencies = filterRelationships(allRelationships, DependenceRelationship.class);
 
-        System.out.printf("Graph edges results:" +
-                "%n    Total matching method calls:   " + declaringClassResolver.getTotalCount() +
-                "%n    Unresolved calls:              " + declaringClassResolver.getErrorCount() +
-                "%n    Resolved calls:                " + declaringClassResolver.getIdentifiedCount() +
-                "%n    To classes within application: " + declaringClassResolver.getCalleeCount() +
-                "%n    Excluding self-reference:      " + count +
-                "%n    Total relationships:           " + allRelationships.size() +
-                "%n    Data relationships:            " + dataRelationships.size() +
-                "%n    Other class dependencies:      " + classDependencies.size() +
-                "%n");
-        System.out.println("Static analysis took " + (System.currentTimeMillis() - start) + " ms");
+        LOGGER.info("Graph edges results:" +
+                "\n\tTotal matching method calls:   " + declaringClassResolver.getTotalCount() +
+                "\n\tUnresolved calls:              " + declaringClassResolver.getErrorCount() +
+                "\n\tResolved calls:                " + declaringClassResolver.getIdentifiedCount() +
+                "\n\tTo classes within application: " + declaringClassResolver.getCalleeCount() +
+                "\n\tExcluding self-reference:      " + count +
+                "\n\tTotal relationships:           " + allRelationships.size() +
+                "\n\tData relationships:            " + dataRelationships.size() +
+                "\n\tOther class dependencies:      " + classDependencies.size());
+
+        var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);
+        LOGGER.info("Static analysis took " + duration + " (H:m:s.millis)");
 
         modelBuilder.withDataClasses(dataClasses)
                 .withOtherClasses(otherClasses)
@@ -205,7 +210,7 @@ public class StaticAnalysis {
         if (typeDeclaration.getFullyQualifiedName().isEmpty()) {
             // This usually happens with inner types, but as we do symbol solving, it should not happen.
             // In any case, we will exclude these from the analysis as we can not uniquely identify them in the graph.
-            System.out.println("Could not construct FQN for type " + typeDeclaration.getNameAsString() + ". Skipping it.");
+            LOGGER.warn("Could not construct FQN for type {}. Skipping it.", typeDeclaration.getNameAsString());
         }
     }
 
@@ -214,11 +219,14 @@ public class StaticAnalysis {
             return;
         }
 
+        var problemString = parseResult.getProblems().stream()
+                .reduce("", (str, problem) -> str + "\n\t" + problem.getVerboseMessage(), (str1, str2) -> str1 + str2);
         if (parseResult.getResult().isPresent() && parseResult.getResult().get().getStorage().isPresent()) {
-            System.out.printf("Problem(s) in parse result %s%n", parseResult.getResult().get().getStorage().get().getFileName());
+            LOGGER.warn("Problem(s) in parse result for file {}:{}",
+                    parseResult.getResult().get().getStorage().get().getFileName(),
+                    problemString);
         } else {
-            System.out.println("Problem(s) in unknown parse result");
+            LOGGER.warn("Problem(s) in unknown parse result:{}", problemString);
         }
-        parseResult.getProblems().forEach(problem -> System.out.printf("        %s%n", problem.getVerboseMessage()));
     }
 }

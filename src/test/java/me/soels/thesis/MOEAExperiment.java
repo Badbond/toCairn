@@ -19,6 +19,8 @@ import org.junit.Test;
 import org.moeaframework.Executor;
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.variable.EncodingUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -29,6 +31,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class MOEAExperiment {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MOEAExperiment.class);
     private static final String GRAPH_NAME = "disease-graph";
 
     @Test
@@ -55,7 +58,7 @@ public class MOEAExperiment {
         //      - Have non-duplicated solutions (results in same clustering)
         //      - Allow duplicated objectives (same result, different clustering, is still interesting)
 
-        // TODO for Friday: Try to disable crossover operators but only allow for mutation operators. Currently SBX and PM is enabled.
+        // TODO: Try to disable crossover operators but only allow for mutation operators. Currently SBX and PM is enabled.
         NondominatedPopulation result = new Executor()
                 .withProblem(new ClusteringProblem(objectives, input, config))
                 .withAlgorithm("NSGAII")
@@ -65,11 +68,11 @@ public class MOEAExperiment {
 
         // Display the results
         var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);
-        System.out.println("===================================");
-        System.out.println("Amount of non-dominated solutions: " + result.size());
-        System.out.println("Processing took: " + duration + " (H:m:s.millis)");
+        LOGGER.info("===================================");
+        LOGGER.info("Amount of non-dominated solutions: " + result.size());
+        LOGGER.info("Processing took: " + duration + " (H:m:s.millis)");
         printSolutionsData(result, objectives, input, config.getEncodingType());
-        System.out.println("===================================");
+        LOGGER.info("===================================");
     }
 
     private AnalysisModel prepareInput() {
@@ -115,22 +118,25 @@ public class MOEAExperiment {
                 .collect(Collectors.toList());
 
         for (var solution : result) {
-            System.out.println("-----------------------------------");
-            System.out.format(StringUtils.join(objectivesNames, "  ") + "%n");
+            LOGGER.info("-----------------------------------");
+            var objectivesStringBuilder = new StringBuilder("\n")
+                    .append(StringUtils.join(objectivesNames, "  "))
+                    .append("\n");
             for (int i = 0; i < objectivesNames.size(); i++) {
                 var numberLength = Double.compare(solution.getObjective(i), 0.0) < 0 ? 7 : 6;
                 var spacing = " ".repeat(objectivesNames.get(i).length() - numberLength) + "  ";
-                System.out.format("%.4f" + spacing, solution.getObjective(i));
+                objectivesStringBuilder.append(String.format("%.4f%s", solution.getObjective(i), spacing));
             }
-            System.out.println();
+            LOGGER.info(objectivesStringBuilder.toString());
 
             var clustering = VariableDecoder.decode(input, EncodingUtils.getInt(solution), encodingType);
             if (clustering.getByClass().size() <= 12) {
-                System.out.println("Clustering:");
-                clustering.getByClass().forEach((clazz, cluster) -> System.out.format("%s: %d, ", clazz.getHumanReadableName(), cluster));
-                System.out.println();
+                var clusteringStringBuilder = new StringBuilder("Clustering:\n");
+                clustering.getByClass().forEach((clazz, cluster) ->
+                        clusteringStringBuilder.append(clazz.getHumanReadableName()).append(": ").append(cluster));
+                LOGGER.info(clusteringStringBuilder.toString());
             }
-            System.out.println("Amount of clusters: " + clustering.getByCluster().size());
+            LOGGER.info("Amount of clusters: {}", clustering.getByCluster().size());
         }
     }
 }

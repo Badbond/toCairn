@@ -97,6 +97,7 @@ public class MethodCallDeclaringClassResolver {
                 .filter(childNode -> childNode instanceof MethodCallExpr)
                 .findFirst() // Can only have one method call as direct child
                 .flatMap(childNode -> getDeclaringClass((MethodCallExpr) childNode, allClasses))
+                // TODO: This is incorrect as it will return the type of the previous method call, not of the current one. We need to extract the return type of the child methodCall.
                 .map(result -> result.getKey().getIdentifier());
     }
 

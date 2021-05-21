@@ -42,10 +42,9 @@ import static org.hamcrest.CoreMatchers.anyOf;
  * is based on their book <i>'JavaParser: Visited'</i>. Please note that we do not introduce any concurrency ourselves
  * on purpose as the library used returns more errors when doing so (both during parsing classes and resolving methods).
  * <p>
- * TODO: Explain that we can not resolve dependencies that are constructed runtime (e.g. those dependencies
- * that are hidden behind polymorphism and injection. I need to present this as a limitation of static analysis.
- * Thus, such existing approaches don't handle that. I won't handle it fully with dynamic analysis and therefore
- * My approach also has this limitation.
+ * Note that this static analysis does not allow for resolving relations that are constructed at runtime. Therefore,
+ * it does not allow to represent injection and polymorphism relations. We can mitigate this if desired using dynamic
+ * analysis.
  * <p>
  * TODO: Perhaps we do need to include dependencies as those dependencies can also model data. Then we would still
  * be in favour of combining classes that use the same data models in terms of data autonomy (even though the data
@@ -137,8 +136,7 @@ public class StaticAnalysis {
                 .map(this::printProblems)
                 .filter(parseResult -> parseResult.getResult().isPresent())
                 .flatMap(parseResult -> parseResult.getResult().get().getTypes().stream())
-                // Also include the inner types
-                // TODO: This now excludes enums and annotations, do we want those?
+                // Also include the inner types, note we do not include annotations and enums
                 .flatMap(type -> type.findAll(ClassOrInterfaceDeclaration.class).stream())
                 // Print problems where FQN could not be determined and filter those cases out
                 .map(this::printEmptyQualifiers)
@@ -160,16 +158,30 @@ public class StaticAnalysis {
     }
 
     private boolean isDataClass(ClassOrInterfaceDeclaration clazz, StaticAnalysisInput input) {
-        var containsDataAnnotation = clazz.getAnnotations().stream()
+        return clazzNameIndicatesDataStructure(clazz) ||
+                clazzContainsDataAnnotation(clazz, input) ||
+                clazzLooksLikeDataStructure(clazz);
+    }
+
+    private boolean clazzNameIndicatesDataStructure(ClassOrInterfaceDeclaration clazz) {
+        // There are more names which would indicate data (such as 'data', 'model', etc.) but those might also return
+        // false positives, for example: ModellingService, DataController.
+        return StringUtils.endsWithIgnoreCase(clazz.getNameAsString(), "DTO") ||
+                StringUtils.endsWithIgnoreCase(clazz.getNameAsString(), "DAO");
+    }
+
+    private boolean clazzContainsDataAnnotation(ClassOrInterfaceDeclaration clazz, StaticAnalysisInput input) {
+        return clazz.getAnnotations().stream()
                 .map(NodeWithName::getNameAsString)
                 .anyMatch(annotation -> anyOf(containsIgnoringCase("immutable"),
                         containsIgnoringCase("entity"),
                         containsIgnoringCase(input.getCustomDataAnnotation()))
                         .matches(annotation));
-        return containsDataAnnotation ||
-                StringUtils.endsWithIgnoreCase(clazz.getNameAsString(), "DTO") ||
-                StringUtils.endsWithIgnoreCase(clazz.getNameAsString(), "DAO");
-        // TODO: Or look at class structure
+    }
+
+    private boolean clazzLooksLikeDataStructure(ClassOrInterfaceDeclaration clazz) {
+        // TODO: Look at class structure
+        return false;
     }
 
     private List<Relationship> resolveClassDependencies(OtherClass caller, List<AbstractClass> allClasses, List<String> allMethodNames, ClassOrInterfaceDeclaration classDeclaration) {
@@ -245,10 +257,9 @@ public class StaticAnalysis {
         if (!parseResult.isSuccessful()) {
             var problemString = parseResult.getProblems().stream()
                     .reduce("", (str, problem) -> str + "\n\t" + problem.getVerboseMessage(), (str1, str2) -> str1 + str2);
-            if (parseResult.getResult().isPresent() && parseResult.getResult().get().getStorage().isPresent()) {
-                LOGGER.warn("Problem(s) in parse result for file {}:{}",
-                        parseResult.getResult().get().getStorage().get().getFileName(),
-                        problemString);
+            var storage = parseResult.getResult().flatMap(CompilationUnit::getStorage);
+            if (storage.isPresent()) {
+                LOGGER.warn("Problem(s) in parse result for file {}:{}", storage.get().getFileName(), problemString);
             } else {
                 LOGGER.warn("Problem(s) in unknown parse result:{}", problemString);
             }

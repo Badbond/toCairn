@@ -257,12 +257,10 @@ public class StaticAnalysis {
         if (!parseResult.isSuccessful()) {
             var problemString = parseResult.getProblems().stream()
                     .reduce("", (str, problem) -> str + "\n\t" + problem.getVerboseMessage(), (str1, str2) -> str1 + str2);
-            var storage = parseResult.getResult().flatMap(CompilationUnit::getStorage);
-            if (storage.isPresent()) {
-                LOGGER.warn("Problem(s) in parse result for file {}:{}", storage.get().getFileName(), problemString);
-            } else {
-                LOGGER.warn("Problem(s) in unknown parse result:{}", problemString);
-            }
+            parseResult.getResult().flatMap(CompilationUnit::getStorage).ifPresentOrElse(
+                    storage -> LOGGER.warn("Problem(s) in parse result for file {}:{}", storage.getFileName(), problemString),
+                    () -> LOGGER.warn("Problem(s) in unknown parse result:{}", problemString)
+            );
         }
 
         return parseResult;

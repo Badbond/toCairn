@@ -7,10 +7,12 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.ast.nodeTypes.NodeWithName;
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy;
 import com.github.javaparser.utils.SourceRoot;
 import me.soels.thesis.model.*;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -23,9 +25,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
+import static me.soels.thesis.analysis.StringContainsIgnoreCaseMatcher.containsIgnoringCase;
 import static me.soels.thesis.analysis.ZipExtractor.extractZip;
 import static me.soels.thesis.model.DataRelationshipType.READ;
 import static me.soels.thesis.model.DataRelationshipType.WRITE;
+import static org.hamcrest.CoreMatchers.anyOf;
 
 /**
  * Performs static analysis of the given {@code .zip} file containing the application's source files.
@@ -35,12 +39,17 @@ import static me.soels.thesis.model.DataRelationshipType.WRITE;
  * and data classes.
  * <p>
  * We use {@link JavaParser} for building the abstract syntax tree and resolving the type references. Some of this class
- * is based on their book <i>'JavaParser: Visited'</i>.
- *
+ * is based on their book <i>'JavaParser: Visited'</i>. Please note that we do not introduce any concurrency ourselves
+ * on purpose as the library used returns more errors when doing so (both during parsing classes and resolving methods).
+ * <p>
  * TODO: Explain that we can not resolve dependencies that are constructed runtime (e.g. those dependencies
- *  that are hidden behind polymorphism and injection. I need to present this as a limitation of static analysis.
- *  Thus, such existing approaches don't handle that. I won't handle it fully with dynamic analysis and therefore
- *  My approach also has this limitation.
+ * that are hidden behind polymorphism and injection. I need to present this as a limitation of static analysis.
+ * Thus, such existing approaches don't handle that. I won't handle it fully with dynamic analysis and therefore
+ * My approach also has this limitation.
+ * <p>
+ * TODO: Perhaps we do need to include dependencies as those dependencies can also model data. Then we would still
+ * be in favour of combining classes that use the same data models in terms of data autonomy (even though the data
+ * is modeled in the dependency. An example of this is FcId.class in shared library of host org.
  */
 public class StaticAnalysis {
     private static final Logger LOGGER = LoggerFactory.getLogger(StaticAnalysis.class);
@@ -60,14 +69,14 @@ public class StaticAnalysis {
         }
 
         var projectLocation = extractZip(inputZip);
-        performAnalysis(modelBuilder, projectLocation, input.getLanguageLevel());
+        performAnalysis(modelBuilder, projectLocation, input);
     }
 
-    private void performAnalysis(AnalysisModelBuilder modelBuilder, Path projectLocation, ParserConfiguration.LanguageLevel languageLevel) {
+    private void performAnalysis(AnalysisModelBuilder modelBuilder, Path projectLocation, StaticAnalysisInput input) {
         var start = System.currentTimeMillis();
 
         LOGGER.info("Extracting classes");
-        var allTypes = getAllTypes(projectLocation, languageLevel);
+        var allTypes = getAllTypes(projectLocation, input);
         var allClasses = allTypes.stream().map(Pair::getKey).collect(Collectors.toList());
         var allMethodNames = allTypes.stream()
                 .flatMap(pair -> pair.getValue().findAll(MethodDeclaration.class).stream())
@@ -78,10 +87,10 @@ public class StaticAnalysis {
         var otherClasses = filterClasses(allTypes, OtherClass.class);
         var dataClasses = filterClasses(allTypes, DataClass.class);
         LOGGER.info("Graph nodes results:" +
-                        "\n\tTotal classes:             {}" +
-                        "\n\tData classes:              {}" +
-                        "\n\tOther classes:             {}" +
-                        "\n\tTotal method declarations: {}",
+                        "\n\tTotal classes:       {}" +
+                        "\n\tData classes:        {}" +
+                        "\n\tOther classes:       {}" +
+                        "\n\tUnique method names: {}",
                 allClasses.size(), dataClasses.size(), otherClasses.size(), allMethodNames.size());
 
         LOGGER.info("Extracting relationships");
@@ -116,8 +125,8 @@ public class StaticAnalysis {
                 .withDataRelationships(dataRelationships);
     }
 
-    private List<Pair<AbstractClass, ClassOrInterfaceDeclaration>> getAllTypes(Path projectLocation, ParserConfiguration.LanguageLevel languageLevel) {
-        var config = new ParserConfiguration().setLanguageLevel(languageLevel);
+    private List<Pair<AbstractClass, ClassOrInterfaceDeclaration>> getAllTypes(Path projectLocation, StaticAnalysisInput input) {
+        var config = new ParserConfiguration().setLanguageLevel(input.getLanguageLevel());
         return new SymbolSolverCollectionStrategy(config)
                 .collect(projectLocation).getSourceRoots().stream()
                 // Don't include test directories
@@ -135,24 +144,32 @@ public class StaticAnalysis {
                 .map(this::printEmptyQualifiers)
                 .filter(clazz -> clazz.getFullyQualifiedName().isPresent())
                 // Create a pair of the type of class and its AST
-                .map(clazz -> Pair.of(identifyClass(clazz), clazz))
+                .map(clazz -> Pair.of(identifyClass(clazz, input), clazz))
                 .collect(Collectors.toList());
     }
 
-    private AbstractClass identifyClass(ClassOrInterfaceDeclaration clazz) {
+    private AbstractClass identifyClass(ClassOrInterfaceDeclaration clazz, StaticAnalysisInput input) {
         var fqn = clazz.getFullyQualifiedName()
                 .orElseThrow(() -> new IllegalStateException("Could not retrieve FQN from already filtered class"));
 
-        if (isDataClass(clazz)) {
+        if (isDataClass(clazz, input)) {
             return new DataClass(fqn, clazz.getNameAsString(), null);
         } else {
             return new OtherClass(fqn, clazz.getNameAsString());
         }
     }
 
-    private boolean isDataClass(ClassOrInterfaceDeclaration clazz) {
-        // TODO: check if class is a data class based on class characteristics
-        return false;
+    private boolean isDataClass(ClassOrInterfaceDeclaration clazz, StaticAnalysisInput input) {
+        var containsDataAnnotation = clazz.getAnnotations().stream()
+                .map(NodeWithName::getNameAsString)
+                .anyMatch(annotation -> anyOf(containsIgnoringCase("immutable"),
+                        containsIgnoringCase("entity"),
+                        containsIgnoringCase(input.getCustomDataAnnotation()))
+                        .matches(annotation));
+        return containsDataAnnotation ||
+                StringUtils.endsWithIgnoreCase(clazz.getNameAsString(), "DTO") ||
+                StringUtils.endsWithIgnoreCase(clazz.getNameAsString(), "DAO");
+        // TODO: Or look at class structure
     }
 
     private List<Relationship> resolveClassDependencies(OtherClass caller, List<AbstractClass> allClasses, List<String> allMethodNames, ClassOrInterfaceDeclaration classDeclaration) {

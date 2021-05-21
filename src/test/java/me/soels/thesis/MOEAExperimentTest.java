@@ -37,7 +37,7 @@ public class MOEAExperimentTest {
 
     @Test
     public void runExperimentTest() {
-        var problemConfig = new ProblemConfiguration(EncodingType.GRAPH_ADJECENCY, VariableType.FLOAT_INT, null, null);
+        var problemConfig = new ProblemConfiguration(EncodingType.CLUSTER_LABEL, VariableType.FLOAT_INT, null, null);
         runExperiment(problemConfig);
     }
 
@@ -133,7 +133,10 @@ public class MOEAExperimentTest {
             if (clustering.getByClass().size() <= 12) {
                 var clusteringStringBuilder = new StringBuilder("Clustering:\n");
                 clustering.getByClass().forEach((clazz, cluster) ->
-                        clusteringStringBuilder.append(clazz.getHumanReadableName()).append(": ").append(cluster));
+                        clusteringStringBuilder.append(clazz.getHumanReadableName())
+                                .append(": ")
+                                .append(cluster)
+                                .append(", "));
                 LOGGER.info(clusteringStringBuilder.toString());
             }
             LOGGER.info("Amount of clusters: {}", clustering.getByCluster().size());

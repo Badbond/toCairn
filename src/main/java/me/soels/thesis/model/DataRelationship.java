@@ -12,23 +12,16 @@ package me.soels.thesis.model;
  * from {@link #getCaller()} to {@link #getCallee()}. When dynamic analysis is used, this will be determined based on
  * the amount of interactions in the time frame for which dynamic analysis was performed.
  */
-public final class DataRelationship extends Relationship {
-    // TODO: List of methods invoked? count can be deduced from that. Not sure if needed but we can add it. Also for other dep.
+public final class DataRelationship extends DependenceRelationship {
     private final DataRelationshipType type;
-    private final int frequency;
 
     public DataRelationship(OtherClass otherClass, DataClass dataClass, DataRelationshipType type, int frequency) {
-        super(otherClass, dataClass);
+        super(otherClass, dataClass, frequency);
         this.type = type;
-        this.frequency = frequency;
     }
 
     public DataRelationshipType getType() {
         return type;
-    }
-
-    public int getFrequency() {
-        return frequency;
     }
 
     @Override

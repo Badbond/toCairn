@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -38,7 +39,7 @@ import static com.github.javaparser.ParserConfiguration.LanguageLevel.JAVA_11;
 public class ThesisExperimentTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ThesisExperimentTest.class);
     private static final String MOCK_GRAPH_NAME = "simple-graph-2";
-    private static final Path ZIP_FILE = Path.of("big-project-cleaned.zip");
+    private static final String ZIP_FILE = "big-project-cleaned.zip";
     private final VariableDecoder variableDecoder = new VariableDecoder();
 
     @Test
@@ -49,14 +50,15 @@ public class ThesisExperimentTest {
     }
 
     @Test
-    public void runExperimentWithSourceCode() {
+    public void runExperimentWithSourceCode() throws URISyntaxException {
         var problemConfig = new ProblemConfiguration(EncodingType.CLUSTER_LABEL, VariableType.FLOAT_INT, null, null);
         var input = getZipInput();
         runExperiment(problemConfig, input);
     }
 
-    private AnalysisModel getZipInput() {
-        var analysisInput = new StaticAnalysisInput(ZIP_FILE, JAVA_11, null);
+    private AnalysisModel getZipInput() throws URISyntaxException {
+        var project = Path.of(this.getClass().getClassLoader().getResource(ZIP_FILE).toURI());
+        var analysisInput = new StaticAnalysisInput(project, JAVA_11, null);
         var modelBuilder = new AnalysisModelBuilder();
         new StaticAnalysis().analyze(modelBuilder, analysisInput);
         return modelBuilder.build();

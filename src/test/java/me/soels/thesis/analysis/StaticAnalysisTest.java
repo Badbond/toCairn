@@ -26,6 +26,11 @@ public class StaticAnalysisTest {
         //      87597 total, 7532 unresolved, 32984 relevant (excl. self-ref), 5186 relationships, -- 6m 35s on 3.22.1
         //      87586 total, 7532 unresolved, 32984 relevant (excl. self-ref), 5186 relationships, -- 2m 01s parallelized
         //      87570 total, 7532 unresolved, 32966 relevant (excl. self-ref), 5186 relationships, -- 2m 13s parallelized
+        //      43222 total, 6763 unresolved, 10298 relevant (excl. self-ref), 3096 relationships, -- 3m 54s on 3.22.1 (16 cores instead of 8)
+        // big-project-cleaned-2.zip (with generated sources by compilation & excluding .jar, /test/, /classes/,
+        //                      /generated-test-sources/, /test-classes/: 4883 classes, 10042 unique method names):
+        //      43222 total, 6763 unresolved, 10298 relevant (excl. self-ref), 3096 relationships, -- 2m 43s on 3.22.1 (16 cores instead of 8)
+        // 2014 dependencies from data class to abstract class. -- 22403 calls ignored -- Difference in 5186-3096-2014=76 is due to changes in platform.
         var analysis = new StaticAnalysis();
         var builder = new AnalysisModelBuilder();
         analysis.analyze(builder, input);

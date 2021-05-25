@@ -1,5 +1,8 @@
 package me.soels.thesis.model;
 
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import org.apache.commons.lang3.tuple.Pair;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -12,10 +15,16 @@ import java.util.List;
  * algorithm.
  */
 public class AnalysisModelBuilder {
+    private final List<Pair<AbstractClass, ClassOrInterfaceDeclaration>> allTypes = Collections.synchronizedList(new ArrayList<>());
     private final List<OtherClass> otherClasses = Collections.synchronizedList(new ArrayList<>());
     private final List<DataClass> dataClasses = Collections.synchronizedList(new ArrayList<>());
     private final List<DependenceRelationship> dependencies = Collections.synchronizedList(new ArrayList<>());
     private final List<DataRelationship> dataRelationships = Collections.synchronizedList(new ArrayList<>());
+
+    public AnalysisModelBuilder withAllTypes(List<Pair<AbstractClass, ClassOrInterfaceDeclaration>> allTypes) {
+        this.dataRelationships.addAll(dataRelationships);
+        return this;
+    }
 
     public AnalysisModelBuilder withOtherClasses(List<OtherClass> otherClasses) {
         this.otherClasses.addAll(otherClasses);

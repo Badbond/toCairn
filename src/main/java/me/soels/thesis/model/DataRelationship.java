@@ -13,6 +13,7 @@ package me.soels.thesis.model;
  * the amount of interactions in the time frame for which dynamic analysis was performed.
  */
 public final class DataRelationship extends Relationship {
+    // TODO: List of methods invoked? count can be deduced from that. Not sure if needed but we can add it. Also for other dep.
     private final DataRelationshipType type;
     private final int frequency;
 

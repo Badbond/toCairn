@@ -1,5 +1,7 @@
 package me.soels.thesis;
 
+import me.soels.thesis.analysis.StaticAnalysis;
+import me.soels.thesis.analysis.StaticAnalysisInput;
 import me.soels.thesis.encoding.EncodingType;
 import me.soels.thesis.encoding.VariableDecoder;
 import me.soels.thesis.encoding.VariableType;
@@ -24,26 +26,44 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class MOEAExperimentTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MOEAExperimentTest.class);
+import static com.github.javaparser.ParserConfiguration.LanguageLevel.JAVA_11;
+
+public class ThesisExperimentTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ThesisExperimentTest.class);
+    private static final String MOCK_GRAPH_NAME = "simple-graph-2";
+    private static final Path ZIP_FILE = Path.of("big-project-cleaned.zip");
     private final VariableDecoder variableDecoder = new VariableDecoder();
-    private static final String GRAPH_NAME = "simple-graph-2";
 
     @Test
-    public void runExperimentTest() {
+    public void runExperimentTestWithMockData() {
         var problemConfig = new ProblemConfiguration(EncodingType.CLUSTER_LABEL, VariableType.FLOAT_INT, null, null);
-        runExperiment(problemConfig);
+        var input = prepareMockInput();
+        runExperiment(problemConfig, input);
     }
 
-    private void runExperiment(ProblemConfiguration config) {
+    @Test
+    public void runExperimentWithSourceCode() {
+        var problemConfig = new ProblemConfiguration(EncodingType.CLUSTER_LABEL, VariableType.FLOAT_INT, null, null);
+        var input = getZipInput();
+        runExperiment(problemConfig, input);
+    }
+
+    private AnalysisModel getZipInput() {
+        var analysisInput = new StaticAnalysisInput(ZIP_FILE, JAVA_11, null);
+        var modelBuilder = new AnalysisModelBuilder();
+        new StaticAnalysis().analyze(modelBuilder, analysisInput);
+        return modelBuilder.build();
+    }
+
+    private void runExperiment(ProblemConfiguration config, AnalysisModel input) {
         List<Objective> objectives = List.of(new CouplingBetweenModuleClassesObjective(), new CohesionCarvalhoObjective());
-        var input = prepareInput();
         var start = System.currentTimeMillis();
 
         // TODO:
@@ -59,7 +79,8 @@ public class MOEAExperimentTest {
         //      - Have non-duplicated solutions (results in same clustering)
         //      - Allow duplicated objectives (same result, different clustering, is still interesting)
 
-        // TODO: Try to disable crossover operators but only allow for mutation operators. Currently SBX and PM is enabled.
+        // TODO: As suggested by Carvalho et al., try to disable crossover operators but only allow for mutation
+        //  operators. Currently SBX and PM is enabled.
         NondominatedPopulation result = new Executor()
                 .withProblem(new ClusteringProblem(objectives, input, config))
                 .withAlgorithm("NSGAII")
@@ -76,15 +97,15 @@ public class MOEAExperimentTest {
         LOGGER.info("===================================");
     }
 
-    private AnalysisModel prepareInput() {
+    private AnalysisModel prepareMockInput() {
         var builder = new AnalysisModelBuilder();
-        var graph = getGraph();
+        var graph = getMockGraph();
         builder.withOtherClasses(graph.getKey());
         builder.withDependencies(graph.getValue());
         return builder.build();
     }
 
-    private Pair<List<OtherClass>, List<DependenceRelationship>> getGraph() {
+    private Pair<List<OtherClass>, List<DependenceRelationship>> getMockGraph() {
         var graphLines = Arrays.stream(getGraphString().split("\n"))
                 .skip(2)
                 .collect(Collectors.toList());
@@ -103,9 +124,9 @@ public class MOEAExperimentTest {
 
     private String getGraphString() {
         try {
-            var stream = this.getClass().getClassLoader().getResourceAsStream(GRAPH_NAME + ".csv");
+            var stream = this.getClass().getClassLoader().getResourceAsStream(MOCK_GRAPH_NAME + ".csv");
             if (stream == null) {
-                throw new IllegalStateException("Could not find " + GRAPH_NAME + ".csv file");
+                throw new IllegalStateException("Could not find " + MOCK_GRAPH_NAME + ".csv file");
             }
             return IOUtils.toString(stream, StandardCharsets.UTF_8);
         } catch (IOException e) {

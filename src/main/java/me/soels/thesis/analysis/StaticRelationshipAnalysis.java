@@ -1,6 +1,8 @@
 package me.soels.thesis.analysis;
 
+import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.ast.expr.MethodReferenceExpr;
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 import me.soels.thesis.model.*;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -8,8 +10,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -19,10 +20,18 @@ import static me.soels.thesis.model.DataRelationshipType.WRITE;
 
 /**
  * Performs static analysis on the provided project to determine the relationships between classes in the project.
+ * <p>
+ * We analyze method calls, constructor usage and method references on a per-class basis to determine relationships
+ * between classes. For method calls and references, we optimize the search algorithm by only including those referenced
+ * methods that are declared within the classes of the application. We furthermore filter out relationships to classes
+ * outside of the project and to the classes themselves.
+ * <p>
+ * We analyze inner classes separately to have them function as separate entities instead of having method calls within
+ * those influence the outer class.
  */
 public class StaticRelationshipAnalysis {
     private static final Logger LOGGER = LoggerFactory.getLogger(StaticRelationshipAnalysis.class);
-    private final MethodCallDeclaringClassResolver declaringClassResolver = new MethodCallDeclaringClassResolver();
+    private final DeclaringClassResolver declaringClassResolver = new DeclaringClassResolver();
     private final CustomClassOrInterfaceVisitor classVisitor = new CustomClassOrInterfaceVisitor();
 
     public void analyze(StaticAnalysisContext context) {
@@ -54,60 +63,123 @@ public class StaticRelationshipAnalysis {
                 .map(Pair::getKey)
                 .collect(Collectors.toList());
 
-        // TODO: Process object creation and references including counters
+        var relevantNodes = new HashMap<AbstractClass, List<Expression>>();
+        relevantNodes.putAll(getRelevantMethodCalls(context, visitorResult, allMethodNames, allClasses));
+        relevantNodes.putAll(getRelevantMethodReferences(context, visitorResult, allMethodNames, allClasses));
+        relevantNodes.putAll(getRelevantConstructorCalls(context, visitorResult, allClasses));
 
+        return relevantNodes.entrySet().stream()
+                .map(calleeEntry -> identifyRelationship(visitorResult.getCaller(), calleeEntry.getKey(), calleeEntry.getValue()))
+                .collect(Collectors.toList());
+    }
+
+    private Map<AbstractClass, List<Expression>> getRelevantConstructorCalls(StaticAnalysisContext context, VisitorResult visitorResult, List<AbstractClass> allClasses) {
+        return visitorResult.getObjectCreationExpressions().stream()
+                .flatMap(node -> declaringClassResolver.resolveConstructorCall(context, node, allClasses).stream())
+                // Filter out self invocation (e.g. when having a static method to instantiate self)
+                .filter(calleePair -> !calleePair.getKey().getIdentifier().equals(visitorResult.getCaller().getIdentifier()))
+                .map(calleePair -> executeSideEffect(() -> context.getCounters().relevantConstructorCalls++, calleePair))
+                .collect(groupingBy(Pair::getKey, Collectors.mapping(pair -> (Expression) pair.getValue(), Collectors.toList())));
+    }
+
+    private Map<AbstractClass, List<Expression>> getRelevantMethodReferences(StaticAnalysisContext context, VisitorResult visitorResult, Set<String> allMethodNames, List<AbstractClass> allClasses) {
+        return visitorResult.getMethodReferences().stream()
+                // Filter out method names that are definitely not within the application
+                .filter(methodRef -> allMethodNames.contains(methodRef.getIdentifier()))
+                .map(method -> executeSideEffect(() -> context.getCounters().matchingMethodReferences++, method))
+                // Try to resolve the method reference to get the pair of callee and its method invoked.
+                .flatMap(methodRef -> declaringClassResolver.resolveMethodReference(context, methodRef, allClasses).stream())
+                // Filter out self invocation
+                .filter(calleePair -> !calleePair.getKey().getIdentifier().equals(visitorResult.getCaller().getIdentifier()))
+                .map(calleePair -> executeSideEffect(() -> context.getCounters().relevantMethodReferences++, calleePair))
+                // Group by callee class based on FQN with value the AST nodes relevant
+                .collect(groupingBy(Pair::getKey, Collectors.mapping(pair -> (Expression) pair.getValue(), Collectors.toList())));
+    }
+
+    private Map<AbstractClass, List<Expression>> getRelevantMethodCalls(StaticAnalysisContext context, VisitorResult visitorResult, Set<String> allMethodNames, List<AbstractClass> allClasses) {
         // We need to iterate this way to resolve statements in a preorder for multiple types of nodes
         return visitorResult.getMethodCalls().stream()
                 // Filter out method names that are definitely not within the application
                 .filter(method -> allMethodNames.contains(method.getNameAsString()))
+                .map(method -> executeSideEffect(() -> context.getCounters().matchingMethodCalls++, method))
                 // Try to resolve the method call to get the pair of callee and its method invoked.
-                .flatMap(method -> declaringClassResolver.getDeclaringClass(context, method, allClasses).stream())
+                .flatMap(method -> declaringClassResolver.resolveMethodCall(context, method, allClasses).stream())
                 // Filter out self invocation
                 .filter(calleePair -> !calleePair.getKey().getIdentifier().equals(visitorResult.getCaller().getIdentifier()))
-                .peek(calleePair -> context.getCounters().relevantMethodCalls++)
-                // Group by callee class based on FQN
-                .collect(groupingBy(Pair::getKey))
-                .values().stream()
-                // For every callee, identify the relationship
-                .map(calleePairs -> identifyRelationship(visitorResult.getCaller(), calleePairs))
-                .collect(Collectors.toList());
+                .map(calleePair -> executeSideEffect(() -> context.getCounters().relevantMethodCalls++, calleePair))
+                // Group by callee class based on FQN with value the AST nodes relevant
+                .collect(groupingBy(Pair::getKey, Collectors.mapping(pair -> (Expression) pair.getValue(), Collectors.toList())));
     }
 
-    private DependenceRelationship identifyRelationship(AbstractClass clazz,
-                                                        List<Pair<AbstractClass, MethodCallExpr>> calleeMethods) {
-        var target = calleeMethods.get(0).getKey();
-        var methods = calleeMethods.stream().map(Pair::getValue).collect(Collectors.toList());
-        if (clazz instanceof OtherClass && target instanceof DataClass) {
-            return new DataRelationship((OtherClass) clazz, (DataClass) target, identifyReadWrite(methods), calleeMethods.size());
+    /**
+     * Identifies whether the given {@link AbstractClass} {@code caller} has a data relationship or a 'normal'
+     * dependence relationship.
+     * <p>
+     * We mark the relationship as a data-relationship when the caller is an {@link OtherClass} and the callee is an
+     * {@link DataClass}. To keep the graph simple, we don't mark data-to-data or data-to-other relationships as a
+     * data relationship.
+     *
+     * @param caller        the source of the relationship
+     * @param callee        the target of the relationship
+     * @param relevantNodes the list of AST nodes related to the relationship
+     * @return the dependence relationship between callee and caller
+     */
+    private DependenceRelationship identifyRelationship(AbstractClass caller,
+                                                        AbstractClass callee,
+                                                        List<Expression> relevantNodes) {
+        if (caller instanceof OtherClass && callee instanceof DataClass) {
+            return new DataRelationship((OtherClass) caller, (DataClass) callee, identifyReadWrite(relevantNodes), relevantNodes.size());
         } else {
-            return new DependenceRelationship(clazz, target, calleeMethods.size());
+            return new DependenceRelationship(caller, callee, relevantNodes.size());
         }
     }
 
     /**
-     * Identifies whether the caller has a read or write dependency to the callee. If any of the calls signify that
+     * Identifies whether the caller has a read or write dependency to the callee. If any of the AST nodes signify that
      * data is being written to the callee, we will mark this relationship as {@link DataRelationshipType#WRITE}.
      * Otherwise, we will signify it as {@link DataRelationshipType#READ}.
      * <p>
-     * We unfortunately can't analyze the return type as we have not always resolved the method call (whereas we
-     * did resolve the type) and therefore requires significant more effort to determine whether this method returns a
-     * value or not. Because in that case you could catch toggle-like methods that do not provide arguments but still
-     * change the state of the data.
+     * In case the caller instantiates the callee, we always mark the relationship as {@link DataRelationshipType#WRITE}.
+     * <p>
+     * Then we continue analyzing the {@link MethodCallExpr} to the callee. If any of these send arguments to the
+     * callee in its call, we assume that the state of the data object is changed by what is passed as argument.
+     * Otherwise, we mark the relationship as {@link DataRelationshipType#READ}. We unfortunately can't analyze the
+     * return type as we have not always resolved the method call (whereas we did resolve the type) and therefore
+     * requires significant more effort to determine whether this method returns a value or not. Therefore, cases such
+     * as toggle-methods (void methods without parameters) to toggle state in the callee, can not be identified without
+     * significant additional effort.
      *
-     * @param methodsCalled the multiple method calls to analyze
+     * @param relevantNodes the AST nodes to analyze to determine the data relationship type
      * @return whether data is being read or written
      */
-    private DataRelationshipType identifyReadWrite(List<MethodCallExpr> methodsCalled) {
-        return methodsCalled.stream().anyMatch(method -> method.getArguments().size() > 1) ? WRITE : READ;
+    private DataRelationshipType identifyReadWrite(List<Expression> relevantNodes) {
+        if (relevantNodes.stream().anyMatch(Expression::isObjectCreationExpr)) {
+            return WRITE;
+        }
+        if (relevantNodes.stream()
+                .filter(MethodCallExpr.class::isInstance)
+                .map(MethodCallExpr.class::cast)
+                .anyMatch(method -> method.getArguments().size() > 1)) {
+            return WRITE;
+        }
+
+        // TODO: Actually process them.. But how? We don't know the parameters (can also be 0!) and naming seems not
+        //  consistent enough.
+        relevantNodes.stream()
+                .filter(MethodReferenceExpr.class::isInstance)
+                .map(MethodReferenceExpr.class::cast)
+                .findFirst().ifPresent(node -> LOGGER.info("Node {} is interesting", node.getIdentifier()));
+
+        return READ;
     }
 
     private void printResults(StaticAnalysisContext context,
                               List<VisitorResult> visitorResults,
                               Set<String> methodNameSet) {
         var counters = context.getCounters();
-        // These AST nodes (method calls, object creations) could not be resolved and thus we could not determine the
-        // class that was called as part of that node.
-        LOGGER.warn("Ignored {} AST nodes as they could not be resolved. Set property 'logging=debug' to see why it could not be resolved.", counters.unresolvedNodes);
+        // For unresolved AST nodes (method calls, object creations) we can not determine the class that was called.
+        LOGGER.warn("Ignored {} AST nodes as they could not be resolved. Set property 'logging=debug' to see why they " +
+                "could not be resolved.", counters.unresolvedNodes);
 
         LOGGER.info("Graph edges results:" +
                         "\n\tTotal constructor calls:           {}" +
@@ -137,5 +209,12 @@ public class StaticRelationshipAnalysis {
         LOGGER.info("Matching means that the method is in the unique set of declared method names.");
         LOGGER.info("Relevant means that the after resolving the AST node, the declaring class was part of another " +
                 "class within this project.");
+    }
+
+    private <T> T executeSideEffect(Runnable runnable, T value) {
+        // Usage of .peek() is not recommended as some stream implementation do not support it. Therefore we have this
+        // method to execute a side effect using .map().
+        runnable.run();
+        return value;
     }
 }

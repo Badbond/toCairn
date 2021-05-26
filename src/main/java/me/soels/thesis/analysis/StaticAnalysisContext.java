@@ -16,11 +16,12 @@ import java.util.stream.Collectors;
  * It furthermore contains data needed to share between stages of the static analysis, utility functions on the data
  * stored within this context, and additional data in favor of debugging such as counters.
  */
-public class StaticAnalysisContext {
+class StaticAnalysisContext {
     private final Path projectLocation;
     private final StaticAnalysisInput input;
     private final List<Pair<AbstractClass, ClassOrInterfaceDeclaration>> classesAndTypes = new ArrayList<>();
     private final List<DependenceRelationship> relationships = new ArrayList<>();
+    private final Counters counters = new Counters();
 
     public StaticAnalysisContext(Path projectLocation, StaticAnalysisInput input) {
         this.projectLocation = projectLocation;
@@ -66,6 +67,15 @@ public class StaticAnalysisContext {
                 .collect(Collectors.toList());
     }
 
+    public Counters getCounters() {
+        return counters;
+    }
+
+    /**
+     * Applies the information held in this context to the {@link AnalysisModelBuilder}.
+     *
+     * @param builder the builder to apply the context information to
+     */
     public void applyResults(AnalysisModelBuilder builder) {
         builder.withOtherClasses(getClassType(OtherClass.class))
                 .withDataClasses(getClassType(DataClass.class))
@@ -79,5 +89,14 @@ public class StaticAnalysisContext {
                 .filter(clazz -> wantedClass.isAssignableFrom(clazz.getClass()))
                 .map(wantedClass::cast)
                 .collect(Collectors.toList());
+    }
+
+    static class Counters {
+        int unresolvedNodes = 0;
+        int relevantConstructorCalls = 0;
+        int matchingMethodReferences = 0;
+        int relevantMethodReferences = 0;
+        int matchingMethodCalls = 0;
+        int relevantMethodCalls;
     }
 }

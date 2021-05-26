@@ -19,30 +19,39 @@ import java.util.Optional;
  * <p>
  * The declaring class needs to be resolved using a {@link SymbolResolver} as in the AST, we don't know which class is
  * being called. There are a few numerous cases which result in different retrieval strategies.
+ * <p>
+ * If needed, this class can be extended with doing declaring class recovery through return types resolution of child
+ * method calls or by doing manual analysis of identifying unique methods in the scope of the package and the class'
+ * import statements, with the latter requiring significant work.
  */
 public class MethodCallDeclaringClassResolver {
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodCallDeclaringClassResolver.class);
-    private int totalCount = 0;
-    private int identifiedCount = 0;
-    private int errorCount = 0;
-    private int calleeCount = 0;
 
-    Optional<Pair<AbstractClass, MethodCallExpr>> getDeclaringClass(MethodCallExpr methodCallExpr, List<AbstractClass> allClasses) {
+    /**
+     * Returns an optional result of the {@link AbstractClass} called as part of the given {@link MethodCallExpr}.
+     * <p>
+     * For convenience, we return a {@link Pair} of the found class and the method call that we analyzed.
+     *
+     * @param context        the analysis context to retrieve or update context information with
+     * @param methodCallExpr the call to analyze
+     * @param allClasses     all the identified classes in the application
+     * @return an optional result of the called class as part of the given method call
+     */
+    Optional<Pair<AbstractClass, MethodCallExpr>> getDeclaringClass(StaticAnalysisContext context,
+                                                                    MethodCallExpr methodCallExpr,
+                                                                    List<AbstractClass> allClasses) {
+        // We have already filtered on the method being in the set of declared methods in the project
+        context.getCounters().matchingMethodCalls++;
+
         var foundCallee = tryGetUsingCompleteResolution(methodCallExpr)
                 .or(() -> tryGetUsingChildNameResolution(methodCallExpr));
 
-        // TODO: Remove debug code or make nicer.
         if (foundCallee.isEmpty()) {
-            errorCount++;
-        } else {
-            identifiedCount++;
+            context.getCounters().unresolvedNodes++;
         }
-        totalCount++;
 
-        var result = foundCallee.flatMap(callee -> findByAbstractClass(allClasses, callee))
+        return foundCallee.flatMap(callee -> findByAbstractClass(allClasses, callee))
                 .map(callee -> Pair.of(callee, methodCallExpr));
-        result.ifPresent(res -> calleeCount++);
-        return result;
     }
 
     /**
@@ -96,6 +105,12 @@ public class MethodCallDeclaringClassResolver {
         }
     }
 
+    /**
+     * Unwraps the given {@link Throwable} to retrieve the possible message of an {@link UnsolvedSymbolException}.
+     *
+     * @param e the throwable to unwrap
+     * @return an optional message indicating why the resolution did not succeed
+     */
     private Optional<String> getSymbolErrorMessage(Throwable e) {
         if (e instanceof UnsolvedSymbolException) {
             return Optional.of(e.getMessage());
@@ -106,30 +121,16 @@ public class MethodCallDeclaringClassResolver {
         }
     }
 
-    // TODO: Another possibility would be to resolve the return type of child MethodCallExpr
-
-    // TODO: Another possibility would be to check all possible accessible classes based on same package + imports and
-    //  see if there is a unique method that we can match
-
+    /**
+     * Finds a {@link AbstractClass} by the given fully qualified name.
+     *
+     * @param allClasses the application's classes to search in
+     * @param fqn the fully qualified name to search for
+     * @return the optional class related to the fully qualified name
+     */
     private Optional<AbstractClass> findByAbstractClass(List<AbstractClass> allClasses, String fqn) {
         return allClasses.stream()
                 .filter(clazz -> clazz.getIdentifier().equals(fqn))
                 .findFirst();
-    }
-
-    public int getTotalCount() {
-        return totalCount;
-    }
-
-    public int getErrorCount() {
-        return errorCount;
-    }
-
-    public int getIdentifiedCount() {
-        return identifiedCount;
-    }
-
-    public int getCalleeCount() {
-        return calleeCount;
     }
 }

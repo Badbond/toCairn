@@ -31,6 +31,8 @@ public class StaticAnalysisTest {
         //                      /generated-test-sources/, /test-classes/: 4883 classes, 10042 unique method names):
         //      43222 total, 6763 unresolved, 10298 relevant (excl. self-ref), 3096 relationships, -- 2m 43s on 3.22.1 (16 cores instead of 8)
         // 2014 dependencies from data class to abstract class. -- 22403 calls ignored -- Difference in 5186-3096-2014=76 is due to changes in platform.
+
+        // 18K calls saved, 150 less dependencies.
         var analysis = new StaticAnalysis();
         var builder = new AnalysisModelBuilder();
         analysis.analyze(builder, input);

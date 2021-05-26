@@ -23,6 +23,7 @@ import static me.soels.thesis.model.DataRelationshipType.WRITE;
 public class StaticRelationshipAnalysis {
     private static final Logger LOGGER = LoggerFactory.getLogger(StaticRelationshipAnalysis.class);
     private final MethodCallDeclaringClassResolver declaringClassResolver = new MethodCallDeclaringClassResolver();
+    private final CustomClassOrInterfaceVisitor classVisitor = new CustomClassOrInterfaceVisitor();
     private int relevantCount = 0;
 
     public void analyze(StaticAnalysisContext context) {
@@ -44,12 +45,12 @@ public class StaticRelationshipAnalysis {
         LOGGER.info("Graph edges results:" +
                         "\n\tTotal unique method names:     {}" +
                         "\n\tTotal matching method calls:   {}" +
-                        "\n\tUnresolved calls:              {}" + // TODO: Investigate whether these make sense.
+                        "\n\tUnresolved calls:              {}" +
                         "\n\tResolved calls:                {}" +
                         "\n\tTo classes within application: {}" +
                         "\n\tExcluding self-reference:      {}" +
                         "\n\tDependence relationships:      {}" +
-                        "\n\t(Of which) data relationships: {}",
+                        "\n\tOf which data relationships:   {}",
                 allMethodNames.size(), declaringClassResolver.getTotalCount(), declaringClassResolver.getErrorCount(),
                 declaringClassResolver.getIdentifiedCount(), declaringClassResolver.getCalleeCount(),
                 relevantCount, dependenceRelationships.size(), context.getDataRelationships().size());
@@ -67,8 +68,10 @@ public class StaticRelationshipAnalysis {
                 .map(Pair::getKey)
                 .collect(Collectors.toList());
 
+        var result = classVisitor.visit(classDeclaration);
+
         // We need to iterate this way to resolve statements in a preorder for multiple types of nodes
-        return classDeclaration.findAll(MethodCallExpr.class).stream()
+        return result.getMethodCalls().stream()
                 // Filter out method names that are definitely not within the application
                 .filter(method -> allMethodNames.contains(method.getNameAsString()))
                 // Try to resolve the method call to get the pair of callee and its method invoked.
@@ -88,15 +91,6 @@ public class StaticRelationshipAnalysis {
         relevantCount += calleeMethods.size();
         var target = calleeMethods.get(0).getKey();
         var methods = calleeMethods.stream().map(Pair::getValue).collect(Collectors.toList());
-        if (clazz instanceof DataClass) {
-            // TODO: Data class TemplatedContentPayloadView depends on service class UserContext indicates to me that
-            //  finding methodCallExpr on compilation unit also goes recursive in inner classes.
-            if (target instanceof OtherClass) {
-                LOGGER.warn("Data class {} depends on service class {}. Investigate whether data class is identified correctly.", clazz.getHumanReadableName(), target.getHumanReadableName());
-            } else {
-                LOGGER.warn("Data class {} depends on another data class {}. Investigate whether both are identified correctly.", clazz.getHumanReadableName(), target.getHumanReadableName());
-            }
-        }
         if (clazz instanceof OtherClass && target instanceof DataClass) {
             return new DataRelationship((OtherClass) clazz, (DataClass) target, identifyReadWrite(methods), calleeMethods.size());
         } else {

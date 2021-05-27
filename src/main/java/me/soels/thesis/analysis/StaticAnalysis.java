@@ -2,13 +2,13 @@ package me.soels.thesis.analysis;
 
 import com.github.javaparser.JavaParser;
 import me.soels.thesis.model.AnalysisModelBuilder;
+import me.soels.thesis.util.ZipExtractor;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.nio.file.Files;
-
-import static me.soels.thesis.analysis.ZipExtractor.extractZip;
 
 /**
  * Performs static analysis of the given {@code .zip} file containing the application's source files.
@@ -25,11 +25,20 @@ import static me.soels.thesis.analysis.ZipExtractor.extractZip;
  * it does not allow to represent injection and polymorphism relations. We can mitigate this if desired using dynamic
  * analysis.
  */
+@Service
 public class StaticAnalysis {
     private static final Logger LOGGER = LoggerFactory.getLogger(StaticAnalysis.class);
-    // TODO: Would rather have injection set up to inject the service instead.
-    private final StaticClassAnalysis classAnalysis = new StaticClassAnalysis();
-    private final StaticRelationshipAnalysis dependencyAnalysis = new StaticRelationshipAnalysis();
+    private final StaticClassAnalysis classAnalysis;
+    private final StaticRelationshipAnalysis dependencyAnalysis;
+    private final ZipExtractor zipExtractor;
+
+    public StaticAnalysis(StaticClassAnalysis classAnalysis,
+                          StaticRelationshipAnalysis dependencyAnalysis,
+                          ZipExtractor zipExtractor) {
+        this.classAnalysis = classAnalysis;
+        this.dependencyAnalysis = dependencyAnalysis;
+        this.zipExtractor = zipExtractor;
+    }
 
     public void analyze(AnalysisModelBuilder modelBuilder, StaticAnalysisInput input) {
         LOGGER.info("Starting static analysis on {}", input.getPathToZip());
@@ -42,7 +51,7 @@ public class StaticAnalysis {
             throw new IllegalArgumentException("The zip file does not exist for path " + inputZip);
         }
 
-        var projectLocation = extractZip(inputZip);
+        var projectLocation = zipExtractor.extractZip(inputZip);
         var context = new StaticAnalysisContext(projectLocation, input);
 
         classAnalysis.analyze(context);

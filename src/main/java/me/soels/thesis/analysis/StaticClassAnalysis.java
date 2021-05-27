@@ -15,18 +15,20 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static me.soels.thesis.util.StringContainsIgnoreCaseMatcher.containsStringIgnoringCase;
 import static org.hamcrest.CoreMatchers.anyOf;
-import static org.hamcrest.Matchers.containsStringIgnoringCase;
 
 /**
  * Performs static analysis on the provided project to determine the classes defined in that project.
  */
+@Service
 public class StaticClassAnalysis {
     private static final Logger LOGGER = LoggerFactory.getLogger(StaticClassAnalysis.class);
 

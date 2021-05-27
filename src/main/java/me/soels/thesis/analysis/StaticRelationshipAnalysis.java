@@ -9,8 +9,12 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -29,10 +33,16 @@ import static me.soels.thesis.model.DataRelationshipType.WRITE;
  * We analyze inner classes separately to have them function as separate entities instead of having method calls within
  * those influence the outer class.
  */
+@Service
 public class StaticRelationshipAnalysis {
     private static final Logger LOGGER = LoggerFactory.getLogger(StaticRelationshipAnalysis.class);
-    private final DeclaringClassResolver declaringClassResolver = new DeclaringClassResolver();
-    private final CustomClassOrInterfaceVisitor classVisitor = new CustomClassOrInterfaceVisitor();
+    private final DeclaringClassResolver declaringClassResolver;
+    private final CustomClassOrInterfaceVisitor classVisitor;
+
+    public StaticRelationshipAnalysis(DeclaringClassResolver declaringClassResolver, CustomClassOrInterfaceVisitor classVisitor) {
+        this.declaringClassResolver = declaringClassResolver;
+        this.classVisitor = classVisitor;
+    }
 
     public void analyze(StaticAnalysisContext context) {
         LOGGER.info("Extracting relationships");

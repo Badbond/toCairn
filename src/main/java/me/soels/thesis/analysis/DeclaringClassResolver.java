@@ -9,6 +9,7 @@ import me.soels.thesis.model.AbstractClass;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +25,7 @@ import java.util.Optional;
  * method calls or by doing manual analysis of identifying unique methods in the scope of the package and the class'
  * import statements, with the latter requiring significant work.
  */
+@Service
 public class DeclaringClassResolver {
     private static final Logger LOGGER = LoggerFactory.getLogger(DeclaringClassResolver.class);
 

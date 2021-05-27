@@ -1,7 +1,12 @@
 package me.soels.thesis.analysis;
 
+import me.soels.thesis.ThesisApplication;
 import me.soels.thesis.model.AnalysisModelBuilder;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import java.net.URISyntaxException;
 import java.nio.file.Path;
@@ -9,7 +14,12 @@ import java.util.Objects;
 
 import static com.github.javaparser.ParserConfiguration.LanguageLevel.JAVA_11;
 
+@RunWith(SpringRunner.class)
+@SpringBootTest
 public class StaticAnalysisTest {
+    @Autowired
+    private StaticAnalysis analysis;
+
     @Test
     public void testStaticAnalysis() throws URISyntaxException {
         var resource = this.getClass().getClassLoader().getResource("./big-project-cleaned.zip");
@@ -33,7 +43,6 @@ public class StaticAnalysisTest {
         // 2014 dependencies from data class to abstract class. -- 22403 calls ignored -- Difference in 5186-3096-2014=76 is due to changes in platform.
 
         // 18K calls saved, 150 less dependencies.
-        var analysis = new StaticAnalysis();
         var builder = new AnalysisModelBuilder();
         analysis.analyze(builder, input);
         builder.build();

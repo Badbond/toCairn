@@ -1,12 +1,14 @@
 package me.soels.thesis.encoding;
 
 import me.soels.thesis.model.AnalysisModel;
+import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Optional;
 import java.util.TreeMap;
 
+@Service
 public class VariableDecoder {
     /**
      * Decodes the genes in the solution to the clusters identified.

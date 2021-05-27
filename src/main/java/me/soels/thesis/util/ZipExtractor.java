@@ -1,6 +1,7 @@
-package me.soels.thesis.analysis;
+package me.soels.thesis.util;
 
 import org.apache.commons.io.IOUtils;
+import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -15,13 +16,9 @@ import java.util.zip.ZipInputStream;
  * <p>
  * Derived from <a href="https://www.baeldung.com/java-compress-and-uncompress">a Baeldung guide</a>.
  */
+@Service
 public class ZipExtractor {
-    private ZipExtractor() {
-        // Utility class, do not instantiate
-        // TODO: This is actually a service. Once we have an injection mechanism (e.g. Spring), inject this service instead.
-    }
-
-    public static Path extractZip(Path pathToZip) {
+    public Path extractZip(Path pathToZip) {
         try (var zipStream = new ZipInputStream(Files.newInputStream(pathToZip))) {
             var tempDirectory = Files.createTempDirectory(pathToZip.getFileName().toString());
             convertZipStreamToFiles(tempDirectory, zipStream);
@@ -31,7 +28,7 @@ public class ZipExtractor {
         }
     }
 
-    private static void convertZipStreamToFiles(Path tempDirectory, ZipInputStream zipStream) throws IOException {
+    private void convertZipStreamToFiles(Path tempDirectory, ZipInputStream zipStream) throws IOException {
         var zipEntry = zipStream.getNextEntry();
         while (zipEntry != null) {
             var newFile = newFile(tempDirectory.toFile(), zipEntry);
@@ -49,7 +46,7 @@ public class ZipExtractor {
         }
     }
 
-    private static File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {
+    private File newFile(File destinationDir, ZipEntry zipEntry) throws IOException {
         var destFile = new File(destinationDir, zipEntry.getName());
 
         var destDirPath = destinationDir.getCanonicalPath();

@@ -23,6 +23,8 @@ import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.variable.EncodingUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -36,11 +38,16 @@ import java.util.stream.Collectors;
 
 import static com.github.javaparser.ParserConfiguration.LanguageLevel.JAVA_11;
 
+@SpringBootTest
 public class ThesisExperimentTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ThesisExperimentTest.class);
     private static final String MOCK_GRAPH_NAME = "simple-graph-2";
     private static final String ZIP_FILE = "big-project-cleaned.zip";
-    private final VariableDecoder variableDecoder = new VariableDecoder();
+
+    @Autowired
+    private VariableDecoder variableDecoder;
+    @Autowired
+    private StaticAnalysis staticAnalysis;
 
     @Test
     public void runExperimentTestWithMockData() {
@@ -60,7 +67,7 @@ public class ThesisExperimentTest {
         var project = Path.of(this.getClass().getClassLoader().getResource(ZIP_FILE).toURI());
         var analysisInput = new StaticAnalysisInput(project, JAVA_11, null);
         var modelBuilder = new AnalysisModelBuilder();
-        new StaticAnalysis().analyze(modelBuilder, analysisInput);
+        staticAnalysis.analyze(modelBuilder, analysisInput);
         return modelBuilder.build();
     }
 

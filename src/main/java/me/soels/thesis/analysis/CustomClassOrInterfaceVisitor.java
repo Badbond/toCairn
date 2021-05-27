@@ -9,6 +9,7 @@ import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import me.soels.thesis.model.AbstractClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.List;
  * {@link ClassOrInterfaceDeclaration#findAll(Class)}). It furthermore accumulates all required information for
  * analysis at once instead of having to traverse the tree multiple times.
  */
+@Service
 class CustomClassOrInterfaceVisitor extends VoidVisitorAdapter<CustomClassOrInterfaceVisitor.VisitorResult> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CustomClassOrInterfaceVisitor.class);
 

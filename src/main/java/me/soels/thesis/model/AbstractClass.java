@@ -1,10 +1,18 @@
 package me.soels.thesis.model;
 
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Node;
+
 import java.util.Objects;
 
+@Node
 public abstract class AbstractClass {
+    @Id
     private final String identifier;
     private final String humanReadableName;
+
+    // TODO: We require @Relationship here. We can then use @RelationshipProperties on DependenceRelationship and
+    //  @TargetNode on the callee.
 
     protected AbstractClass(String identifier, String humanReadableName) {
         this.identifier = identifier;

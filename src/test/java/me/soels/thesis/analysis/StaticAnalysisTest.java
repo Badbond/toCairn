@@ -14,8 +14,8 @@ import java.util.Objects;
 
 import static com.github.javaparser.ParserConfiguration.LanguageLevel.JAVA_11;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest
+@RunWith(SpringRunner.class)
 public class StaticAnalysisTest {
     @Autowired
     private StaticAnalysis analysis;

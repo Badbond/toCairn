@@ -18,6 +18,7 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.moeaframework.Executor;
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.variable.EncodingUtils;
@@ -25,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -39,6 +41,7 @@ import java.util.stream.Collectors;
 import static com.github.javaparser.ParserConfiguration.LanguageLevel.JAVA_11;
 
 @SpringBootTest
+@RunWith(SpringRunner.class)
 public class ThesisExperimentTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ThesisExperimentTest.class);
     private static final String MOCK_GRAPH_NAME = "simple-graph-2";

@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 
-import static me.soels.thesis.analysis.ZipExtractor.extractZip;
+import static me.soels.thesis.util.ZipExtractor.extractZip;
 
 /**
  * Performs static analysis of the given {@code .zip} file containing the application's source files.

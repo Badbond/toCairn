@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static me.soels.thesis.analysis.StringContainsIgnoreCaseMatcher.containsIgnoringCase;
+import static me.soels.thesis.util.StringContainsIgnoreCaseMatcher.containsIgnoringCase;
 import static org.hamcrest.CoreMatchers.anyOf;
 
 /**

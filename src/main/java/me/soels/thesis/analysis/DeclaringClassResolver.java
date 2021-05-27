@@ -1,8 +1,10 @@
 package me.soels.thesis.analysis;
 
 import com.github.javaparser.ast.expr.*;
+import com.github.javaparser.resolution.Resolvable;
 import com.github.javaparser.resolution.SymbolResolver;
 import com.github.javaparser.resolution.UnsolvedSymbolException;
+import com.github.javaparser.resolution.declarations.ResolvedMethodLikeDeclaration;
 import me.soels.thesis.model.AbstractClass;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -18,9 +20,9 @@ import java.util.Optional;
  * The declaring class needs to be resolved using a {@link SymbolResolver} as in the AST, we don't know which class is
  * being called. There are a few numerous cases which result in different retrieval strategies.
  * <p>
- * If needed, for {@link MethodCallExpr}, this class can be extended with doing declaring class recovery through return
- * types resolution of child method calls or by doing manual analysis of identifying unique methods in the scope of the
- * package and the class' import statements, with the latter requiring significant work.
+ * If needed, this class can be extended with doing declaring class recovery through return types resolution of child
+ * method calls or by doing manual analysis of identifying unique methods in the scope of the package and the class'
+ * import statements, with the latter requiring significant work.
  */
 public class DeclaringClassResolver {
     private static final Logger LOGGER = LoggerFactory.getLogger(DeclaringClassResolver.class);
@@ -38,7 +40,8 @@ public class DeclaringClassResolver {
     Optional<Pair<AbstractClass, ObjectCreationExpr>> resolveConstructorCall(StaticAnalysisContext context,
                                                                              ObjectCreationExpr node,
                                                                              List<AbstractClass> allClasses) {
-        var resolvedConstructor = tryResolveByCalculatingType(node);
+        var resolvedConstructor = tryGetUsingCompleteResolution(node)
+                .or(() -> tryResolveByCalculatingType(node));
 
         if (resolvedConstructor.isEmpty()) {
             context.getCounters().unresolvedNodes++;
@@ -61,7 +64,8 @@ public class DeclaringClassResolver {
     Optional<Pair<AbstractClass, MethodReferenceExpr>> resolveMethodReference(StaticAnalysisContext context,
                                                                               MethodReferenceExpr node,
                                                                               List<AbstractClass> allClasses) {
-        var resolvedMethodReference = tryResolveByCalculatingType(node)
+        var resolvedMethodReference = tryGetUsingCompleteResolution(node)
+                .or(() -> tryResolveByCalculatingType(node))
                 .or(() -> tryGetUsingChildExpressionResolution(node, TypeExpr.class));
 
         if (resolvedMethodReference.isEmpty()) {
@@ -87,7 +91,7 @@ public class DeclaringClassResolver {
                                                                     List<AbstractClass> allClasses) {
         var foundCallee = tryGetUsingCompleteResolution(node)
                 // Other cases include thisExpr (which we ignore because we don't allow for self reference) and
-                // methodCallExpr (which we ignore because determining the return type is too resource consuming)
+                // methodCallExpr (which we ignore because we already tried full resolution before)
                 .or(() -> tryGetUsingChildExpressionResolution(node, NameExpr.class));
 
         if (foundCallee.isEmpty()) {
@@ -99,22 +103,31 @@ public class DeclaringClassResolver {
     }
 
     /**
-     * Try resolving the entire methodCallExpr.
+     * Try resolving the a {@link Resolvable} indicating a method-like (methods and constructors) declaration entirely.
      * <p>
-     * This allows allows sequential method calls (e.g. {@code a.callA().callB()}) to be resolved properly as the
-     * return type is also resolved. Therefore, this should always be tried first. However, this approach is more
+     * Performing this action will resolve the node's children such as parameters in a method, but also the parents
+     * such that the type of the node used can be determined. This decreases performance of the analysis drastically
+     * but is an important step to fully cover all the nodes required for dependency construction.
+     * <p>
+     * Note that as this resolves more than just the type of the node, it is also more likely to fail if not all
+     * information is present or acquirable. To increase chances of resolving using this method, one should also
+     * provide the dependency {@code .jar} files so that entire ASTs can be resolved. This decreases performance even
+     * more but provides a more complete analysis.
+     * <p>
+     * This, for example, allows sequential method calls (e.g. {@code a.callA().callB()}) to be resolved properly as
+     * the return type is also resolved. Therefore, this should always be tried first. However, this approach is more
      * error prone as there are more places where symbol resolution could fail, such as the arguments provided. This
      * happens for example with argument types that have been generated compile-time.
      *
-     * @param methodCallExpr the expression to fully resolve
+     * @param node the expression to fully resolve
      * @return an optional string with the FQN of the class in which the method called is declared
      */
-    private Optional<String> tryGetUsingCompleteResolution(MethodCallExpr methodCallExpr) {
+    private Optional<String> tryGetUsingCompleteResolution(Resolvable<? extends ResolvedMethodLikeDeclaration> node) {
         try {
-            var resolvedMethodCall = methodCallExpr.resolve();
-            return Optional.of(resolvedMethodCall.getPackageName() + "." + resolvedMethodCall.getClassName());
+            var resolvedNode = node.resolve();
+            return Optional.of(resolvedNode.getPackageName() + "." + resolvedNode.getClassName());
         } catch (Exception e) {
-            LOGGER.trace("Could not resolve method " + methodCallExpr.getNameAsString() + " using full resolution", e);
+            LOGGER.trace("Could not resolve node " + node + " using full resolution", e);
             return Optional.empty();
         }
     }

@@ -1,4 +1,4 @@
-package me.soels.thesis.analysis;
+package me.soels.thesis.util;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.Factory;

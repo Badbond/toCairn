@@ -1,0 +1,26 @@
+version: "3.6"
+
+services:
+  neo4j:
+    image: neo4j:4.2.6
+    ports:
+      - 7687:7687
+      - 7474:7474
+    volumes:
+      - neo4j-volume:/conf
+      - neo4j-volume:/data
+      - neo4j-volume:/import
+      - neo4j-volume:/logs
+      - neo4j-volume:/plugins
+    environment:
+      # Raise memory limits
+      - NEO4J_dbms_memory_pagecache_size=1G
+      - NEO4J_dbms.memory.heap.initial_size=1G
+      - NEO4J_dbms_memory_heap_max__size=1G
+      # Note, we run without authentication here as this is a development environment
+      # DO NOT copy paste this. You should run with authentication in production environments
+      - NEO4J_AUTH=none
+
+# Store neo4j data between restarts in Docker volume
+volumes:
+  neo4j-volume:

@@ -5,9 +5,6 @@ import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.nodeTypes.NodeWithName;
-import com.github.javaparser.symbolsolver.JavaSymbolSolver;
-import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
-import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy;
 import com.github.javaparser.utils.SourceRoot;
 import me.soels.thesis.model.AbstractClass;
@@ -40,10 +37,40 @@ public class StaticClassAnalysis {
         var start = System.currentTimeMillis();
         var config = new ParserConfiguration().setLanguageLevel(context.getInput().getLanguageLevel());
 
-        // TODO: In the process of finding out how JavaParser works with ClassLoaders in ReflectionTypeSolver.
-        //  It uses the classloader of this application which results in conflicts. How to solve that without impacting
-        //  the coverage of analysis too much? Just setting jreOnly to 'true' results in thousands of missing nodes/edges.
-
+        /**
+         *TODO: Investigate and solve the problems faced by the ReflectionTypeSolver
+         * As they document in their Javadoc, classes in OUR application's classpath will be included in the analysis.
+         * This means that, now that we introduced Spring, we include many of our own classes that AST nodes will be
+         * resolved against. This has the downside of having worse performance (mainly because this solver will always
+         * be checked first before the 'source root' class solvers (which matter most).
+         * <p>
+         * However, the biggest problems is conflicting with libraries used in the application analyzed and our own
+         * thesis application. Currently, the analysis fails on 'FilterRegistrationBean'. Of the analyzed application,
+         * this is referring to a Spring boot 2.4.5 dependency (which is not included in the type solvers because we
+         * don't include dependencies because of performance reasons). However, our Spring boot 2.5.0 version of the
+         * class is picked up instead (prior to us introducing Spring, this just failed as it could not be resolved).
+         * This class can not be parsed correctly because we don't have javax.servlet on our classpath (not sure why
+         * we don't) whereas at the analyzed application they do using jakarta.servlet-api dependency (but I can't see
+         * where it is declared).
+         * <p>
+         * We should not want to just omit this solver because many 'java' and 'javax' packages are very useful to
+         * solve allowing for a more complete analysis. For example, Objects.requireNonNull(T) is easily resolvable
+         * and allows us to continue resolving the provided argument to determine the actual type being returned.
+         * <p>
+         * We can influence the solvers using the ParserConfiguration above by using 'setSymbolResolver()'. However,
+         * it appears that upon doing so, the 'SymbolSolverCollectionStrategy' is not capable of injecting additional
+         * solvers that are generated while finding source roots. Even if we use the same solver as defined in
+         * SymbolSolverCollectionStrategy. These JavaParserTypeSolvers are most important in analysis to match classes
+         * within the application to analyze. For that matter, I have not been able to test whether the jreOnly
+         * argument on ReflectionTypeSolver would work.
+         * <p>
+         * I've also looked into catching the ClassDefNotFoundError. That might be a viable solution; completely
+         * ignoring the node that we can't resolve. Previously (before Spring) we could also not resolve it as we did
+         * not have the class on the classpath nor in the other solvers (as we don't include libraries). However,
+         * I would like to, once the model is final/mature, to run the analysis with libraries (which would likely take
+         * hours/days) in order to resolve more nodes and therefore get a more complete graph. The problem that we are
+         * facing now would still be present as ReflectionTypeSolver is the first solver.
+         **/
         var allTypes = new SymbolSolverCollectionStrategy(config)
                 .collect(context.getProjectLocation()).getSourceRoots().stream()
                 // Don't include test directories (ideally, they were already filtered out by the user)

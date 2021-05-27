@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static me.soels.thesis.util.StringContainsIgnoreCaseMatcher.containsIgnoringCase;
 import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.Matchers.containsStringIgnoringCase;
 
 /**
  * Performs static analysis on the provided project to determine the classes defined in that project.
@@ -94,9 +94,9 @@ public class StaticClassAnalysis {
     private boolean clazzContainsDataAnnotation(ClassOrInterfaceDeclaration clazz, StaticAnalysisInput input) {
         return clazz.getAnnotations().stream()
                 .map(NodeWithName::getNameAsString)
-                .anyMatch(annotation -> anyOf(containsIgnoringCase("immutable"),
-                        containsIgnoringCase("entity"),
-                        containsIgnoringCase(input.getCustomDataAnnotation()))
+                .anyMatch(annotation -> anyOf(containsStringIgnoringCase("immutable"),
+                        containsStringIgnoringCase("entity"),
+                        containsStringIgnoringCase(input.getCustomDataAnnotation()))
                         .matches(annotation));
     }
 

@@ -1,4 +1,4 @@
-package me.soels.thesis.util;
+package me.soels.thesis.analysis;
 
 import org.apache.commons.io.IOUtils;
 

@@ -1,5 +1,6 @@
 version: "3.6"
 
+# Development environment set up for this application
 services:
   neo4j:
     image: neo4j:4.2.6
@@ -13,13 +14,14 @@ services:
       - neo4j-volume:/logs
       - neo4j-volume:/plugins
     environment:
+      # Start with a default database
+      - NEO4J_dbms_default__database=thesis
       # Raise memory limits
       - NEO4J_dbms_memory_pagecache_size=1G
-      - NEO4J_dbms.memory.heap.initial_size=1G
+      - NEO4J_dbms_memory_heap_initial__size=1G
       - NEO4J_dbms_memory_heap_max__size=1G
-      # Note, we run without authentication here as this is a development environment
-      # DO NOT copy paste this. You should run with authentication in production environments
-      - NEO4J_AUTH=none
+      # DO NOT copy paste these auth variables for a production environment
+      - NEO4J_AUTH=neo4j/local-development-secret
 
 # Store neo4j data between restarts in Docker volume
 volumes:

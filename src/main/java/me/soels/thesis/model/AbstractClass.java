@@ -19,6 +19,14 @@ public abstract class AbstractClass {
         return humanReadableName;
     }
 
+    /**
+     * Returns whether the provided class is equal to this class.
+     * <p>
+     * Note that we only use our {@code identifier} for equality checks.
+     *
+     * @param o the class to check equality with
+     * @return whether the given class is equal to this class
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

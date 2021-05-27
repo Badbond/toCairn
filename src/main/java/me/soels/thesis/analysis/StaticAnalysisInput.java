@@ -13,7 +13,7 @@ public final class StaticAnalysisInput {
     private final String customDataAnnotation;
 
     /**
-     * Creates the input required to perform static analysis
+     * Creates the input required to perform static analysis.
      *
      * @param pathToZip            the path to the .zip file to analyze containing (generated) source code
      * @param languageLevel        the Java language to parse the project with

@@ -5,6 +5,9 @@ import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.nodeTypes.NodeWithName;
+import com.github.javaparser.symbolsolver.JavaSymbolSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy;
 import com.github.javaparser.utils.SourceRoot;
 import me.soels.thesis.model.AbstractClass;
@@ -35,8 +38,12 @@ public class StaticClassAnalysis {
     public void analyze(StaticAnalysisContext context) {
         LOGGER.info("Extracting classes");
         var start = System.currentTimeMillis();
-
         var config = new ParserConfiguration().setLanguageLevel(context.getInput().getLanguageLevel());
+
+        // TODO: In the process of finding out how JavaParser works with ClassLoaders in ReflectionTypeSolver.
+        //  It uses the classloader of this application which results in conflicts. How to solve that without impacting
+        //  the coverage of analysis too much? Just setting jreOnly to 'true' results in thousands of missing nodes/edges.
+
         var allTypes = new SymbolSolverCollectionStrategy(config)
                 .collect(context.getProjectLocation()).getSourceRoots().stream()
                 // Don't include test directories (ideally, they were already filtered out by the user)

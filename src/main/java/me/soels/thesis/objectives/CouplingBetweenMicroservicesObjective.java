@@ -1,7 +1,7 @@
 package me.soels.thesis.objectives;
 
 import me.soels.thesis.encoding.Clustering;
-import me.soels.thesis.model.AnalysisModel;
+import me.soels.thesis.model.AnalysisInput;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,11 +21,11 @@ import java.util.stream.Collectors;
  */
 public class CouplingBetweenMicroservicesObjective implements OnePurposeMetric {
     @Override
-    public double calculate(Clustering clustering, AnalysisModel analysisModel) {
+    public double calculate(Clustering clustering, AnalysisInput analysisInput) {
         Map<Integer, List<Integer>> interClusterDependencies = clustering.getByCluster().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ArrayList<>()));
         var clusteringByClass = clustering.getByClass();
-        for (var edge : analysisModel.getDependencies()) {
+        for (var edge : analysisInput.getDependencies()) {
             var classA = edge.getCaller();
             var classB = edge.getCallee();
 

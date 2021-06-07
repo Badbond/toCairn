@@ -2,17 +2,18 @@ version: "3.6"
 
 # Development environment set up for this application
 services:
+  # Neo4j graph database for analysis input
   neo4j:
     image: neo4j:4.2.6
     ports:
       - 7687:7687
       - 7474:7474
     volumes:
-      - neo4j-volume:/conf
-      - neo4j-volume:/data
-      - neo4j-volume:/import
-      - neo4j-volume:/logs
-      - neo4j-volume:/plugins
+      - neo4j:/conf
+      - neo4j:/data
+      - neo4j:/import
+      - neo4j:/logs
+      - neo4j:/plugins
     environment:
       # Start with a default database
       - NEO4J_dbms_default__database=thesis
@@ -23,6 +24,19 @@ services:
       # DO NOT copy paste these auth variables for a production environment
       - NEO4J_AUTH=neo4j/local-development-secret
 
-# Store neo4j data between restarts in Docker volume
+  # PostgreSQL database for analysis configuration
+  postgres:
+    image: postgres:13.3
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: thesis
+    volumes:
+      - postgres:/var/lib/postgresql/data
+
+# Store data of databases between restarts in Docker volume
 volumes:
-  neo4j-volume:
+  neo4j:
+  postgres:

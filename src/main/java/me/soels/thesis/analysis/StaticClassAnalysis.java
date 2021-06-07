@@ -151,7 +151,7 @@ public class StaticClassAnalysis {
 
     private ClassOrInterfaceDeclaration printEmptyQualifiers(ClassOrInterfaceDeclaration typeDeclaration) {
         if (typeDeclaration.getFullyQualifiedName().isEmpty()) {
-            // This usually happens with inner types, but as we do symbol solving, it should not happen.
+            // This could happen with inner types, but as we do symbol solving, it should not happen.
             // In any case, we will exclude these from the analysis as we can not uniquely identify them in the graph.
             LOGGER.warn("Could not construct FQN for type {}. Skipping it.", typeDeclaration.getNameAsString());
             return null;

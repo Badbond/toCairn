@@ -15,17 +15,17 @@ import java.util.List;
  * <p>
  * The data in this class is to be immutable so that it can be shared among solution evaluations.
  *
- * @see AnalysisModelBuilder
+ * @see AnalysisInputBuilder
  * @see Objective
  */
-public final class AnalysisModel {
+public final class AnalysisInput {
     private final List<AbstractClass> allClasses;
     private final List<OtherClass> otherClasses;
     private final List<DataClass> dataClasses;
     private final List<DataRelationship> dataRelations;
     private final List<DependenceRelationship> dependencies;
 
-    AnalysisModel(List<OtherClass> otherClasses,
+    AnalysisInput(List<OtherClass> otherClasses,
                   List<DataClass> dataClasses,
                   List<DependenceRelationship> dependencies,
                   List<DataRelationship> dataRelationships) {

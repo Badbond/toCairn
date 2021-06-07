@@ -5,8 +5,8 @@ import me.soels.thesis.analysis.StaticAnalysisInput;
 import me.soels.thesis.encoding.EncodingType;
 import me.soels.thesis.encoding.VariableDecoder;
 import me.soels.thesis.encoding.VariableType;
-import me.soels.thesis.model.AnalysisModel;
-import me.soels.thesis.model.AnalysisModelBuilder;
+import me.soels.thesis.model.AnalysisInput;
+import me.soels.thesis.model.AnalysisInputBuilder;
 import me.soels.thesis.model.DependenceRelationship;
 import me.soels.thesis.model.OtherClass;
 import me.soels.thesis.objectives.CohesionCarvalhoObjective;
@@ -66,15 +66,15 @@ public class ThesisExperimentTest {
         runExperiment(problemConfig, input);
     }
 
-    private AnalysisModel getZipInput() throws URISyntaxException {
+    private AnalysisInput getZipInput() throws URISyntaxException {
         var project = Path.of(this.getClass().getClassLoader().getResource(ZIP_FILE).toURI());
         var analysisInput = new StaticAnalysisInput(project, JAVA_11, null);
-        var modelBuilder = new AnalysisModelBuilder();
+        var modelBuilder = new AnalysisInputBuilder();
         staticAnalysis.analyze(modelBuilder, analysisInput);
         return modelBuilder.build();
     }
 
-    private void runExperiment(ProblemConfiguration config, AnalysisModel input) {
+    private void runExperiment(ProblemConfiguration config, AnalysisInput input) {
         List<Objective> objectives = List.of(new CouplingBetweenModuleClassesObjective(), new CohesionCarvalhoObjective());
         var start = System.currentTimeMillis();
 
@@ -109,8 +109,8 @@ public class ThesisExperimentTest {
         LOGGER.info("===================================");
     }
 
-    private AnalysisModel prepareMockInput() {
-        var builder = new AnalysisModelBuilder();
+    private AnalysisInput prepareMockInput() {
+        var builder = new AnalysisInputBuilder();
         var graph = getMockGraph();
         builder.withOtherClasses(graph.getKey());
         builder.withDependencies(graph.getValue());
@@ -146,7 +146,7 @@ public class ThesisExperimentTest {
         }
     }
 
-    private void printSolutionsData(NondominatedPopulation result, List<Objective> objectives, AnalysisModel input, EncodingType encodingType) {
+    private void printSolutionsData(NondominatedPopulation result, List<Objective> objectives, AnalysisInput input, EncodingType encodingType) {
         var objectivesNames = objectives.stream()
                 .map(objective -> objective.getClass().getSimpleName())
                 .collect(Collectors.toList());

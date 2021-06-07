@@ -1,7 +1,7 @@
 package me.soels.thesis.analysis;
 
 import com.github.javaparser.JavaParser;
-import me.soels.thesis.model.AnalysisModelBuilder;
+import me.soels.thesis.model.AnalysisInputBuilder;
 import me.soels.thesis.util.ZipExtractor;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
@@ -40,7 +40,7 @@ public class StaticAnalysis {
         this.zipExtractor = zipExtractor;
     }
 
-    public void analyze(AnalysisModelBuilder modelBuilder, StaticAnalysisInput input) {
+    public void analyze(AnalysisInputBuilder modelBuilder, StaticAnalysisInput input) {
         LOGGER.info("Starting static analysis on {}", input.getPathToZip());
         var start = System.currentTimeMillis();
 

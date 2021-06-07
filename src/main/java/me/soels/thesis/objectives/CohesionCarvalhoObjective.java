@@ -1,7 +1,7 @@
 package me.soels.thesis.objectives;
 
 import me.soels.thesis.encoding.Clustering;
-import me.soels.thesis.model.AnalysisModel;
+import me.soels.thesis.model.AnalysisInput;
 
 import java.util.HashMap;
 
@@ -18,11 +18,11 @@ import java.util.HashMap;
  */
 public class CohesionCarvalhoObjective implements OnePurposeMetric {
     @Override
-    public double calculate(Clustering clustering, AnalysisModel analysisModel) {
+    public double calculate(Clustering clustering, AnalysisInput analysisInput) {
         // TODO: Using mock data we did not consider the direction of the relationship which is important for this metric.
         var clusteringByClass = clustering.getByClass();
         var clusterCohesionSums = new HashMap<Integer, Integer>();
-        for (var edge : analysisModel.getDependencies()) {
+        for (var edge : analysisInput.getDependencies()) {
             var cluster = clusteringByClass.get(edge.getCaller());
             if (cluster.equals(clusteringByClass.get(edge.getCallee()))) {
                 // TODO: Carvalho does not use frequency within method body but extrapolated towards classes, we do

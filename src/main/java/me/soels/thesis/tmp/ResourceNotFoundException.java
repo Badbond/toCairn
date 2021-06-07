@@ -1,4 +1,4 @@
-package me.soels.thesis.controllers;
+package me.soels.thesis.tmp;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

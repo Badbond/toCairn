@@ -1,6 +1,6 @@
-package me.soels.thesis.model;
+package me.soels.thesis.tmp.daos;
 
-public enum AnalysisStatus {
+public enum EvaluationStatus {
     /**
      * The analysis data is being set up and is still missing information.
      * This can happen when not all the required inputs have been delivered for the measurements configured.

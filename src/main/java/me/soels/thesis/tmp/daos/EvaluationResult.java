@@ -8,6 +8,11 @@ import javax.validation.constraints.Size;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Models the result of an evaluation run.
+ * <p>
+ * The objectives stored are for identification purposes to see which objectives were included in the run.
+ */
 @Entity
 public class EvaluationResult {
     @Id

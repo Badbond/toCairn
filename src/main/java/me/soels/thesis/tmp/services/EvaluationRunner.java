@@ -6,6 +6,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service responsible for performing a run for a configured evaluation.
+ */
 @Service
 public class EvaluationRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(EvaluationRunner.class);

@@ -1,5 +1,8 @@
 package me.soels.thesis.tmp.daos;
 
+/**
+ * Indicates the status in which an evaluation is in.
+ */
 public enum EvaluationStatus {
     /**
      * The analysis data is being set up and is still missing information.

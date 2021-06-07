@@ -12,10 +12,10 @@ import java.util.UUID;
 /**
  * Models an evaluation of a project.
  * <p>
- * The evaluation of a project contains identifiable information, the input for performing the analysis, the result
- * from analysis prior to clustering, and the results on the evaluation runs.
+ * The evaluation of a project contains identifiable information, the input for performing the evaluation, the result
+ * from analysis prior to clustering, and the results on multiple evaluation runs.
  * <p>
- * Note, the 'evaluation' can be seen as an analysis on the project, but to remove confusion with analyzing inputs
+ * Note, the 'evaluation' can be seen as an analysis on the project, but to reduce confusion with analyzing inputs
  * (static analysis, dynamic analysis, etc.) we have chosen 'evaluation' for its name.
  */
 @Entity

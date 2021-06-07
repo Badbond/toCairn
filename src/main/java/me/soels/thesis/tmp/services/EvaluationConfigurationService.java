@@ -1,6 +1,7 @@
 package me.soels.thesis.tmp.services;
 
 import me.soels.thesis.tmp.daos.EvaluationConfiguration;
+import me.soels.thesis.tmp.repositories.EvaluationConfigurationRepository;
 import org.springframework.stereotype.Service;
 
 import javax.validation.Valid;
@@ -10,6 +11,17 @@ import javax.validation.Valid;
  */
 @Service
 public class EvaluationConfigurationService {
+    private final EvaluationConfigurationRepository repository;
+
+    public EvaluationConfigurationService(EvaluationConfigurationRepository repository) {
+        this.repository = repository;
+    }
+
+    public EvaluationConfiguration createConfiguration(EvaluationConfiguration configuration) {
+        validate(configuration);
+        return repository.save(configuration);
+    }
+
     /**
      * Validates the configuration.
      * <p>
@@ -18,10 +30,11 @@ public class EvaluationConfigurationService {
      * @param configuration the configuration to validate
      */
     public void validate(@Valid EvaluationConfiguration configuration) {
-        configuration.getClusterCountLowerBound()
+        var boundViolation = configuration.getClusterCountLowerBound()
                 .flatMap(lower -> configuration.getClusterCountUpperBound())
-                .filter(upper -> configuration.getClusterCountLowerBound().get() <= upper)
-                .orElseThrow(() -> new IllegalArgumentException("Cluster count upper bound needs to be greater than " +
-                        "its lower bound"));
+                .filter(upper -> upper < configuration.getClusterCountLowerBound().get());
+        if (boundViolation.isPresent()) {
+            throw new IllegalArgumentException("Cluster count upper bound needs to be greater than its lower bound");
+        }
     }
 }

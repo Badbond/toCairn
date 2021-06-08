@@ -9,8 +9,8 @@ import javax.annotation.Nullable;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -42,7 +42,7 @@ public class EvaluationConfiguration {
     @Size(min = 2)
     @Column(nullable = false)
     @ElementCollection(targetClass = Objective.class, fetch = FetchType.EAGER)
-    private List<Objective> objectives;
+    private Set<Objective> objectives;
 
     @NotNull
     @Column(nullable = false)

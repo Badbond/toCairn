@@ -4,6 +4,7 @@ import me.soels.thesis.model.AbstractClass;
 import me.soels.thesis.model.ClassRepository;
 import me.soels.thesis.model.EvaluationInput;
 import me.soels.thesis.model.EvaluationInputBuilder;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -21,13 +22,13 @@ public class GraphService {
     private final ClassRepository<AbstractClass> classRepository;
     // TODO: Relationship repository
 
-    public GraphService(ClassRepository<AbstractClass> classRepository) {
+    public GraphService(@Qualifier("classRepository") ClassRepository<AbstractClass> classRepository) {
         this.classRepository = classRepository;
     }
 
     public EvaluationInput getInputForEvaluation(UUID id) {
         var builder = new EvaluationInputBuilder();
-        classRepository.findAllByEvaluation(id);
+        classRepository.findAllByEvaluationId(id);
         return builder.build();
     }
 }

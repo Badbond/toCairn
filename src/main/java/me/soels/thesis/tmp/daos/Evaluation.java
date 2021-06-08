@@ -1,5 +1,7 @@
 package me.soels.thesis.tmp.daos;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
@@ -19,6 +21,8 @@ import java.util.UUID;
  * (static analysis, dynamic analysis, etc.) we have chosen 'evaluation' for its name.
  */
 @Entity
+@Getter
+@Setter
 public class Evaluation {
     @Id
     @GeneratedValue(generator = "UUID")
@@ -45,44 +49,4 @@ public class Evaluation {
     //  This is not project zip, git log, JFR results, etc. -- those are one-offs and should be processed immediately
     //  Instead we want to store the classes, relationships, sizes, etc.
     //  These are to be based on the configured configuration.objectives and validated as such before running
-
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public EvaluationStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(EvaluationStatus status) {
-        this.status = status;
-    }
-
-    public EvaluationConfiguration getConfiguration() {
-        return configuration;
-    }
-
-    public void setConfiguration(EvaluationConfiguration configuration) {
-        this.configuration = configuration;
-    }
-
-    public List<EvaluationResult> getResults() {
-        return results;
-    }
-
-    public void setResults(List<EvaluationResult> results) {
-        this.results = results;
-    }
 }

@@ -18,7 +18,8 @@ import java.util.stream.Collectors;
  * Can Neo4J work with 'multiple analysis' use-case in mind? If so, this is a nice way to go as we can
  * keep everything running and stored and see our results. Otherwise, we can only have one analysis per instance :(
  */
-@RestController("/api/evaluation")
+@RestController
+@RequestMapping("/api/evaluation")
 public class EvaluationController {
     private final EvaluationConfigurationService configurationService;
     private final EvaluationService evaluationService;

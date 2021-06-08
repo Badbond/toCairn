@@ -8,5 +8,5 @@ import java.util.UUID;
 
 public interface ClassRepository<T extends AbstractClass> extends Neo4jRepository<T, String> {
     @NonNull
-    List<T> findAllByEvaluation(@NonNull UUID evaluationId);
+    List<T> findAllByEvaluationId(@NonNull UUID evaluationId);
 }

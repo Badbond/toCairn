@@ -1,6 +1,7 @@
 package me.soels.thesis.tmp.dtos;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import lombok.Getter;
 import me.soels.thesis.tmp.daos.Evaluation;
 import me.soels.thesis.tmp.daos.EvaluationResult;
 import me.soels.thesis.tmp.daos.EvaluationStatus;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
  * An evaluation is the core data structure that manages the desired objectives, the model to run an analysis with
  * based off of the required sorts of analysis, metrics of the evaluation run and the solutions.
  */
+@Getter
 public class EvaluationDto {
     private final UUID id;
     @NotBlank
@@ -47,26 +49,6 @@ public class EvaluationDto {
         this.results = dao.getResults().stream()
                 .map(EvaluationResult::getId)
                 .collect(Collectors.toList());
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public EvaluationStatus getStatus() {
-        return status;
-    }
-
-    public EvaluationConfigurationDto getConfiguration() {
-        return configuration;
-    }
-
-    public List<UUID> getResults() {
-        return results;
     }
 
     public Evaluation toDao() {

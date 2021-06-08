@@ -1,5 +1,6 @@
 package me.soels.thesis.model;
 
+import lombok.Getter;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 
@@ -7,6 +8,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Node
+@Getter
 public abstract class AbstractClass {
     @Id
     private final String identifier;
@@ -20,14 +22,6 @@ public abstract class AbstractClass {
         this.identifier = identifier;
         this.humanReadableName = humanReadableName;
         this.evaluationId = evaluationId;
-    }
-
-    public String getIdentifier() {
-        return identifier;
-    }
-
-    public String getHumanReadableName() {
-        return humanReadableName;
     }
 
     /**

@@ -5,6 +5,7 @@ import me.soels.thesis.tmp.dtos.EvaluationResultDto;
 import me.soels.thesis.tmp.services.EvaluationResultService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -17,7 +18,8 @@ import java.util.stream.Collectors;
  * TODO:
  * How to expose the solutions in the clustering from optimization?
  */
-@RestController("/api/results")
+@RestController
+@RequestMapping("/api/results")
 public class EvaluationResultController {
     private final EvaluationResultService service;
 
@@ -26,14 +28,14 @@ public class EvaluationResultController {
     }
 
     @GetMapping
-    public List<EvaluationResultDto> getAllEvaluations() {
+    public List<EvaluationResultDto> getAllEvaluationResults() {
         return service.getResults().stream()
                 .map(EvaluationResultDto::new)
                 .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
-    public EvaluationResultDto getEvaluation(@PathVariable UUID id) {
+    public EvaluationResultDto getEvaluationResult(@PathVariable UUID id) {
         return new EvaluationResultDto(service.getResult(id));
     }
 }

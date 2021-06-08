@@ -10,8 +10,8 @@ import me.soels.thesis.tmp.daos.Objective;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Models the configuration of an evaluation.
@@ -33,7 +33,7 @@ public class EvaluationConfigurationDto {
 
     @NotNull
     @Size(min = 2)
-    private final List<Objective> objectives;
+    private final Set<Objective> objectives;
 
     public EvaluationConfigurationDto(EvaluationConfiguration dao) {
         this.algorithm = dao.getAlgorithm();

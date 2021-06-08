@@ -1,7 +1,7 @@
 package me.soels.thesis.objectives;
 
 import me.soels.thesis.encoding.Clustering;
-import me.soels.thesis.model.AnalysisInput;
+import me.soels.thesis.model.EvaluationInput;
 
 /**
  * Coupling as measured by Carvalho et al. (2020) based off of metrics in the work of Chidamber and Kemerer (1994).
@@ -19,11 +19,11 @@ import me.soels.thesis.model.AnalysisInput;
  */
 public class CouplingCarvalhoObjective implements OnePurposeMetric {
     @Override
-    public double calculate(Clustering clustering, AnalysisInput analysisInput) {
+    public double calculate(Clustering clustering, EvaluationInput evaluationInput) {
         // TODO: Using mock data we did not consider the direction of the relationship which is important for this metric.
         var coupling = 0.0;
         var clusteringByClass = clustering.getByClass();
-        for (var edge : analysisInput.getDependencies()) {
+        for (var edge : evaluationInput.getDependencies()) {
             if (!clusteringByClass.get(edge.getCaller()).equals(clusteringByClass.get(edge.getCallee()))) {
                 // TODO: Carvalho uses sc(a,b) here which is the number of calls present in A to B, use static freq.
                 coupling++;

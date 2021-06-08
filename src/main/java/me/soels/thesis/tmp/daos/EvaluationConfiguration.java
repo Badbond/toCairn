@@ -1,7 +1,8 @@
 package me.soels.thesis.tmp.daos;
 
+import lombok.Getter;
+import lombok.Setter;
 import me.soels.thesis.encoding.EncodingType;
-import me.soels.thesis.tmp.dtos.EvaluationConfigurationDto;
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.annotation.Nullable;
@@ -19,6 +20,8 @@ import java.util.UUID;
  * multi-objective clustering. This therefore primarily configures the problem statement of the evaluation.
  */
 @Entity
+@Getter
+@Setter
 public class EvaluationConfiguration {
     @Id
     @GeneratedValue(generator = "UUID")
@@ -47,6 +50,10 @@ public class EvaluationConfiguration {
 
     @Column
     @Nullable
+    private Long maxTime;
+
+    @Column
+    @Nullable
     @Size(min = 1)
     private Integer clusterCountLowerBound;
 
@@ -55,61 +62,17 @@ public class EvaluationConfiguration {
     @Size(min = 1)
     private Integer clusterCountUpperBound;
 
-    // TODO: Model max evaluations to accept, max time, operators to use (enum-wise)
+    // TODO: Model operators to use (enum-wise)
 
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID uuid) {
-        this.id = uuid;
-    }
-
-    public EvolutionaryAlgorithm getAlgorithm() {
-        return algorithm;
-    }
-
-    public void setAlgorithm(EvolutionaryAlgorithm algorithm) {
-        this.algorithm = algorithm;
-    }
-
-    public EncodingType getEncodingType() {
-        return encodingType;
-    }
-
-    public void setEncodingType(EncodingType encodingType) {
-        this.encodingType = encodingType;
-    }
-
-    public List<Objective> getObjectives() {
-        return objectives;
-    }
-
-    public void setObjectives(List<Objective> objectives) {
-        this.objectives = objectives;
-    }
-
-    public int getMaxEvaluations() {
-        return maxEvaluations;
-    }
-
-    public void setMaxEvaluations(int maxEvaluations) {
-        this.maxEvaluations = maxEvaluations;
+    public Optional<Long> getMaxTime() {
+        return Optional.ofNullable(maxTime);
     }
 
     public Optional<Integer> getClusterCountLowerBound() {
         return Optional.ofNullable(clusterCountLowerBound);
     }
 
-    public void setClusterCountLowerBound(@Nullable Integer clusterCountLowerBound) {
-        this.clusterCountLowerBound = clusterCountLowerBound;
-    }
-
     public Optional<Integer> getClusterCountUpperBound() {
         return Optional.ofNullable(clusterCountUpperBound);
-    }
-
-    public void setClusterCountUpperBound(@Nullable Integer clusterCountUpperBound) {
-        this.clusterCountUpperBound = clusterCountUpperBound;
     }
 }

@@ -32,7 +32,8 @@ public class EvaluationResult {
     private List<Objective> objectives;
 
     // TODO: Model metrics (performance metrics)
-    // TODO: Model (linkage to) clustering solutions
+    // TODO: Model (linkage to) clustering solutions -- This can be difficult as it is linked to our input model.
+    //  What happens if the evaluation changes? Clear the results?
 
     public UUID getId() {
         return id;

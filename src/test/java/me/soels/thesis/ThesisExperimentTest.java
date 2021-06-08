@@ -5,9 +5,9 @@ import me.soels.thesis.analysis.StaticAnalysisInput;
 import me.soels.thesis.encoding.EncodingType;
 import me.soels.thesis.encoding.VariableDecoder;
 import me.soels.thesis.encoding.VariableType;
-import me.soels.thesis.model.AnalysisInput;
-import me.soels.thesis.model.AnalysisInputBuilder;
 import me.soels.thesis.model.DependenceRelationship;
+import me.soels.thesis.model.EvaluationInput;
+import me.soels.thesis.model.EvaluationInputBuilder;
 import me.soels.thesis.model.OtherClass;
 import me.soels.thesis.objectives.CohesionCarvalhoObjective;
 import me.soels.thesis.objectives.CouplingBetweenModuleClassesObjective;
@@ -32,10 +32,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.github.javaparser.ParserConfiguration.LanguageLevel.JAVA_11;
@@ -66,15 +63,15 @@ public class ThesisExperimentTest {
         runExperiment(problemConfig, input);
     }
 
-    private AnalysisInput getZipInput() throws URISyntaxException {
+    private EvaluationInput getZipInput() throws URISyntaxException {
         var project = Path.of(this.getClass().getClassLoader().getResource(ZIP_FILE).toURI());
-        var analysisInput = new StaticAnalysisInput(project, JAVA_11, null);
-        var modelBuilder = new AnalysisInputBuilder();
+        var analysisInput = new StaticAnalysisInput(UUID.randomUUID(), project, JAVA_11, null);
+        var modelBuilder = new EvaluationInputBuilder();
         staticAnalysis.analyze(modelBuilder, analysisInput);
         return modelBuilder.build();
     }
 
-    private void runExperiment(ProblemConfiguration config, AnalysisInput input) {
+    private void runExperiment(ProblemConfiguration config, EvaluationInput input) {
         List<Objective> objectives = List.of(new CouplingBetweenModuleClassesObjective(), new CohesionCarvalhoObjective());
         var start = System.currentTimeMillis();
 
@@ -109,8 +106,8 @@ public class ThesisExperimentTest {
         LOGGER.info("===================================");
     }
 
-    private AnalysisInput prepareMockInput() {
-        var builder = new AnalysisInputBuilder();
+    private EvaluationInput prepareMockInput() {
+        var builder = new EvaluationInputBuilder();
         var graph = getMockGraph();
         builder.withOtherClasses(graph.getKey());
         builder.withDependencies(graph.getValue());
@@ -121,14 +118,15 @@ public class ThesisExperimentTest {
         var graphLines = Arrays.stream(getGraphString().split("\n"))
                 .skip(2)
                 .collect(Collectors.toList());
+        var evaluationId = UUID.randomUUID();
         var classMapping = new LinkedHashMap<String, OtherClass>();
         var edges = new ArrayList<DependenceRelationship>();
         for (var line : graphLines) {
             var split = Arrays.stream(line.split(","))
                     .map(StringUtils::trim)
                     .collect(Collectors.toList());
-            var classA = classMapping.computeIfAbsent(split.get(0), key -> new OtherClass("Class" + classMapping.size(), split.get(0)));
-            var classB = classMapping.computeIfAbsent(split.get(1), key -> new OtherClass("Class" + classMapping.size(), split.get(1)));
+            var classA = classMapping.computeIfAbsent(split.get(0), key -> new OtherClass("Class" + classMapping.size(), split.get(0), evaluationId));
+            var classB = classMapping.computeIfAbsent(split.get(1), key -> new OtherClass("Class" + classMapping.size(), split.get(1), evaluationId));
             edges.add(new DependenceRelationship(classA, classB, 1));
         }
         return new ImmutablePair<>(new ArrayList<>(classMapping.values()), edges);
@@ -146,7 +144,7 @@ public class ThesisExperimentTest {
         }
     }
 
-    private void printSolutionsData(NondominatedPopulation result, List<Objective> objectives, AnalysisInput input, EncodingType encodingType) {
+    private void printSolutionsData(NondominatedPopulation result, List<Objective> objectives, EvaluationInput input, EncodingType encodingType) {
         var objectivesNames = objectives.stream()
                 .map(objective -> objective.getClass().getSimpleName())
                 .collect(Collectors.toList());

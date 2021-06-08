@@ -7,25 +7,32 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
  * Context holder for static analysis.
  * <p>
- * This context holder will hold the resulting analysis results and populates that in the {@link AnalysisInputBuilder}.
+ * This context holder will hold the resulting analysis results and populates that in the {@link EvaluationInputBuilder}.
  * It furthermore contains data needed to share between stages of the static analysis, utility functions on the data
  * stored within this context, and additional data in favor of debugging such as counters.
  */
 class StaticAnalysisContext {
+    private final UUID evaluationId;
     private final Path projectLocation;
     private final StaticAnalysisInput input;
     private final List<Pair<AbstractClass, ClassOrInterfaceDeclaration>> classesAndTypes = new ArrayList<>();
     private final List<DependenceRelationship> relationships = new ArrayList<>();
     private final Counters counters = new Counters();
 
-    public StaticAnalysisContext(Path projectLocation, StaticAnalysisInput input) {
+    public StaticAnalysisContext(UUID evaluationId, Path projectLocation, StaticAnalysisInput input) {
+        this.evaluationId = evaluationId;
         this.projectLocation = projectLocation;
         this.input = input;
+    }
+
+    public UUID getEvaluationId() {
+        return evaluationId;
     }
 
     public Path getProjectLocation() {
@@ -72,11 +79,11 @@ class StaticAnalysisContext {
     }
 
     /**
-     * Applies the information held in this context to the {@link AnalysisInputBuilder}.
+     * Applies the information held in this context to the {@link EvaluationInputBuilder}.
      *
      * @param builder the builder to apply the context information to
      */
-    public void applyResults(AnalysisInputBuilder builder) {
+    public void applyResults(EvaluationInputBuilder builder) {
         builder.withOtherClasses(getClassType(OtherClass.class))
                 .withDataClasses(getClassType(DataClass.class))
                 .withDependencies(relationships)

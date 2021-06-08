@@ -89,7 +89,7 @@ public class StaticClassAnalysis {
                 .filter(Objects::nonNull)
                 .filter(clazz -> clazz.getFullyQualifiedName().isPresent())
                 // Create a pair of the type of class and its AST
-                .map(clazz -> Pair.of(identifyClass(clazz, context.getInput()), clazz))
+                .map(clazz -> Pair.of(identifyClass(clazz, context.getInput(), context), clazz))
                 .collect(Collectors.toList());
         context.addClassesAndTypes(allTypes);
 
@@ -102,14 +102,14 @@ public class StaticClassAnalysis {
         LOGGER.info("Static class analysis took {} (H:m:s.millis)", duration);
     }
 
-    private AbstractClass identifyClass(ClassOrInterfaceDeclaration clazz, StaticAnalysisInput input) {
+    private AbstractClass identifyClass(ClassOrInterfaceDeclaration clazz, StaticAnalysisInput input, StaticAnalysisContext context) {
         var fqn = clazz.getFullyQualifiedName()
                 .orElseThrow(() -> new IllegalStateException("Could not retrieve FQN from already filtered class"));
 
         if (isDataClass(clazz, input)) {
-            return new DataClass(fqn, clazz.getNameAsString(), null);
+            return new DataClass(fqn, clazz.getNameAsString(), null, context.getEvaluationId());
         } else {
-            return new OtherClass(fqn, clazz.getNameAsString());
+            return new OtherClass(fqn, clazz.getNameAsString(), context.getEvaluationId());
         }
     }
 

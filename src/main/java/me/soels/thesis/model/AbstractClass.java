@@ -4,19 +4,22 @@ import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 
 import java.util.Objects;
+import java.util.UUID;
 
 @Node
 public abstract class AbstractClass {
     @Id
     private final String identifier;
     private final String humanReadableName;
+    private final UUID evaluationId;
 
     // TODO: We require @Relationship here. We can then use @RelationshipProperties on DependenceRelationship and
     //  @TargetNode on the callee.
 
-    protected AbstractClass(String identifier, String humanReadableName) {
+    protected AbstractClass(String identifier, String humanReadableName, UUID evaluationId) {
         this.identifier = identifier;
         this.humanReadableName = humanReadableName;
+        this.evaluationId = evaluationId;
     }
 
     public String getIdentifier() {

@@ -3,7 +3,7 @@ package me.soels.thesis;
 import me.soels.thesis.encoding.EncodingType;
 import me.soels.thesis.encoding.VariableDecoder;
 import me.soels.thesis.encoding.VariableType;
-import me.soels.thesis.model.AnalysisInput;
+import me.soels.thesis.model.EvaluationInput;
 import me.soels.thesis.objectives.Objective;
 import org.moeaframework.Executor;
 import org.moeaframework.core.Solution;
@@ -26,7 +26,7 @@ import java.util.List;
  */
 public class ClusteringProblem extends AbstractProblem {
     private final List<Objective> objectives;
-    private final AnalysisInput analysisInput;
+    private final EvaluationInput evaluationInput;
     private final ProblemConfiguration problemConfiguration;
     private final VariableDecoder variableDecoder = new VariableDecoder();
 
@@ -37,10 +37,10 @@ public class ClusteringProblem extends AbstractProblem {
      * @param analysisInput        the input to cluster
      * @param problemConfiguration the configuration for the problem
      */
-    public ClusteringProblem(List<Objective> objectives, AnalysisInput analysisInput, ProblemConfiguration problemConfiguration) {
+    public ClusteringProblem(List<Objective> objectives, EvaluationInput analysisInput, ProblemConfiguration problemConfiguration) {
         super(analysisInput.getOtherClasses().size(), objectives.size());
         this.objectives = objectives;
-        this.analysisInput = analysisInput;
+        this.evaluationInput = analysisInput;
         this.problemConfiguration = problemConfiguration;
     }
 
@@ -55,7 +55,7 @@ public class ClusteringProblem extends AbstractProblem {
     @Override
     public void evaluate(Solution solution) {
         var variables = EncodingUtils.getInt(solution);
-        var decodedClustering = variableDecoder.decode(analysisInput, variables, problemConfiguration.getEncodingType());
+        var decodedClustering = variableDecoder.decode(evaluationInput, variables, problemConfiguration.getEncodingType());
 
         if (problemConfiguration.getClusterCountLowerBound().isPresent() &&
                 decodedClustering.getByCluster().size() < problemConfiguration.getClusterCountLowerBound().get()) {
@@ -68,7 +68,7 @@ public class ClusteringProblem extends AbstractProblem {
         }
 
         for (var i = 0; i < objectives.size(); i++) {
-            double objectiveValue = objectives.get(i).calculate(decodedClustering, analysisInput);
+            double objectiveValue = objectives.get(i).calculate(decodedClustering, evaluationInput);
             solution.setObjective(i, objectiveValue);
         }
     }

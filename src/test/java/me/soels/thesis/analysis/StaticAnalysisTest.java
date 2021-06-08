@@ -31,7 +31,7 @@ public class StaticAnalysisTest {
 
     private void runAnalysis(URL resource) throws URISyntaxException {
         var project = Path.of(Objects.requireNonNull(resource).toURI());
-        var input = new StaticAnalysisInput(UUID.randomUUID(), project, JAVA_11, null);
+        var input = new StaticAnalysisInput(project, JAVA_11, null);
         // thesis-project-master.zip (28 classes, 64 unique method names):
         //      117 total, 17 unresolved, 68 relevant (excl. self-ref), 29 relationships on 3.18.0 -- 2s
         //      117 total, 38 unresolved, 57 relevant (excl. self-ref), 25 relationships on 3.22.1 -- 1s
@@ -41,7 +41,7 @@ public class StaticAnalysisTest {
         // big-project-cleaned.zip (with generated sources by compilation & excluding jars+test: 4882 classes, 10021 unique method names):
         //      stack overflow error on 3.18
         //      87597 total, 7532 unresolved, 32984 relevant (excl. self-ref), 5186 relationships, -- 6m 35s on 3.22.1
-        var builder = new EvaluationInputBuilder(evaluationId);
+        var builder = new EvaluationInputBuilder(UUID.randomUUID());
         analysis.analyze(builder, input);
         builder.build();
     }

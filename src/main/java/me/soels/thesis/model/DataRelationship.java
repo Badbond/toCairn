@@ -1,5 +1,7 @@
 package me.soels.thesis.model;
 
+import java.util.UUID;
+
 /**
  * Indicates that there is a relationship between an {@link OtherClass} and a {@link DataClass}.
  * <p>
@@ -15,8 +17,8 @@ package me.soels.thesis.model;
 public final class DataRelationship extends DependenceRelationship {
     private final DataRelationshipType type;
 
-    public DataRelationship(DataClass dataClass, DataRelationshipType type, int frequency) {
-        super(dataClass, frequency);
+    public DataRelationship(UUID evaluationId, DataClass dataClass, DataRelationshipType type, int frequency) {
+        super(evaluationId, dataClass, frequency);
         this.type = type;
     }
 

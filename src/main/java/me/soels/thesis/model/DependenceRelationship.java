@@ -1,5 +1,7 @@
 package me.soels.thesis.model;
 
+import java.util.UUID;
+
 /**
  * Relationship between two {@link OtherClass} that signify one depends on the other.
  * <p>
@@ -13,8 +15,8 @@ public class DependenceRelationship extends Relationship {
     // TODO: List of methods invoked? count can be deduced from that. Not sure if needed but we can add it. Also for other dep.
     private final int frequency;
 
-    public DependenceRelationship(AbstractClass callee, int frequency) {
-        super(callee);
+    public DependenceRelationship(UUID evaluationId, AbstractClass callee, int frequency) {
+        super(evaluationId, callee);
         this.frequency = frequency;
     }
 

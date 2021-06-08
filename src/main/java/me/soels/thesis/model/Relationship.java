@@ -1,5 +1,7 @@
 package me.soels.thesis.model;
 
+import java.util.UUID;
+
 /**
  * Indicates a relationships between two classes.
  *
@@ -7,9 +9,12 @@ package me.soels.thesis.model;
  * @see DependenceRelationship
  */
 public abstract class Relationship {
+    // TODO: Create an @Id for the graph
+    private final UUID evaluationId;
     private final AbstractClass callee;
 
-    protected Relationship(AbstractClass callee) {
+    protected Relationship(UUID evaluationId, AbstractClass callee) {
+        this.evaluationId = evaluationId;
         this.callee = callee;
     }
 

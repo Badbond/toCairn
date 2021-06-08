@@ -1,8 +1,14 @@
 package me.soels.thesis.analysis.statik;
 
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import lombok.Getter;
+import me.soels.thesis.model.AbstractClass;
 import me.soels.thesis.model.EvaluationInputBuilder;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Context holder for static analysis.
@@ -11,11 +17,13 @@ import java.nio.file.Path;
  * It furthermore contains data needed to share between stages of the static analysis, utility functions on the data
  * stored within this context, and additional data in favor of debugging such as counters.
  */
+@Getter
 class StaticAnalysisContext {
     private final Path projectLocation;
     private final StaticAnalysisInput input;
     private final EvaluationInputBuilder resultBuilder;
     private final Counters counters = new Counters();
+    private final List<Pair<ClassOrInterfaceDeclaration, AbstractClass>> typesAndClasses = new ArrayList<>();
 
     public StaticAnalysisContext(Path projectLocation,
                                  StaticAnalysisInput input,
@@ -25,20 +33,13 @@ class StaticAnalysisContext {
         this.resultBuilder = resultBuilder;
     }
 
-    public Path getProjectLocation() {
-        return projectLocation;
-    }
-
-    public StaticAnalysisInput getInput() {
-        return input;
-    }
-
-    public EvaluationInputBuilder getResultBuilder() {
-        return resultBuilder;
-    }
-
-    public Counters getCounters() {
-        return counters;
+    /**
+     * Sets the types and classes identified during class analysis to use in relationship analysis as well.
+     *
+     * @param typesAndClasses the types and classes to persist in context
+     */
+    public void setTypesAndClasses(List<Pair<ClassOrInterfaceDeclaration, AbstractClass>> typesAndClasses) {
+        this.typesAndClasses.addAll(typesAndClasses);
     }
 
     static class Counters {

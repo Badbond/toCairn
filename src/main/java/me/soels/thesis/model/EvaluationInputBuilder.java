@@ -5,6 +5,7 @@ import lombok.Getter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Builder for an {@link EvaluationInput}.
@@ -41,25 +42,57 @@ public class EvaluationInputBuilder {
         this.dataRelationships.addAll(input.getDataRelations());
     }
 
-    public void addDataClass(String fqn, String humanReadableName, int size) {
-        allClasses.add(new DataClass(fqn, humanReadableName, size, evaluationId));
+    public EvaluationInputBuilder withClasses(List<? extends AbstractClass> classes) {
+        allClasses.addAll(classes);
+        return this;
     }
 
-    public void addOtherClass(String fqn, String humanReadableName) {
-        allClasses.add(new OtherClass(fqn, humanReadableName, evaluationId));
+    public EvaluationInputBuilder withDependencies(List<DependenceRelationship> dependencies) {
+        return null;
     }
 
-    public void addDependency(AbstractClass callee, int frequency) {
-        dependencies.add(new DependenceRelationship(callee, frequency, evaluationId));
+    public DataClass addDataClass(String fqn, String humanReadableName, int size) {
+        var dataClass = new DataClass(fqn, humanReadableName, size, evaluationId);
+        allClasses.add(dataClass);
+        return dataClass;
     }
 
-    public void addDataRelationship(AbstractClass caller, AbstractClass callee, DataRelationshipType type, int frequency) {
-        dataRelationships.add(new DataRelationship(callee, type, frequency, evaluationId));
+    public OtherClass addOtherClass(String fqn, String humanReadableName) {
+        var otherClass = new OtherClass(fqn, humanReadableName, evaluationId);
+        allClasses.add(otherClass);
+        return otherClass;
+    }
+
+    public DependenceRelationship addDependency(AbstractClass caller, AbstractClass callee, int frequency) {
+        var dependency = new DependenceRelationship(evaluationId, callee, frequency);
+        // TODO: Add the dependency to a list of relationships of the caller.
+        dependencies.add(dependency);
+        return dependency;
+    }
+
+    public DataRelationship addDataRelationship(AbstractClass caller, DataClass callee, DataRelationshipType type, int frequency) {
+        var dataRelationship = new DataRelationship(evaluationId, callee, type, frequency);
+        // TODO: Add the dependency to a list of relationships of the caller.
+        dataRelationships.add(dataRelationship);
+        return dataRelationship;
+    }
+
+    public List<DataClass> getDataClasses() {
+        return getTypesOfClasses(DataClass.class);
+    }
+
+    public List<OtherClass> getOtherClasses() {
+        return getTypesOfClasses(OtherClass.class);
     }
 
     public EvaluationInput build() {
-        return new EvaluationInput(evaluationId, otherClasses, dataClasses, dependencies, dataRelationships);
+        return new EvaluationInput(evaluationId, getOtherClasses(), getDataClasses(), dependencies, dataRelationships);
     }
 
-    private
+    private <T extends AbstractClass> List<T> getTypesOfClasses(Class<T> expectedClass) {
+        return allClasses.stream()
+                .filter(clazz -> expectedClass.isAssignableFrom(clazz.getClass()))
+                .map(expectedClass::cast)
+                .collect(Collectors.toList());
+    }
 }

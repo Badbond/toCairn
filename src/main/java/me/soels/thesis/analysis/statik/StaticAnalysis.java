@@ -53,12 +53,10 @@ public class StaticAnalysis {
         }
 
         var projectLocation = zipExtractor.extractZip(inputZip);
-        var context = new StaticAnalysisContext(projectLocation, input, resultBuilder);
+        var context = new StaticAnalysisContext(projectLocation, input, modelBuilder);
 
         classAnalysis.analyze(context);
         dependencyAnalysis.analyze(context);
-
-        context.applyResults(modelBuilder);
 
         var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);
         LOGGER.info("Total static analysis took {} (H:m:s.millis)", duration);

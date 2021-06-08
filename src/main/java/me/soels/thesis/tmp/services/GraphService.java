@@ -28,13 +28,15 @@ public class GraphService {
 
     public EvaluationInput getInput(UUID id) {
         return new EvaluationInputBuilder(id)
-                .withDataClasses(dataClassRepository.findAllByEvaluationId(id))
-                .withOtherClasses(otherClassRepository.findAllByEvaluationId(id))
+                .withClasses(dataClassRepository.findAllByEvaluationId(id))
+                .withClasses(otherClassRepository.findAllByEvaluationId(id))
+                // TODO: Add relationships
                 .build();
     }
 
     public void storeInput(EvaluationInput input) {
         otherClassRepository.saveAll(input.getOtherClasses());
         dataClassRepository.saveAll(input.getDataClasses());
+        // TODO: Store relationships
     }
 }

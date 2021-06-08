@@ -107,9 +107,9 @@ public class ThesisExperimentTest {
     }
 
     private EvaluationInput prepareMockInput() {
-        var builder = new EvaluationInputBuilder(evaluationId);
+        var builder = new EvaluationInputBuilder(UUID.randomUUID());
         var graph = getMockGraph();
-        builder.withOtherClasses(graph.getKey());
+        builder.withClasses(graph.getKey());
         builder.withDependencies(graph.getValue());
         return builder.build();
     }
@@ -127,7 +127,8 @@ public class ThesisExperimentTest {
                     .collect(Collectors.toList());
             var classA = classMapping.computeIfAbsent(split.get(0), key -> new OtherClass("Class" + classMapping.size(), split.get(0), evaluationId));
             var classB = classMapping.computeIfAbsent(split.get(1), key -> new OtherClass("Class" + classMapping.size(), split.get(1), evaluationId));
-            edges.add(new DependenceRelationship(classA, classB, 1));
+            edges.add(new DependenceRelationship(UUID.randomUUID(), classB, 1));
+            // TODO: Add edge on classA as relationship.
         }
         return new ImmutablePair<>(new ArrayList<>(classMapping.values()), edges);
     }

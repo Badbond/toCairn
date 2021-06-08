@@ -7,8 +7,10 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.nodeTypes.NodeWithName;
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy;
 import com.github.javaparser.utils.SourceRoot;
+import me.soels.thesis.model.AbstractClass;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static me.soels.thesis.util.StringContainsIgnoreCaseMatcher.containsStringIgnoringCase;
 import static org.hamcrest.CoreMatchers.anyOf;
@@ -66,7 +69,7 @@ public class StaticClassAnalysis {
          * hours/days) in order to resolve more nodes and therefore get a more complete graph. The problem that we are
          * facing now would still be present as ReflectionTypeSolver is the first solver.
          **/
-        new SymbolSolverCollectionStrategy(config)
+        var typesAndClasses = new SymbolSolverCollectionStrategy(config)
                 .collect(context.getProjectLocation()).getSourceRoots().stream()
                 // Don't include test directories (ideally, they were already filtered out by the user)
                 .filter(root -> !root.getRoot().toString().contains("/test/"))
@@ -84,7 +87,9 @@ public class StaticClassAnalysis {
                 .filter(Objects::nonNull)
                 .filter(clazz -> clazz.getFullyQualifiedName().isPresent())
                 // Create a pair of the type of class and its AST
-                .forEach(clazz -> storeClass(clazz, context.getInput(), context));
+                .map(clazz -> Pair.of(clazz, storeClass(clazz, context.getInput(), context)))
+                .collect(Collectors.toList());
+        context.setTypesAndClasses(typesAndClasses);
 
         LOGGER.info("Graph nodes results:" +
                         "\n\tTotal classes:       {}" +
@@ -97,15 +102,15 @@ public class StaticClassAnalysis {
         LOGGER.info("Static class analysis took {} (H:m:s.millis)", duration);
     }
 
-    private void storeClass(ClassOrInterfaceDeclaration clazz, StaticAnalysisInput input, StaticAnalysisContext context) {
+    private AbstractClass storeClass(ClassOrInterfaceDeclaration clazz, StaticAnalysisInput input, StaticAnalysisContext context) {
         var fqn = clazz.getFullyQualifiedName()
                 .orElseThrow(() -> new IllegalStateException("Could not retrieve FQN from already filtered class"));
 
         if (isDataClass(clazz, input)) {
             // TODO: Replace 1 size with default in case dynamic analysis has not seen data class
-            context.getResultBuilder().addDataClass(fqn, clazz.getNameAsString(), 1);
+            return context.getResultBuilder().addDataClass(fqn, clazz.getNameAsString(), 1);
         } else {
-            context.getResultBuilder().addOtherClass(fqn, clazz.getNameAsString());
+            return context.getResultBuilder().addOtherClass(fqn, clazz.getNameAsString());
         }
     }
 

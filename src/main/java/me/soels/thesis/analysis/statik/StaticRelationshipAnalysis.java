@@ -4,7 +4,10 @@ import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.MethodReferenceExpr;
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
-import me.soels.thesis.model.*;
+import me.soels.thesis.model.AbstractClass;
+import me.soels.thesis.model.DataClass;
+import me.soels.thesis.model.DataRelationshipType;
+import me.soels.thesis.model.OtherClass;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -48,18 +51,16 @@ public class StaticRelationshipAnalysis {
         LOGGER.info("Extracting relationships");
         var start = System.currentTimeMillis();
 
-        var visitorResults = context.getResultBuilder().getClassesAndTypes().stream()
-                .map(pair -> classVisitor.visit(pair.getValue(), pair.getKey()))
+        var visitorResults = context.getTypesAndClasses().stream()
+                .map(pair -> classVisitor.visit(pair.getKey(), pair.getValue()))
                 .collect(Collectors.toList());
         var methodNameSet = visitorResults.stream()
                 .flatMap(visitorResult -> visitorResult.getDeclaredMethods().stream())
                 .map(NodeWithSimpleName::getNameAsString)
                 .collect(Collectors.toSet());
 
-        var relationships = visitorResults.stream()
-                .flatMap(visitorResult -> this.storeClassDependencies(context, visitorResult, methodNameSet).stream())
-                .collect(Collectors.toList());
-        context.getResultBuilder().addRelationships(relationships);
+        visitorResults.forEach(visitorResult ->
+                this.storeClassDependencies(context, visitorResult, methodNameSet));
 
         printResults(context, visitorResults, methodNameSet);
         var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);
@@ -67,20 +68,15 @@ public class StaticRelationshipAnalysis {
     }
 
     private void storeClassDependencies(StaticAnalysisContext context,
-                                                                VisitorResult visitorResult,
-                                                                Set<String> allMethodNames) {
-        var allClasses = context.getResultBuilder().getClassesAndTypes().stream()
-                .map(Pair::getKey)
-                .collect(Collectors.toList());
-
+                                        VisitorResult visitorResult,
+                                        Set<String> allMethodNames) {
+        var allClasses = context.getResultBuilder().getAllClasses();
         var relevantNodes = new HashMap<AbstractClass, List<Expression>>();
         relevantNodes.putAll(getRelevantMethodCalls(context, visitorResult, allMethodNames, allClasses));
         relevantNodes.putAll(getRelevantMethodReferences(context, visitorResult, allMethodNames, allClasses));
         relevantNodes.putAll(getRelevantConstructorCalls(context, visitorResult, allClasses));
 
-        return relevantNodes.entrySet().stream()
-                .map(calleeEntry -> identifyRelationship(visitorResult.getCaller(), calleeEntry.getKey(), calleeEntry.getValue()))
-                .collect(Collectors.toList());
+        relevantNodes.forEach((key, value) -> storeRelationship(visitorResult.getCaller(), key, value, context));
     }
 
     private Map<AbstractClass, List<Expression>> getRelevantConstructorCalls(StaticAnalysisContext context, VisitorResult visitorResult, List<AbstractClass> allClasses) {
@@ -132,15 +128,17 @@ public class StaticRelationshipAnalysis {
      * @param caller        the source of the relationship
      * @param callee        the target of the relationship
      * @param relevantNodes the list of AST nodes related to the relationship
-     * @return the dependence relationship between callee and caller
+     * @param context       the contet to add the relationships to
      */
-    private DependenceRelationship identifyRelationship(AbstractClass caller,
-                                                        AbstractClass callee,
-                                                        List<Expression> relevantNodes) {
+    private void storeRelationship(AbstractClass caller,
+                                   AbstractClass callee,
+                                   List<Expression> relevantNodes,
+                                   StaticAnalysisContext context) {
         if (caller instanceof OtherClass && callee instanceof DataClass) {
-            return new DataRelationship((OtherClass) caller, (DataClass) callee, identifyReadWrite(relevantNodes), relevantNodes.size());
+            var type = identifyReadWrite(relevantNodes);
+            context.getResultBuilder().addDataRelationship(caller, (DataClass) callee, type, relevantNodes.size());
         } else {
-            return new DependenceRelationship(caller, callee, relevantNodes.size());
+            context.getResultBuilder().addDependency(caller, callee, relevantNodes.size());
         }
     }
 
@@ -212,8 +210,8 @@ public class StaticRelationshipAnalysis {
                 visitorResults.stream().mapToInt(res -> res.getMethodCalls().size()).sum(),
                 counters.matchingMethodCalls,
                 counters.relevantMethodCalls,
-                context.getRelationships().size(),
-                context.getDataRelationships().size()
+                context.getResultBuilder().getDependencies().size(),
+                context.getResultBuilder().getDataRelationships().size()
         );
         LOGGER.info("Total means the amount of that type of AST node found within the project");
         LOGGER.info("Matching means that the method is in the unique set of declared method names.");

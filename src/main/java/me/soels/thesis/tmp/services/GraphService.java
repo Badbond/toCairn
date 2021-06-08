@@ -1,9 +1,6 @@
 package me.soels.thesis.tmp.services;
 
-import me.soels.thesis.model.AbstractClass;
-import me.soels.thesis.model.ClassRepository;
-import me.soels.thesis.model.EvaluationInput;
-import me.soels.thesis.model.EvaluationInputBuilder;
+import me.soels.thesis.model.*;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -19,16 +16,25 @@ import java.util.UUID;
  */
 @Service
 public class GraphService {
-    private final ClassRepository<AbstractClass> classRepository;
+    private final ClassRepository<OtherClass> otherClassRepository;
+    private final ClassRepository<DataClass> dataClassRepository;
     // TODO: Relationship repository
 
-    public GraphService(@Qualifier("classRepository") ClassRepository<AbstractClass> classRepository) {
-        this.classRepository = classRepository;
+    public GraphService(@Qualifier("classRepository") ClassRepository<OtherClass> otherClassRepository,
+                        @Qualifier("classRepository") ClassRepository<DataClass> dataClassRepository) {
+        this.otherClassRepository = otherClassRepository;
+        this.dataClassRepository = dataClassRepository;
     }
 
-    public EvaluationInput getInputForEvaluation(UUID id) {
-        var builder = new EvaluationInputBuilder();
-        classRepository.findAllByEvaluationId(id);
-        return builder.build();
+    public EvaluationInput getInput(UUID id) {
+        return new EvaluationInputBuilder(id)
+                .withDataClasses(dataClassRepository.findAllByEvaluationId(id))
+                .withOtherClasses(otherClassRepository.findAllByEvaluationId(id))
+                .build();
+    }
+
+    public void storeInput(EvaluationInput input) {
+        otherClassRepository.saveAll(input.getOtherClasses());
+        dataClassRepository.saveAll(input.getDataClasses());
     }
 }

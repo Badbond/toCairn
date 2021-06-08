@@ -10,6 +10,7 @@ import java.util.UUID;
 @Node
 @Getter
 public abstract class AbstractClass {
+    // TODO: Change the ID to a random UUID. There should be a unique
     @Id
     private final String identifier;
     private final String humanReadableName;
@@ -27,7 +28,7 @@ public abstract class AbstractClass {
     /**
      * Returns whether the provided class is equal to this class.
      * <p>
-     * Note that we only use our {@code identifier} for equality checks.
+     * Note that we only use our {@code identifier} and {@code evaluationId} for equality checks.
      *
      * @param o the class to check equality with
      * @return whether the given class is equal to this class
@@ -37,11 +38,11 @@ public abstract class AbstractClass {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AbstractClass that = (AbstractClass) o;
-        return identifier.equals(that.identifier);
+        return identifier.equals(that.identifier) && evaluationId.equals(that.evaluationId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(identifier, humanReadableName);
+        return Objects.hash(identifier, humanReadableName, evaluationId);
     }
 }

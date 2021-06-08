@@ -1,4 +1,4 @@
-package me.soels.thesis.analysis;
+package me.soels.thesis.analysis.statik;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;

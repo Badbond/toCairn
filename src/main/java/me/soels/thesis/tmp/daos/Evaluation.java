@@ -6,8 +6,10 @@ import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 
@@ -44,6 +46,13 @@ public class Evaluation {
 
     @OneToMany(mappedBy = "evaluation")
     private List<EvaluationResult> results = new ArrayList<>();
+
+    @NotNull
+    @Enumerated
+    @Size(min = 2)
+    @Column(nullable = false)
+    @ElementCollection(targetClass = Objective.class, fetch = FetchType.EAGER)
+    private Set<Objective> objectives;
 
     // TODO: Model inputs
     //  This is not project zip, git log, JFR results, etc. -- those are one-offs and should be processed immediately

@@ -15,18 +15,13 @@ package me.soels.thesis.model;
 public final class DataRelationship extends DependenceRelationship {
     private final DataRelationshipType type;
 
-    public DataRelationship(OtherClass otherClass, DataClass dataClass, DataRelationshipType type, int frequency) {
-        super(otherClass, dataClass, frequency);
+    public DataRelationship(DataClass dataClass, DataRelationshipType type, int frequency) {
+        super(dataClass, frequency);
         this.type = type;
     }
 
     public DataRelationshipType getType() {
         return type;
-    }
-
-    @Override
-    public OtherClass getCaller() {
-        return (OtherClass) super.getCaller();
     }
 
     @Override

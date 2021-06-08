@@ -1,43 +1,65 @@
 package me.soels.thesis.model;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Builder for an {@link EvaluationInput}.
  * <p>
- * This builder can be used to construct the model in a parallel manner for all analysis classes. This
- * furthermore allows for modifying the model before finalizing it when it is being run through the evolutionary
- * algorithm.
+ * This builder can be used to construct and enhance the model for all analysis classes. This furthermore allows for
+ * modifying the model before finalizing it when it is being run through the evolutionary algorithm.
  */
+@Getter
 public class EvaluationInputBuilder {
-    private final List<OtherClass> otherClasses = Collections.synchronizedList(new ArrayList<>());
-    private final List<DataClass> dataClasses = Collections.synchronizedList(new ArrayList<>());
-    private final List<DependenceRelationship> dependencies = Collections.synchronizedList(new ArrayList<>());
-    private final List<DataRelationship> dataRelationships = Collections.synchronizedList(new ArrayList<>());
+    private final UUID evaluationId;
+    private final List<AbstractClass> allClasses = new ArrayList<>();
+    private final List<DependenceRelationship> dependencies = new ArrayList<>();
+    private final List<DataRelationship> dataRelationships = new ArrayList<>();
 
-    public EvaluationInputBuilder withOtherClasses(List<OtherClass> otherClasses) {
-        this.otherClasses.addAll(otherClasses);
-        return this;
+    /**
+     * Creates a clean new builder for the evaluation with the given {@code evaluationId}.
+     *
+     * @param evaluationId the evaluation to create the input for
+     */
+    public EvaluationInputBuilder(UUID evaluationId) {
+        this.evaluationId = evaluationId;
     }
 
-    public EvaluationInputBuilder withDataClasses(List<DataClass> dataClasses) {
-        this.dataClasses.addAll(dataClasses);
-        return this;
+    /**
+     * Creates a builder from an already existing input.
+     *
+     * @param input the input data to start this builder with
+     */
+    public EvaluationInputBuilder(EvaluationInput input) {
+        this.evaluationId = input.getEvaluationId();
+        this.allClasses.addAll(input.getOtherClasses());
+        this.allClasses.addAll(input.getDataClasses());
+        this.dependencies.addAll(input.getDependencies());
+        this.dataRelationships.addAll(input.getDataRelations());
     }
 
-    public EvaluationInputBuilder withDependencies(List<DependenceRelationship> dependencies) {
-        this.dependencies.addAll(dependencies);
-        return this;
+    public void addDataClass(String fqn, String humanReadableName, int size) {
+        allClasses.add(new DataClass(fqn, humanReadableName, size, evaluationId));
     }
 
-    public EvaluationInputBuilder withDataRelationships(List<DataRelationship> dataRelationships) {
-        this.dataRelationships.addAll(dataRelationships);
-        return this;
+    public void addOtherClass(String fqn, String humanReadableName) {
+        allClasses.add(new OtherClass(fqn, humanReadableName, evaluationId));
     }
 
-    public synchronized EvaluationInput build() {
-        return new EvaluationInput(otherClasses, dataClasses, dependencies, dataRelationships);
+    public void addDependency(AbstractClass callee, int frequency) {
+        dependencies.add(new DependenceRelationship(callee, frequency, evaluationId));
     }
+
+    public void addDataRelationship(AbstractClass caller, AbstractClass callee, DataRelationshipType type, int frequency) {
+        dataRelationships.add(new DataRelationship(callee, type, frequency, evaluationId));
+    }
+
+    public EvaluationInput build() {
+        return new EvaluationInput(evaluationId, otherClasses, dataClasses, dependencies, dataRelationships);
+    }
+
+    private
 }

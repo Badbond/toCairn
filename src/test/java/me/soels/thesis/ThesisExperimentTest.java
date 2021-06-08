@@ -1,7 +1,7 @@
 package me.soels.thesis;
 
-import me.soels.thesis.analysis.StaticAnalysis;
-import me.soels.thesis.analysis.StaticAnalysisInput;
+import me.soels.thesis.analysis.statik.StaticAnalysis;
+import me.soels.thesis.analysis.statik.StaticAnalysisInput;
 import me.soels.thesis.encoding.EncodingType;
 import me.soels.thesis.encoding.VariableDecoder;
 import me.soels.thesis.encoding.VariableType;
@@ -65,8 +65,8 @@ public class ThesisExperimentTest {
 
     private EvaluationInput getZipInput() throws URISyntaxException {
         var project = Path.of(this.getClass().getClassLoader().getResource(ZIP_FILE).toURI());
-        var analysisInput = new StaticAnalysisInput(UUID.randomUUID(), project, JAVA_11, null);
-        var modelBuilder = new EvaluationInputBuilder();
+        var analysisInput = new StaticAnalysisInput(project, JAVA_11, null);
+        var modelBuilder = new EvaluationInputBuilder(UUID.randomUUID());
         staticAnalysis.analyze(modelBuilder, analysisInput);
         return modelBuilder.build();
     }
@@ -107,7 +107,7 @@ public class ThesisExperimentTest {
     }
 
     private EvaluationInput prepareMockInput() {
-        var builder = new EvaluationInputBuilder();
+        var builder = new EvaluationInputBuilder(evaluationId);
         var graph = getMockGraph();
         builder.withOtherClasses(graph.getKey());
         builder.withDependencies(graph.getValue());

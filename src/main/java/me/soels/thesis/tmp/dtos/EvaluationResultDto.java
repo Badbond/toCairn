@@ -2,9 +2,6 @@ package me.soels.thesis.tmp.dtos;
 
 import lombok.Getter;
 import me.soels.thesis.tmp.daos.EvaluationResult;
-import me.soels.thesis.tmp.daos.Objective;
-
-import java.util.Set;
 
 /**
  * The data transfer object for {@link EvaluationResult}.
@@ -13,9 +10,6 @@ import java.util.Set;
  */
 @Getter
 public class EvaluationResultDto {
-    private final Set<Objective> objectives;
-
     public EvaluationResultDto(EvaluationResult result) {
-        this.objectives = result.getObjectives();
     }
 }

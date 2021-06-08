@@ -7,16 +7,10 @@ package me.soels.thesis.model;
  * @see DependenceRelationship
  */
 public abstract class Relationship {
-    private final AbstractClass caller;
     private final AbstractClass callee;
 
-    protected Relationship(AbstractClass caller, AbstractClass callee) {
-        this.caller = caller;
+    protected Relationship(AbstractClass callee) {
         this.callee = callee;
-    }
-
-    public AbstractClass getCaller() {
-        return caller;
     }
 
     public AbstractClass getCallee() {

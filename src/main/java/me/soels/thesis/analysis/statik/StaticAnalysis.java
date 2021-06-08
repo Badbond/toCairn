@@ -1,4 +1,4 @@
-package me.soels.thesis.analysis;
+package me.soels.thesis.analysis.statik;
 
 import com.github.javaparser.JavaParser;
 import me.soels.thesis.model.EvaluationInputBuilder;
@@ -40,6 +40,7 @@ public class StaticAnalysis {
         this.zipExtractor = zipExtractor;
     }
 
+    // TODO: Perform static analysis async. Need a way of locking to prevent concurrent analysis or memory overflow.
     public void analyze(EvaluationInputBuilder modelBuilder, StaticAnalysisInput input) {
         LOGGER.info("Starting static analysis on {}", input.getPathToZip());
         var start = System.currentTimeMillis();
@@ -52,7 +53,7 @@ public class StaticAnalysis {
         }
 
         var projectLocation = zipExtractor.extractZip(inputZip);
-        var context = new StaticAnalysisContext(input.getEvaluationId(), projectLocation, input);
+        var context = new StaticAnalysisContext(projectLocation, input, resultBuilder);
 
         classAnalysis.analyze(context);
         dependencyAnalysis.analyze(context);

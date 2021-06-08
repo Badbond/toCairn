@@ -8,6 +8,10 @@ import java.util.UUID;
 @ResponseStatus(HttpStatus.NOT_FOUND)
 public class ResourceNotFoundException extends RuntimeException {
     public ResourceNotFoundException(UUID id) {
-        super("Could not find resource with id " + id.toString());
+        this("Could not find resource with id " + id.toString());
+    }
+
+    public ResourceNotFoundException(String message) {
+        super(message);
     }
 }

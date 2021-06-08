@@ -13,8 +13,8 @@ public class DependenceRelationship extends Relationship {
     // TODO: List of methods invoked? count can be deduced from that. Not sure if needed but we can add it. Also for other dep.
     private final int frequency;
 
-    public DependenceRelationship(AbstractClass caller, AbstractClass callee, int frequency) {
-        super(caller, callee);
+    public DependenceRelationship(AbstractClass callee, int frequency) {
+        super(callee);
         this.frequency = frequency;
     }
 

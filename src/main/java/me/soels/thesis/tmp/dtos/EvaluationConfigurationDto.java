@@ -6,12 +6,10 @@ import lombok.Getter;
 import me.soels.thesis.encoding.EncodingType;
 import me.soels.thesis.tmp.daos.EvaluationConfiguration;
 import me.soels.thesis.tmp.daos.EvolutionaryAlgorithm;
-import me.soels.thesis.tmp.daos.Objective;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Models the configuration of an evaluation.
@@ -31,14 +29,9 @@ public class EvaluationConfigurationDto {
     @Size(min = 1)
     private final Integer clusterCountUpperBound;
 
-    @NotNull
-    @Size(min = 2)
-    private final Set<Objective> objectives;
-
     public EvaluationConfigurationDto(EvaluationConfiguration dao) {
         this.algorithm = dao.getAlgorithm();
         this.encodingType = dao.getEncodingType();
-        this.objectives = dao.getObjectives();
         this.clusterCountLowerBound = dao.getClusterCountLowerBound().orElse(null);
         this.clusterCountUpperBound = dao.getClusterCountUpperBound().orElse(null);
     }
@@ -47,7 +40,6 @@ public class EvaluationConfigurationDto {
         var dao = new EvaluationConfiguration();
         dao.setAlgorithm(algorithm);
         dao.setEncodingType(encodingType);
-        dao.setObjectives(objectives);
         dao.setClusterCountLowerBound(clusterCountLowerBound);
         dao.setClusterCountUpperBound(clusterCountUpperBound);
         return dao;

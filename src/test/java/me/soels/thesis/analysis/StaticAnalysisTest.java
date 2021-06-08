@@ -1,5 +1,7 @@
 package me.soels.thesis.analysis;
 
+import me.soels.thesis.analysis.statik.StaticAnalysis;
+import me.soels.thesis.analysis.statik.StaticAnalysisInput;
 import me.soels.thesis.model.EvaluationInputBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,7 +41,7 @@ public class StaticAnalysisTest {
         // big-project-cleaned.zip (with generated sources by compilation & excluding jars+test: 4882 classes, 10021 unique method names):
         //      stack overflow error on 3.18
         //      87597 total, 7532 unresolved, 32984 relevant (excl. self-ref), 5186 relationships, -- 6m 35s on 3.22.1
-        var builder = new EvaluationInputBuilder();
+        var builder = new EvaluationInputBuilder(evaluationId);
         analysis.analyze(builder, input);
         builder.build();
     }

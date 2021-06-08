@@ -4,10 +4,11 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -27,13 +28,6 @@ public class EvaluationResult {
     @NotNull
     @ManyToOne(optional = false)
     private Evaluation evaluation;
-
-    @NotNull
-    @Enumerated
-    @Size(min = 2)
-    @Column(nullable = false)
-    @ElementCollection(targetClass = Objective.class, fetch = FetchType.EAGER)
-    private Set<Objective> objectives;
 
     // TODO: Model metrics (performance metrics)
     // TODO: Model (linkage to) clustering solutions -- This can be difficult as it is linked to our input model.

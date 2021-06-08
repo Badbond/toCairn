@@ -38,4 +38,6 @@ public class EvaluationResultController {
     public EvaluationResultDto getEvaluationResult(@PathVariable UUID id) {
         return new EvaluationResultDto(service.getResult(id));
     }
+
+    // TODO: Delete
 }

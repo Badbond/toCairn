@@ -10,7 +10,6 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -28,6 +27,9 @@ public class EvaluationConfiguration {
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     private UUID id;
 
+    @OneToOne(mappedBy = "configuration")
+    private Evaluation evaluation;
+
     @NotNull
     @Enumerated
     @Column(nullable = false)
@@ -36,13 +38,6 @@ public class EvaluationConfiguration {
     @NotNull
     @Column(nullable = false)
     private EncodingType encodingType;
-
-    @NotNull
-    @Enumerated
-    @Size(min = 2)
-    @Column(nullable = false)
-    @ElementCollection(targetClass = Objective.class, fetch = FetchType.EAGER)
-    private Set<Objective> objectives;
 
     @NotNull
     @Column(nullable = false)

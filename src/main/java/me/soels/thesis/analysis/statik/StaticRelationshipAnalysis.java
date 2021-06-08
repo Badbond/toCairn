@@ -1,4 +1,4 @@
-package me.soels.thesis.analysis;
+package me.soels.thesis.analysis.statik;
 
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
@@ -18,7 +18,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
-import static me.soels.thesis.analysis.CustomClassOrInterfaceVisitor.VisitorResult;
+import static me.soels.thesis.analysis.statik.CustomClassOrInterfaceVisitor.VisitorResult;
 import static me.soels.thesis.model.DataRelationshipType.READ;
 import static me.soels.thesis.model.DataRelationshipType.WRITE;
 
@@ -48,7 +48,7 @@ public class StaticRelationshipAnalysis {
         LOGGER.info("Extracting relationships");
         var start = System.currentTimeMillis();
 
-        var visitorResults = context.getClassesAndTypes().stream()
+        var visitorResults = context.getResultBuilder().getClassesAndTypes().stream()
                 .map(pair -> classVisitor.visit(pair.getValue(), pair.getKey()))
                 .collect(Collectors.toList());
         var methodNameSet = visitorResults.stream()
@@ -57,19 +57,19 @@ public class StaticRelationshipAnalysis {
                 .collect(Collectors.toSet());
 
         var relationships = visitorResults.stream()
-                .flatMap(visitorResult -> this.resolveClassDependencies(context, visitorResult, methodNameSet).stream())
+                .flatMap(visitorResult -> this.storeClassDependencies(context, visitorResult, methodNameSet).stream())
                 .collect(Collectors.toList());
-        context.addRelationships(relationships);
+        context.getResultBuilder().addRelationships(relationships);
 
         printResults(context, visitorResults, methodNameSet);
         var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);
         LOGGER.info("Static method call analysis took {} (H:m:s.millis)", duration);
     }
 
-    private List<DependenceRelationship> resolveClassDependencies(StaticAnalysisContext context,
-                                                                  VisitorResult visitorResult,
-                                                                  Set<String> allMethodNames) {
-        var allClasses = context.getClassesAndTypes().stream()
+    private void storeClassDependencies(StaticAnalysisContext context,
+                                                                VisitorResult visitorResult,
+                                                                Set<String> allMethodNames) {
+        var allClasses = context.getResultBuilder().getClassesAndTypes().stream()
                 .map(Pair::getKey)
                 .collect(Collectors.toList());
 

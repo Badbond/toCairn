@@ -1,4 +1,4 @@
-package me.soels.thesis.analysis;
+package me.soels.thesis.analysis.statik;
 
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.resolution.Resolvable;

@@ -1,8 +1,12 @@
 package me.soels.thesis.model;
 
-import java.util.Objects;
-import java.util.UUID;
+import lombok.Getter;
+import org.springframework.data.neo4j.core.schema.Node;
 
+import java.util.Objects;
+
+@Node
+@Getter
 public final class DataClass extends AbstractClass {
     private final Integer size;
 
@@ -12,15 +16,10 @@ public final class DataClass extends AbstractClass {
      * @param identifier        the identifier for this data class (FQN)
      * @param humanReadableName the human readable name for this data class
      * @param size              the size of the data class in bytes
-     * @param evaluationId      the evaluation this class is a part of
      */
-    public DataClass(String identifier, String humanReadableName, Integer size, UUID evaluationId) {
-        super(identifier, humanReadableName, evaluationId);
+    public DataClass(String identifier, String humanReadableName, Integer size) {
+        super(identifier, humanReadableName);
         this.size = size;
-    }
-
-    public Integer getSize() {
-        return size;
     }
 
     @Override

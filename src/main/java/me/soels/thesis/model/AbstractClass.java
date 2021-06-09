@@ -1,29 +1,26 @@
 package me.soels.thesis.model;
 
 import lombok.Getter;
-import org.neo4j.
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 @Node
 @Getter
 public abstract class AbstractClass {
-    // TODO: Change the ID to a random UUID. There should be a unique
     @Id
     private final String identifier;
     private final String humanReadableName;
-    private final UUID evaluationId;
+    @Relationship
+    private final List<DependenceRelationship> dependenceRelationships = new ArrayList<>();
 
-    // TODO: We require @Relationship here. We can then use @RelationshipProperties on DependenceRelationship and
-    //  @TargetNode on the callee.
-
-    protected AbstractClass(String identifier, String humanReadableName, UUID evaluationId) {
+    protected AbstractClass(String identifier, String humanReadableName) {
         this.identifier = identifier;
         this.humanReadableName = humanReadableName;
-        this.evaluationId = evaluationId;
     }
 
     /**
@@ -39,11 +36,11 @@ public abstract class AbstractClass {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AbstractClass that = (AbstractClass) o;
-        return identifier.equals(that.identifier) && evaluationId.equals(that.evaluationId);
+        return identifier.equals(that.identifier);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(identifier, humanReadableName, evaluationId);
+        return Objects.hash(identifier, humanReadableName);
     }
 }

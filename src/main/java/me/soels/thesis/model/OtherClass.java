@@ -1,9 +1,19 @@
 package me.soels.thesis.model;
 
-import java.util.UUID;
+import lombok.Getter;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
+import java.util.ArrayList;
+import java.util.List;
+
+@Node
+@Getter
 public final class OtherClass extends AbstractClass {
-    public OtherClass(String identifier, String humanReadableName, UUID evaluationId) {
-        super(identifier, humanReadableName, evaluationId);
+    @Relationship
+    private final List<DataRelationship> dataRelationships = new ArrayList<>();
+
+    public OtherClass(String identifier, String humanReadableName) {
+        super(identifier, humanReadableName);
     }
 }

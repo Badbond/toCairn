@@ -40,19 +40,19 @@ public class EvaluationInputGraphController {
     @GetMapping("/edges")
     public List<AbstractRelationshipDto> getEdges(@PathVariable UUID evaluationId) {
         var graph = graphService.getInput(evaluationId);
-        var edges = graph.getAllClasses().stream()
+        List<AbstractRelationshipDto> edges = graph.getAllClasses().stream()
                 .flatMap(abstractClass -> abstractClass.getDependenceRelationships().stream()
-                        .map(relationship -> new DependenceRelationshipDto(abstractClass,
+                        .map(relationship -> new DependenceRelationshipDto(abstractClass.getIdentifier(),
                                 relationship.getCallee().getIdentifier(),
                                 relationship.getFrequency())))
-                .collect(Collectors.toUnmodifiableList());
+                .collect(Collectors.toList());
         edges.addAll(graph.getOtherClasses().stream()
                 .flatMap(otherClass -> otherClass.getDataRelationships().stream()
                         .map(relationship -> new DataRelationshipDto(otherClass.getIdentifier(),
                                 relationship.getCallee().getIdentifier(),
                                 relationship.getFrequency(),
-                                relationship.getDataRelationshipType())))
-                .collect(Collectors.toUnmodifiableList()));
+                                relationship.getType())))
+                .collect(Collectors.toList()));
         return edges;
     }
 

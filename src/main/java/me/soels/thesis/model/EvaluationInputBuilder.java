@@ -43,36 +43,37 @@ public class EvaluationInputBuilder {
     }
 
     public EvaluationInputBuilder withClasses(List<? extends AbstractClass> classes) {
-        allClasses.addAll(classes);
+        this.allClasses.addAll(classes);
         return this;
     }
 
     public EvaluationInputBuilder withDependencies(List<DependenceRelationship> dependencies) {
-        return null;
+        this.dependencies.addAll(dependencies);
+        return this;
     }
 
     public DataClass addDataClass(String fqn, String humanReadableName, int size) {
-        var dataClass = new DataClass(fqn, humanReadableName, size, evaluationId);
+        var dataClass = new DataClass(fqn, humanReadableName, size);
         allClasses.add(dataClass);
         return dataClass;
     }
 
     public OtherClass addOtherClass(String fqn, String humanReadableName) {
-        var otherClass = new OtherClass(fqn, humanReadableName, evaluationId);
+        var otherClass = new OtherClass(fqn, humanReadableName);
         allClasses.add(otherClass);
         return otherClass;
     }
 
     public DependenceRelationship addDependency(AbstractClass caller, AbstractClass callee, int frequency) {
-        var dependency = new DependenceRelationship(evaluationId, callee, frequency);
-        // TODO: Add the dependency to a list of relationships of the caller.
+        var dependency = new DependenceRelationship(callee, frequency);
+        caller.getDependenceRelationships().add(dependency);
         dependencies.add(dependency);
         return dependency;
     }
 
-    public DataRelationship addDataRelationship(AbstractClass caller, DataClass callee, DataRelationshipType type, int frequency) {
-        var dataRelationship = new DataRelationship(evaluationId, callee, type, frequency);
-        // TODO: Add the dependency to a list of relationships of the caller.
+    public DataRelationship addDataRelationship(OtherClass caller, DataClass callee, DataRelationshipType type, int frequency) {
+        var dataRelationship = new DataRelationship(callee, type, frequency);
+        caller.getDataRelationships().add(dataRelationship);
         dataRelationships.add(dataRelationship);
         return dataRelationship;
     }

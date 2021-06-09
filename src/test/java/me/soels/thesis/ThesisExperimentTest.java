@@ -125,10 +125,11 @@ public class ThesisExperimentTest {
             var split = Arrays.stream(line.split(","))
                     .map(StringUtils::trim)
                     .collect(Collectors.toList());
-            var classA = classMapping.computeIfAbsent(split.get(0), key -> new OtherClass("Class" + classMapping.size(), split.get(0), evaluationId));
-            var classB = classMapping.computeIfAbsent(split.get(1), key -> new OtherClass("Class" + classMapping.size(), split.get(1), evaluationId));
-            edges.add(new DependenceRelationship(UUID.randomUUID(), classB, 1));
-            // TODO: Add edge on classA as relationship.
+            var classA = classMapping.computeIfAbsent(split.get(0), key -> new OtherClass("Class" + classMapping.size(), split.get(0)));
+            var classB = classMapping.computeIfAbsent(split.get(1), key -> new OtherClass("Class" + classMapping.size(), split.get(1)));
+            var edge = new DependenceRelationship(classB, 1);
+            classA.getDependenceRelationships().add(edge);
+            edges.add(edge);
         }
         return new ImmutablePair<>(new ArrayList<>(classMapping.values()), edges);
     }

@@ -136,7 +136,7 @@ public class StaticRelationshipAnalysis {
                                    StaticAnalysisContext context) {
         if (caller instanceof OtherClass && callee instanceof DataClass) {
             var type = identifyReadWrite(relevantNodes);
-            context.getResultBuilder().addDataRelationship(caller, (DataClass) callee, type, relevantNodes.size());
+            context.getResultBuilder().addDataRelationship((OtherClass) caller, (DataClass) callee, type, relevantNodes.size());
         } else {
             context.getResultBuilder().addDependency(caller, callee, relevantNodes.size());
         }

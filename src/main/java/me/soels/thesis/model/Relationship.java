@@ -1,5 +1,13 @@
 package me.soels.thesis.model;
 
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.RelationshipProperties;
+import org.springframework.data.neo4j.core.schema.TargetNode;
+import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
+
+import javax.persistence.Id;
 import java.util.UUID;
 
 /**
@@ -8,17 +16,17 @@ import java.util.UUID;
  * @see DataRelationship
  * @see DependenceRelationship
  */
+@Getter
+@Setter
+@RelationshipProperties
 public abstract class Relationship {
-    // TODO: Create an @Id for the graph
-    private final UUID evaluationId;
-    private final AbstractClass callee;
+    @Id
+    @GeneratedValue(UUIDStringGenerator.class)
+    private UUID id;
+    @TargetNode
+    private AbstractClass callee;
 
-    protected Relationship(UUID evaluationId, AbstractClass callee) {
-        this.evaluationId = evaluationId;
+    protected Relationship(AbstractClass callee) {
         this.callee = callee;
-    }
-
-    public AbstractClass getCallee() {
-        return callee;
     }
 }

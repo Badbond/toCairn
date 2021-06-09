@@ -1,9 +1,9 @@
 package me.soels.thesis.tmp;
 
-import me.soels.thesis.model.AbstractClass;
-import me.soels.thesis.model.DataClass;
+import me.soels.thesis.tmp.daos.AbstractClass;
+import me.soels.thesis.tmp.daos.DataClass;
 import me.soels.thesis.model.EvaluationInput;
-import me.soels.thesis.model.OtherClass;
+import me.soels.thesis.tmp.daos.OtherClass;
 import me.soels.thesis.tmp.dtos.*;
 import me.soels.thesis.tmp.services.GraphService;
 import org.springframework.web.bind.annotation.GetMapping;

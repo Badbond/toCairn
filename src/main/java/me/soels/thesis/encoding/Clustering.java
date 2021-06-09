@@ -1,7 +1,7 @@
 package me.soels.thesis.encoding;
 
-import me.soels.thesis.model.AbstractClass;
-import me.soels.thesis.model.OtherClass;
+import me.soels.thesis.tmp.daos.AbstractClass;
+import me.soels.thesis.tmp.daos.OtherClass;
 import org.apache.commons.lang3.tuple.Pair;
 import org.moeaframework.core.Solution;
 

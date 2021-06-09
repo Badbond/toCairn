@@ -1,4 +1,4 @@
-package me.soels.thesis.model;
+package me.soels.thesis.tmp.daos;
 
 import lombok.Getter;
 import lombok.Setter;

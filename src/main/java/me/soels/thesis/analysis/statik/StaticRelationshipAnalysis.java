@@ -4,10 +4,10 @@ import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.MethodReferenceExpr;
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
-import me.soels.thesis.model.AbstractClass;
-import me.soels.thesis.model.DataClass;
-import me.soels.thesis.model.DataRelationshipType;
-import me.soels.thesis.model.OtherClass;
+import me.soels.thesis.tmp.daos.AbstractClass;
+import me.soels.thesis.tmp.daos.DataClass;
+import me.soels.thesis.tmp.daos.DataRelationshipType;
+import me.soels.thesis.tmp.daos.OtherClass;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -22,8 +22,8 @@ import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
 import static me.soels.thesis.analysis.statik.CustomClassOrInterfaceVisitor.VisitorResult;
-import static me.soels.thesis.model.DataRelationshipType.READ;
-import static me.soels.thesis.model.DataRelationshipType.WRITE;
+import static me.soels.thesis.tmp.daos.DataRelationshipType.READ;
+import static me.soels.thesis.tmp.daos.DataRelationshipType.WRITE;
 
 /**
  * Performs static analysis on the provided project to determine the relationships between classes in the project.

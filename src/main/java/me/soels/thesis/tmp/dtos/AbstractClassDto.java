@@ -1,7 +1,7 @@
 package me.soels.thesis.tmp.dtos;
 
 import lombok.Getter;
-import me.soels.thesis.model.AbstractClass;
+import me.soels.thesis.tmp.daos.AbstractClass;
 
 /**
  * Models a DTO for exposing an {@link AbstractClass} node of the graph.

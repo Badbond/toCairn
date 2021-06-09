@@ -1,6 +1,8 @@
 package me.soels.thesis.tmp.services;
 
 import me.soels.thesis.model.*;
+import me.soels.thesis.tmp.daos.DataClass;
+import me.soels.thesis.tmp.daos.OtherClass;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 

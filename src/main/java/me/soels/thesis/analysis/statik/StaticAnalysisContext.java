@@ -2,7 +2,7 @@ package me.soels.thesis.analysis.statik;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import lombok.Getter;
-import me.soels.thesis.model.AbstractClass;
+import me.soels.thesis.tmp.daos.AbstractClass;
 import me.soels.thesis.model.EvaluationInputBuilder;
 import org.apache.commons.lang3.tuple.Pair;
 

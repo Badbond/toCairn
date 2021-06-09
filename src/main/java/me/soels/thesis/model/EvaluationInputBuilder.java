@@ -1,6 +1,7 @@
 package me.soels.thesis.model;
 
 import lombok.Getter;
+import me.soels.thesis.tmp.daos.*;
 
 import java.util.ArrayList;
 import java.util.List;

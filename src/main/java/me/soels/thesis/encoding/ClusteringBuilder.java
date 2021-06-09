@@ -1,6 +1,6 @@
 package me.soels.thesis.encoding;
 
-import me.soels.thesis.model.OtherClass;
+import me.soels.thesis.tmp.daos.OtherClass;
 
 import java.util.ArrayList;
 import java.util.HashMap;

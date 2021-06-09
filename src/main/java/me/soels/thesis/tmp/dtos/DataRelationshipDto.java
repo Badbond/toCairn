@@ -1,8 +1,8 @@
 package me.soels.thesis.tmp.dtos;
 
 import lombok.Getter;
-import me.soels.thesis.model.DataRelationshipType;
-import me.soels.thesis.model.DependenceRelationship;
+import me.soels.thesis.tmp.daos.DataRelationshipType;
+import me.soels.thesis.tmp.daos.DependenceRelationship;
 
 /**
  * Models a DTO for exposing an {@link DependenceRelationship} node of the graph.

@@ -1,6 +1,7 @@
 package me.soels.thesis.model;
 
 import lombok.Getter;
+import org.neo4j.
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 

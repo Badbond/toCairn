@@ -38,7 +38,6 @@ public class EvaluationDto {
     private final EvaluationConfigurationDto configuration;
     private final EvaluationStatus status;
     private final List<UUID> results;
-    // TODO: Inputs
 
     @JsonCreator
     public EvaluationDto(String name, Set<Objective> objectives, EvaluationConfigurationDto configuration) {

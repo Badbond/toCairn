@@ -3,8 +3,9 @@ version: "3.6"
 # Development environment set up for this application
 services:
   # Neo4j graph database for analysis input
+  # Note that we use enterprise edition. Please arrange a license when using this commercially.
   neo4j:
-    image: neo4j:4.2.6
+    image: neo4j:4.2.6-enterprise
     ports:
       - 7687:7687
       - 7474:7474

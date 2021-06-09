@@ -115,31 +115,24 @@ public class StaticClassAnalysis {
     }
 
     private boolean isDataClass(ClassOrInterfaceDeclaration clazz, StaticAnalysisInput input) {
-        // TODO: Check for usage of JsonProperty/JsonCreator perhaps?
-        return clazzNameIndicatesDataStructure(clazz) ||
-                clazzContainsDataAnnotation(clazz, input) ||
-                clazzLooksLikeDataStructure(clazz);
+        return classNameIndicatesDataStructure(clazz) ||
+                classContainsDataAnnotation(clazz, input);
     }
 
-    private boolean clazzNameIndicatesDataStructure(ClassOrInterfaceDeclaration clazz) {
+    private boolean classNameIndicatesDataStructure(ClassOrInterfaceDeclaration clazz) {
         // There are more names which would indicate data (such as 'data', 'model', etc.) but those might also return
         // false positives, for example: ModellingService, DataController.
         return StringUtils.endsWithIgnoreCase(clazz.getNameAsString(), "DTO") ||
                 StringUtils.endsWithIgnoreCase(clazz.getNameAsString(), "DAO");
     }
 
-    private boolean clazzContainsDataAnnotation(ClassOrInterfaceDeclaration clazz, StaticAnalysisInput input) {
+    private boolean classContainsDataAnnotation(ClassOrInterfaceDeclaration clazz, StaticAnalysisInput input) {
         return clazz.getAnnotations().stream()
                 .map(NodeWithName::getNameAsString)
                 .anyMatch(annotation -> anyOf(containsStringIgnoringCase("immutable"),
                         containsStringIgnoringCase("entity"),
                         containsStringIgnoringCase(input.getCustomDataAnnotation()))
                         .matches(annotation));
-    }
-
-    private boolean clazzLooksLikeDataStructure(ClassOrInterfaceDeclaration clazz) {
-        // TODO: Look at class structure
-        return false;
     }
 
     private List<ParseResult<CompilationUnit>> parseRoot(SourceRoot root) {

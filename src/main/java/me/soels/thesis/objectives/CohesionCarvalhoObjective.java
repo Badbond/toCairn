@@ -2,8 +2,10 @@ package me.soels.thesis.objectives;
 
 import me.soels.thesis.encoding.Clustering;
 import me.soels.thesis.model.EvaluationInput;
+import me.soels.thesis.tmp.daos.AbstractClass;
+import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.HashMap;
+import java.util.List;
 
 /**
  * Cohesion as measured by Carvalho et al. (2020) based off of metrics in the work of Chidamber and Kemerer (1994).
@@ -19,30 +21,25 @@ import java.util.HashMap;
 public class CohesionCarvalhoObjective implements OnePurposeMetric {
     @Override
     public double calculate(Clustering clustering, EvaluationInput evaluationInput) {
-        // TODO: Using mock data we did not consider the direction of the relationship which is important for this metric.
-        var clusteringByClass = clustering.getByClass();
-        var clusterCohesionSums = new HashMap<Integer, Integer>();
-        for (var edge : evaluationInput.getDependencies()) {
-            var cluster = clusteringByClass.get(edge.getCaller());
-            if (cluster.equals(clusteringByClass.get(edge.getCallee()))) {
-                // TODO: Carvalho does not use frequency within method body but extrapolated towards classes, we do
-                //  need to use the amount of methods connecting to other methods to replicate the metric fully.
-                clusterCohesionSums.compute(cluster, (key, value) -> value == null ? 1 : value + 1);
-            }
-        }
-        var result = 0.0;
-        for (var entry : clusterCohesionSums.entrySet()) {
-            double clusterSize = clustering.getByCluster().get(entry.getKey()).size();
-            if (clusterSize <= 1) {
+        var clusteringByCluster = clustering.getByCluster();
+
+        return -1 * clusteringByCluster.values().stream()
+                // Construct a pair of the cluster's size and the cohesion value for the cluster
+                .map(cluster -> Pair.of(cluster.size(), calculateForCluster(cluster)))
+                // Apply Carvalho's formula
                 // TODO: If clusterSize == 1, this returns Infinity (division by 0).
                 //  would 'setting to 0' be good? We want to prevent clusters without inner connections (be it multiple
-                //  classes or only 1), I guess.
-                continue;
-            }
-            // TODO: Did I interpret this function correctly?
-            result += entry.getValue() / (clusterSize * (clusterSize - 1)) / 2;
-        }
+                //  classes or only 1), I guess. Did I interpret the formula correctly?
+                .mapToDouble(pair -> pair.getValue() / (pair.getKey() * (pair.getKey() - 1)) / 2)
+                .sum();
+    }
 
-        return -1 * result;
+    private double calculateForCluster(List<? extends AbstractClass> classes) {
+        // We do not use the frequency of the dependency here as Carvalho et al. also made this binary.
+        return classes.stream()
+                .flatMap(clazz -> clazz.getDependenceRelationships().stream()
+                        .map(relationShip -> Pair.of(clazz, relationShip)))
+                .filter(pair -> classes.contains(pair.getValue().getCallee()))
+                .count();
     }
 }

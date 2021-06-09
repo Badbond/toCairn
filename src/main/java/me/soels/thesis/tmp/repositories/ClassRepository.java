@@ -1,4 +1,4 @@
-package me.soels.thesis.model;
+package me.soels.thesis.tmp.repositories;
 
 import me.soels.thesis.tmp.daos.AbstractClass;
 import org.springframework.data.neo4j.repository.Neo4jRepository;

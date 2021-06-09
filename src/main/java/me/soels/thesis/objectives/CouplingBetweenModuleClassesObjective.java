@@ -3,9 +3,7 @@ package me.soels.thesis.objectives;
 import me.soels.thesis.encoding.Clustering;
 import me.soels.thesis.model.EvaluationInput;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -23,6 +21,20 @@ import java.util.stream.Collectors;
 public class CouplingBetweenModuleClassesObjective implements OnePurposeMetric {
     @Override
     public double calculate(Clustering clustering, EvaluationInput evaluationInput) {
+        var byClass = clustering.getByClass();
+        var clusterIn = new HashMap<Integer, Set<Integer>>();
+        clustering.getByCluster().keySet().forEach(clusterNumber -> clusterIn.put(clusterNumber, new HashSet<>()));
+
+        // Create a map of incoming dependencies of other cluster for each cluster
+        clustering.getByCluster().forEach((clusterNumber, cluster) -> cluster.stream()
+                .flatMap(clazz -> clazz.getDependenceRelationships().stream())
+                .filter(relationship -> !cluster.contains(relationship.getCallee()))
+                .forEach(relationship -> clusterIn.get(byClass.get(relationship.getCallee())).add(clusterNumber)));
+
+        // TODO: Now we need to also calculate the outgoing dependencies which we can do from the same map. Summing
+        //  those for each cluster and then averaging over all clusters would give the result.
+
+        // TODO: Remove old code.
         Map<Integer, List<Integer>> interClusterDependencies = clustering.getByCluster().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ArrayList<>()));
         var clusteringByClass = clustering.getByClass();

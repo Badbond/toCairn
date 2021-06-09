@@ -5,6 +5,7 @@ import me.soels.thesis.model.EvaluationInput;
 import me.soels.thesis.tmp.daos.AbstractClass;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Coupling between microservices (CBMs) as suggested by Taibi and Systä (2019) based off of Coupling Between Object
@@ -21,16 +22,16 @@ public class CouplingBetweenMicroservicesObjective implements OnePurposeMetric {
     @Override
     public double calculate(Clustering clustering, EvaluationInput evaluationInput) {
         return clustering.getByCluster().values().stream()
-                .mapToDouble(cluster -> getUniqueExternalLinks(clustering, cluster) / cluster.size())
+                .mapToDouble(cluster -> getUniqueExternalLinks(clustering.getByClass(), cluster) / cluster.size())
                 .average()
                 .orElseThrow(() -> new IllegalStateException("Could not create average CBM for this solution"));
     }
 
-    private double getUniqueExternalLinks(Clustering clustering, List<? extends AbstractClass> cluster) {
+    private double getUniqueExternalLinks(Map<? extends AbstractClass, Integer> clusteringByClass, List<? extends AbstractClass> cluster) {
         return cluster.stream()
                 .flatMap(clazz -> clazz.getDependenceRelationships().stream())
                 .filter(relation -> !cluster.contains(relation.getCallee()))
-                .mapToInt(relation -> clustering.getByClass().get(relation.getCallee()))
+                .mapToInt(relation -> clusteringByClass.get(relation.getCallee()))
                 .distinct()
                 .sum();
     }

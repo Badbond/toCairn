@@ -2,11 +2,10 @@ package me.soels.thesis.objectives;
 
 import me.soels.thesis.encoding.Clustering;
 import me.soels.thesis.model.EvaluationInput;
+import me.soels.thesis.tmp.daos.AbstractClass;
+import me.soels.thesis.tmp.daos.OtherClass;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
 
 /**
  * Coupling between modules (CBM) as suggested by Lindvall et al. (2003). We map the concept of modules to
@@ -22,30 +21,33 @@ import java.util.stream.Collectors;
 public class CouplingBetweenModulesObjective implements OnePurposeMetric {
     @Override
     public double calculate(Clustering clustering, EvaluationInput evaluationInput) {
-        Map<Integer, List<Integer>> interClusterDependencies = clustering.getByCluster().entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, entry -> new ArrayList<>()));
-        var clusteringByClass = clustering.getByClass();
-        for (var edge : evaluationInput.getDependencies()) {
-            var classA = edge.getCaller();
-            var classB = edge.getCallee();
+        // Construct a set of which cluster depends on which other cluster in both directions.
+        // Note, we use a set as CBM does not distinguish different classes within the module.
+        var clusterDependencies = new HashMap<Integer, Set<Integer>>();
+        clustering.getByCluster().keySet().forEach(clusterNumber -> clusterDependencies.put(clusterNumber, new HashSet<>()));
+        clustering.getByCluster().forEach((clusterFrom, classes) -> classes
+                .forEach(clazz -> populateDependenciesForClass(clazz, classes, clusterFrom, clustering.getByClass(), clusterDependencies)));
 
-            if (!clusteringByClass.get(classA).equals(clusteringByClass.get(classB))) {
-                addDependency(interClusterDependencies, clusteringByClass.get(classA), clusteringByClass.get(classB));
-                addDependency(interClusterDependencies, clusteringByClass.get(classB), clusteringByClass.get(classA));
-            }
-        }
 
         return clustering.getByCluster().keySet().stream()
-                .mapToDouble(otherClasses -> interClusterDependencies.get(otherClasses).size())
+                .mapToDouble(clusterNumber -> clusterDependencies.get(clusterNumber).size())
                 .average()
                 .orElseThrow(() -> new IllegalStateException("Could not create average CBM for this solution"));
     }
 
-    private void addDependency(Map<Integer, List<Integer>> interClusterDependencies,
-                               Integer clusterA,
-                               Integer clusterB) {
-        if (!interClusterDependencies.get(clusterB).contains(clusterA)) {
-            interClusterDependencies.get(clusterB).add(clusterA);
-        }
+    private void populateDependenciesForClass(OtherClass clazz,
+                                              List<? extends AbstractClass> ownClusterClasses,
+                                              Integer ownCluster,
+                                              Map<? extends AbstractClass, Integer> byClass,
+                                              HashMap<Integer, Set<Integer>> clusterDependencies) {
+        clazz.getDependenceRelationships().stream()
+                .filter(relationship -> !ownClusterClasses.contains(relationship.getCallee()))
+                .forEach(relationship -> {
+                    var targetCluster = byClass.get(relationship.getCallee());
+                    // Register cluster dependency in both clusters as the metric considers both incoming
+                    // and outgoing dependencies
+                    clusterDependencies.get(ownCluster).add(targetCluster);
+                    clusterDependencies.get(targetCluster).add(ownCluster);
+                });
     }
 }

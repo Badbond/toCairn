@@ -3,7 +3,6 @@ package me.soels.thesis.objectives;
 import me.soels.thesis.encoding.Clustering;
 import me.soels.thesis.model.EvaluationInput;
 import me.soels.thesis.tmp.daos.AbstractClass;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
 
@@ -22,38 +21,32 @@ import java.util.*;
 public class CouplingBetweenModuleClassesObjective implements OnePurposeMetric {
     @Override
     public double calculate(Clustering clustering, EvaluationInput evaluationInput) {
-        var clusterIn = new HashMap<Integer, Set<Integer>>();
-        clustering.getByCluster().keySet().forEach(clusterNumber -> clusterIn.put(clusterNumber, new HashSet<>()));
-        var clusterOut = new HashMap<Integer, Set<Integer>>();
-        clustering.getByCluster().keySet().forEach(clusterNumber -> clusterOut.put(clusterNumber, new HashSet<>()));
-
-        // Create a map of incoming dependencies of other cluster for each cluster
-        clustering.getByCluster().forEach((clusterNumber, cluster) ->
-                populateIncomingDependencies(clustering.getByClass(), clusterIn, clusterNumber, cluster));
-
-        populateOutgoingDependencies(clusterIn, clusterOut);
+        // Construct a set of which cluster depends on which other cluster in both directions.
+        // Note, we use a set of classes as CBMC does (unlike CBM) distinguish different classes within the modules.
+        var clusterDependencies = new HashMap<Integer, Set<AbstractClass>>();
+        clustering.getByCluster().keySet().forEach(clusterNumber -> clusterDependencies.put(clusterNumber, new HashSet<>()));
+        clustering.getByCluster().forEach((clusterFrom, classes) -> classes
+                .forEach(clazz -> populateDependenciesForClass(clazz, classes, clusterFrom, clustering.getByClass(), clusterDependencies)));
 
         return clustering.getByCluster().keySet().stream()
-                .mapToDouble(clusterNumber -> clusterIn.get(clusterNumber).size() + clusterOut.get(clusterNumber).size())
+                .mapToDouble(clusterNumber -> clusterDependencies.get(clusterNumber).size())
                 .average()
                 .orElseThrow(() -> new IllegalStateException("Could not create average CBMC for this solution"));
     }
 
-    private void populateIncomingDependencies(Map<? extends AbstractClass, Integer> byClass,
-                                              HashMap<Integer, Set<Integer>> clusterIn,
-                                              Integer clusterNumber,
-                                              List<? extends AbstractClass> cluster) {
-        cluster.stream()
-                .flatMap(clazz -> clazz.getDependenceRelationships().stream())
-                .filter(relationship -> !cluster.contains(relationship.getCallee()))
-                .forEach(relationship -> clusterIn.get(byClass.get(relationship.getCallee())).add(clusterNumber));
-    }
-
-    private void populateOutgoingDependencies(HashMap<Integer, Set<Integer>> clusterIn,
-                                              HashMap<Integer, Set<Integer>> clusterOut) {
-        clusterIn.entrySet().stream()
-                .flatMap(entry -> entry.getValue().stream()
-                        .map(incoming -> Pair.of(incoming, entry.getKey())))
-                .forEach(pair -> clusterOut.get(pair.getKey()).add(pair.getValue()));
+    private void populateDependenciesForClass(AbstractClass clazz,
+                                              List<? extends AbstractClass> classes,
+                                              Integer clusterFrom,
+                                              Map<? extends AbstractClass, Integer> byClass,
+                                              HashMap<Integer, Set<AbstractClass>> clusterDependencies) {
+        clazz.getDependenceRelationships().stream()
+                .filter(relationship -> !classes.contains(relationship.getCallee()))
+                .forEach(relationship -> {
+                    var clusterTarget = byClass.get(relationship.getCallee());
+                    // Add target class to cluster of the source class as dependency
+                    clusterDependencies.get(clusterFrom).add(relationship.getCallee());
+                    // Add source class to cluster of the target class as dependency
+                    clusterDependencies.get(clusterTarget).add(clazz);
+                });
     }
 }

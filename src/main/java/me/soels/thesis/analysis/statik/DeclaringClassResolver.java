@@ -5,7 +5,7 @@ import com.github.javaparser.resolution.Resolvable;
 import com.github.javaparser.resolution.SymbolResolver;
 import com.github.javaparser.resolution.UnsolvedSymbolException;
 import com.github.javaparser.resolution.declarations.ResolvedMethodLikeDeclaration;
-import me.soels.thesis.tmp.daos.AbstractClass;
+import me.soels.thesis.model.AbstractClass;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

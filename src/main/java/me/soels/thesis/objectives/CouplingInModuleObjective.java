@@ -2,6 +2,9 @@ package me.soels.thesis.objectives;
 
 import me.soels.thesis.encoding.Clustering;
 import me.soels.thesis.model.EvaluationInput;
+import me.soels.thesis.tmp.daos.AbstractClass;
+
+import java.util.List;
 
 /**
  * Coupling in module (CIM) as suggested by Lindvall et al. (2003). We map the concept of modules to microservices.
@@ -20,12 +23,18 @@ public class CouplingInModuleObjective implements OnePurposeMetric {
     public double calculate(Clustering clustering, EvaluationInput evaluationInput) {
         var accumulatedCim = 0.0;
         for (var cluster : clustering.getByCluster().values()) {
-            var sumOfDependencies = evaluationInput.getDependencies().stream()
-                    .filter(dependency -> cluster.contains(dependency.getCaller()) && cluster.contains(dependency.getCallee()))
-                    .count();
+            var sumOfDependencies = cluster.stream()
+                    .mapToDouble(clazz -> getDependenciesForClass(cluster, clazz))
+                    .sum();
             accumulatedCim += sumOfDependencies / (double) cluster.size();
         }
 
         return -1 * accumulatedCim / clustering.getByCluster().size();
+    }
+
+    private long getDependenciesForClass(List<? extends AbstractClass> cluster, AbstractClass clazz) {
+        return clazz.getDependenceRelationships().stream()
+                .filter(relationship -> cluster.contains(relationship.getCallee()))
+                .count();
     }
 }

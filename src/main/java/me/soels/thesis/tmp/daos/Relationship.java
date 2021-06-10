@@ -3,12 +3,9 @@ package me.soels.thesis.tmp.daos;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.RelationshipProperties;
 import org.springframework.data.neo4j.core.schema.TargetNode;
-import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
-
-import javax.persistence.Id;
-import java.util.UUID;
 
 /**
  * Indicates a relationships between two classes.
@@ -21,8 +18,9 @@ import java.util.UUID;
 @RelationshipProperties
 public abstract class Relationship {
     @Id
-    @GeneratedValue(UUIDStringGenerator.class)
-    private UUID id;
+    @GeneratedValue
+    private Long id;
+
     @TargetNode
     private AbstractClass callee;
 

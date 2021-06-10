@@ -2,7 +2,6 @@ package me.soels.thesis.tmp.daos;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.data.neo4j.core.schema.RelationshipProperties;
 
 /**
  * Indicates that there is a relationship between an {@link OtherClass} and a {@link DataClass}.
@@ -18,7 +17,6 @@ import org.springframework.data.neo4j.core.schema.RelationshipProperties;
  */
 @Getter
 @Setter
-@RelationshipProperties
 public final class DataRelationship extends DependenceRelationship {
     private DataRelationshipType type;
 

@@ -2,7 +2,6 @@ package me.soels.thesis.tmp.daos;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.data.neo4j.core.schema.RelationshipProperties;
 
 /**
  * Relationship between two {@link AbstractClass} that signify one depends on the other.
@@ -14,7 +13,6 @@ import org.springframework.data.neo4j.core.schema.RelationshipProperties;
  */
 @Getter
 @Setter
-@RelationshipProperties
 public class DependenceRelationship extends Relationship {
     private int frequency;
 

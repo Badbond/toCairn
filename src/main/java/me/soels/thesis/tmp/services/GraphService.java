@@ -31,8 +31,9 @@ public class GraphService {
 
     public EvaluationInput getInput(UUID id) {
         return new EvaluationInputBuilder(id)
-                .withClasses(dataClassRepository.findAllByEvaluationId(id))
-                .withClasses(otherClassRepository.findAllByEvaluationId(id))
+                // TODO: Reimplement
+//                .withClasses(dataClassRepository.findAllByEvaluationId(id))
+//                .withClasses(otherClassRepository.findAllByEvaluationId(id))
                 // TODO: Add relationships
                 .build();
     }

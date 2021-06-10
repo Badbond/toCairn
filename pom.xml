@@ -28,7 +28,6 @@
         <!-- 3.19+ contains a bug preventing us from resolving 'var' types https://github.com/javaparser/javaparser/issues/3088 -->
         <javaparser.version>3.22.1</javaparser.version>
         <commons.version>2.8.0</commons.version>
-        <logback.version>1.2.3</logback.version>
     </properties>
 
     <dependencies>

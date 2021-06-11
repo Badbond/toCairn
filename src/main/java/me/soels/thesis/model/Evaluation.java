@@ -2,9 +2,11 @@ package me.soels.thesis.model;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.GenericGenerator;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
-import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.ArrayList;
@@ -22,40 +24,32 @@ import java.util.UUID;
  * Note, the 'evaluation' can be seen as an analysis on the project, but to reduce confusion with analyzing inputs
  * (static analysis, dynamic analysis, etc.) we have chosen 'evaluation' for its name.
  */
-@Entity
+@Node
 @Getter
 @Setter
 public class Evaluation {
     @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+    @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)
     private UUID id;
 
     @NotNull
-    @Column(nullable = false)
     private String name;
 
     @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private EvaluationStatus status;
 
     @NotNull
-    @OneToOne
+    @Relationship(value = "CONFIGURED_WITH")
     private EvaluationConfiguration configuration;
 
-    @OneToMany(mappedBy = "evaluation")
+    @Relationship(value = "HAS_RESULTS")
     private List<EvaluationResult> results = new ArrayList<>();
 
     @NotNull
-    @Enumerated
-    @Size(min = 2)
-    @Column(nullable = false)
-    @ElementCollection(targetClass = Objective.class, fetch = FetchType.EAGER)
-    private Set<Objective> objectives;
+    @Relationship(value = "HAS_INPUTS")
+    private List<? extends AbstractClass> inputs = new ArrayList<>();
 
-    // TODO: Model inputs
-    //  This is not project zip, git log, JFR results, etc. -- those are one-offs and should be processed immediately
-    //  Instead we want to store the classes, relationships, sizes, etc.
-    //  These are to be based on the configured configuration.objectives and validated as such before running
+    @NotNull
+    @Size(min = 2)
+    private Set<Objective> objectives;
 }

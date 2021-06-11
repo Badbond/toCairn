@@ -1,11 +1,9 @@
 package me.soels.thesis.repositories;
 
 import me.soels.thesis.model.EvaluationConfiguration;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.neo4j.repository.Neo4jRepository;
 
-import java.util.Optional;
 import java.util.UUID;
 
-public interface EvaluationConfigurationRepository extends JpaRepository<EvaluationConfiguration, UUID> {
-    Optional<EvaluationConfiguration> findByEvaluationId(UUID id);
+public interface EvaluationConfigurationRepository extends Neo4jRepository<EvaluationConfiguration, UUID> {
 }

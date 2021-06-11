@@ -25,7 +25,7 @@ public class StaticAnalysisTest {
 
     @Test
     public void testStaticAnalysis() throws URISyntaxException {
-        var resource = this.getClass().getClassLoader().getResource("./big-project-cleaned-4.zip");
+        var resource = this.getClass().getClassLoader().getResource("./thesis-project-master.zip");
         runAnalysis(resource);
     }
 

@@ -2,7 +2,7 @@ package me.soels.thesis.api;
 
 import me.soels.thesis.api.dtos.EvaluationResultDto;
 import me.soels.thesis.model.EvaluationResult;
-import me.soels.thesis.repositories.EvaluationResultRepository;
+import me.soels.thesis.services.EvaluationResultService;
 import me.soels.thesis.services.EvaluationService;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,24 +20,24 @@ import static org.springframework.http.HttpStatus.NO_CONTENT;
 @RestController
 @RequestMapping("/api")
 public class EvaluationResultController {
-    private final EvaluationResultRepository repository;
+    private final EvaluationResultService resultService;
     private final EvaluationService evaluationService;
 
-    public EvaluationResultController(EvaluationResultRepository repository, EvaluationService evaluationService) {
-        this.repository = repository;
+    public EvaluationResultController(EvaluationResultService resultService, EvaluationService evaluationService) {
+        this.resultService = resultService;
         this.evaluationService = evaluationService;
     }
 
     @GetMapping("/result")
     public List<EvaluationResultDto> getAllEvaluationResults() {
-        return repository.findAll().stream()
+        return resultService.getAllResults().stream()
                 .map(EvaluationResultDto::new)
                 .collect(Collectors.toList());
     }
 
     @GetMapping("/result/{evaluationResultId}}")
     public EvaluationResultDto getEvaluationResultById(@PathVariable UUID evaluationResultId) {
-        return new EvaluationResultDto(getResult(evaluationResultId));
+        return new EvaluationResultDto(resultService.getResult(evaluationResultId));
     }
 
     @GetMapping("/evaluation/{evaluationId}/result")
@@ -51,11 +51,6 @@ public class EvaluationResultController {
     @ResponseStatus(NO_CONTENT)
     @DeleteMapping("/result/{evaluationResultId}")
     public void deleteEvaluationResult(@PathVariable UUID evaluationResultId) {
-        repository.deleteById(evaluationResultId);
-    }
-
-    private EvaluationResult getResult(UUID id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(id));
+        resultService.deleteResult(evaluationResultId);
     }
 }

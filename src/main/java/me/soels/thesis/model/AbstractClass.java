@@ -1,6 +1,7 @@
 package me.soels.thesis.model;
 
 import lombok.Getter;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
@@ -8,11 +9,14 @@ import org.springframework.data.neo4j.core.schema.Relationship;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 @Node
 @Getter
 public abstract class AbstractClass {
     @Id
+    @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)
+    private UUID id;
     private final String identifier;
     private final String humanReadableName;
     @Relationship
@@ -21,6 +25,12 @@ public abstract class AbstractClass {
     protected AbstractClass(String identifier, String humanReadableName) {
         this.identifier = identifier;
         this.humanReadableName = humanReadableName;
+    }
+
+    // TODO: Look into Neo4j best practices with regards to immutable classes (if that is something we would want)
+    //  maybe we can use withX() methods to 'enhance' our graphs during analysis.
+    public void setId(UUID id) {
+        this.id = id;
     }
 
     /**
@@ -36,11 +46,11 @@ public abstract class AbstractClass {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AbstractClass that = (AbstractClass) o;
-        return identifier.equals(that.identifier);
+        return id.equals(that.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(identifier, humanReadableName);
+        return Objects.hash(id, identifier, humanReadableName);
     }
 }

@@ -39,7 +39,7 @@ import static com.github.javaparser.ParserConfiguration.LanguageLevel.JAVA_11;
 public class ThesisExperimentTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ThesisExperimentTest.class);
     private static final String MOCK_GRAPH_NAME = "simple-graph-2";
-    private static final String ZIP_FILE = "big-project-cleaned.zip";
+    private static final String ZIP_FILE = "thesis-project-master.zip";
 
     @Autowired
     private VariableDecoder variableDecoder;

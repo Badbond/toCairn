@@ -21,6 +21,7 @@ import java.util.List;
 public class CohesionCarvalhoObjective implements OnePurposeMetric {
     @Override
     public double calculate(Clustering clustering, EvaluationInput evaluationInput) {
+        // TODO: Monday: thesis-project-master return NaN here. Fix that.
         var clusteringByCluster = clustering.getByCluster();
 
         return -1 * clusteringByCluster.values().stream()

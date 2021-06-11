@@ -1,0 +1,34 @@
+package me.soels.thesis.services;
+
+import me.soels.thesis.api.ResourceNotFoundException;
+import me.soels.thesis.model.EvaluationResult;
+import me.soels.thesis.repositories.EvaluationResultRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * Service responsible for managing {@link EvaluationResult}
+ */
+@Service
+public class EvaluationResultService {
+    private final EvaluationResultRepository repository;
+
+    public EvaluationResultService(EvaluationResultRepository repository) {
+        this.repository = repository;
+    }
+
+    public void deleteResult(UUID id) {
+        repository.deleteById(id);
+    }
+
+    public EvaluationResult getResult(UUID id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(id));
+    }
+
+    public List<EvaluationResult> getAllResults() {
+        return repository.findAll();
+    }
+}

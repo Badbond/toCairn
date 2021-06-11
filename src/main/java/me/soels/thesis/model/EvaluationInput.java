@@ -20,20 +20,16 @@ import java.util.UUID;
  * @see Objective
  */
 public final class EvaluationInput {
-    private final UUID evaluationId;
     private final List<AbstractClass> allClasses;
     private final List<OtherClass> otherClasses;
     private final List<DataClass> dataClasses;
     private final List<DataRelationship> dataRelations;
     private final List<DependenceRelationship> dependencies;
 
-    EvaluationInput(UUID evaluationId,
-                    List<OtherClass> otherClasses,
+    EvaluationInput(List<OtherClass> otherClasses,
                     List<DataClass> dataClasses,
                     List<DependenceRelationship> dependencies,
                     List<DataRelationship> dataRelationships) {
-        this.evaluationId = evaluationId;
-
         var classes = new ArrayList<AbstractClass>(otherClasses);
         classes.addAll(dataClasses);
 
@@ -42,10 +38,6 @@ public final class EvaluationInput {
         this.otherClasses = Collections.unmodifiableList(otherClasses);
         this.dependencies = Collections.unmodifiableList(dependencies);
         this.dataRelations = Collections.unmodifiableList(dataRelationships);
-    }
-
-    public UUID getEvaluationId() {
-        return evaluationId;
     }
 
     public List<AbstractClass> getAllClasses() {

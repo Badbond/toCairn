@@ -96,6 +96,22 @@ public class EvaluationService {
     }
 
     /**
+     * Deletes the evaluation with the provided {@code id}.
+     * <p>
+     * Performs cascading deletes on the configuration, input graph and results.
+     *
+     * @param id the evaluation to delete
+     */
+    public void deleteEvaluation(UUID id) {
+        evaluationRepository.findById(id).ifPresent(evaluation -> {
+            // TODO: Validate delete inputs, implement delete results
+            inputService.deleteAllInputs(evaluation);
+            configurationRepository.deleteById(evaluation.getConfiguration().getId());
+            evaluationRepository.deleteById(evaluation.getId());
+        });
+    }
+
+    /**
      * Prepares the run of an {@link Evaluation} for the given {@code id}.
      *
      * @param id the evaluation to prepare to run.
@@ -137,7 +153,7 @@ public class EvaluationService {
      * @param evaluation the evaluation to check inputs and update the status for
      */
     public void checkInputAndUpdateStatus(Evaluation evaluation) {
-        var newStatus = inputService.hasAllRequiredInput(evaluation.getId(), evaluation.getObjectives()) ?
+        var newStatus = inputService.hasAllRequiredInput(evaluation, evaluation.getObjectives()) ?
                 EvaluationStatus.PENDING :
                 EvaluationStatus.INCOMPLETE;
         evaluation.setStatus(newStatus);

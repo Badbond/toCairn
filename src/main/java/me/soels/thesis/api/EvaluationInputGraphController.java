@@ -1,11 +1,12 @@
 package me.soels.thesis.api;
 
+import me.soels.thesis.api.dtos.*;
 import me.soels.thesis.model.AbstractClass;
 import me.soels.thesis.model.DataClass;
 import me.soels.thesis.model.EvaluationInput;
 import me.soels.thesis.model.OtherClass;
-import me.soels.thesis.api.dtos.*;
-import me.soels.thesis.services.GraphService;
+import me.soels.thesis.services.EvaluationInputService;
+import me.soels.thesis.services.EvaluationService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,15 +24,17 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/evaluation/{evaluationId}/graph")
 public class EvaluationInputGraphController {
-    private final GraphService graphService;
+    private final EvaluationService evaluationService;
+    private final EvaluationInputService inputService;
 
-    public EvaluationInputGraphController(GraphService graphService) {
-        this.graphService = graphService;
+    public EvaluationInputGraphController(EvaluationService evaluationService, EvaluationInputService inputService) {
+        this.evaluationService = evaluationService;
+        this.inputService = inputService;
     }
 
     @GetMapping("/nodes")
     public List<AbstractClassDto> getNodes(@PathVariable UUID evaluationId) {
-        var graph = graphService.getInput(evaluationId);
+        var graph = inputService.getInput(evaluationService.getEvaluation(evaluationId));
         return graph.getAllClasses().stream()
                 .map(this::mapClass)
                 .collect(Collectors.toUnmodifiableList());
@@ -39,7 +42,7 @@ public class EvaluationInputGraphController {
 
     @GetMapping("/edges")
     public List<AbstractRelationshipDto> getEdges(@PathVariable UUID evaluationId) {
-        var graph = graphService.getInput(evaluationId);
+        var graph = inputService.getInput(evaluationService.getEvaluation(evaluationId));
         List<AbstractRelationshipDto> edges = graph.getAllClasses().stream()
                 .flatMap(abstractClass -> abstractClass.getDependenceRelationships().stream()
                         .map(relationship -> new DependenceRelationshipDto(abstractClass.getIdentifier(),

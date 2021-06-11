@@ -1,8 +1,6 @@
 package me.soels.thesis.services;
 
 import me.soels.thesis.model.*;
-import me.soels.thesis.model.DataClass;
-import me.soels.thesis.model.OtherClass;
 import me.soels.thesis.repositories.ClassRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -19,28 +17,5 @@ import java.util.UUID;
  */
 @Service
 public class GraphService {
-    private final ClassRepository<OtherClass> otherClassRepository;
-    private final ClassRepository<DataClass> dataClassRepository;
-    // TODO: Relationship repository
 
-    public GraphService(@Qualifier("classRepository") ClassRepository<OtherClass> otherClassRepository,
-                        @Qualifier("classRepository") ClassRepository<DataClass> dataClassRepository) {
-        this.otherClassRepository = otherClassRepository;
-        this.dataClassRepository = dataClassRepository;
-    }
-
-    public EvaluationInput getInput(UUID id) {
-        return new EvaluationInputBuilder(id)
-                // TODO: Reimplement
-//                .withClasses(dataClassRepository.findAllByEvaluationId(id))
-//                .withClasses(otherClassRepository.findAllByEvaluationId(id))
-                // TODO: Add relationships
-                .build();
-    }
-
-    public void storeInput(EvaluationInput input) {
-        otherClassRepository.saveAll(input.getOtherClasses());
-        dataClassRepository.saveAll(input.getDataClasses());
-        // TODO: Store relationships
-    }
 }

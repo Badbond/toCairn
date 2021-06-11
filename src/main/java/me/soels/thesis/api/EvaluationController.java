@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.HttpStatus.NO_CONTENT;
+
 /**
  * Controller for managing the {@link Evaluation} and its {@link EvaluationConfiguration}.
  */
@@ -60,6 +63,7 @@ public class EvaluationController {
      * @return the created evaluation
      */
     @PostMapping
+    @ResponseStatus(CREATED)
     public EvaluationDto createEvaluation(@Valid @RequestBody EvaluationDto dto) {
         return new EvaluationDto(service.createEvaluation(dto));
     }
@@ -96,5 +100,16 @@ public class EvaluationController {
         return new EvaluationDto(service.updateEvaluation(id, dto));
     }
 
-    // TODO: Delete
+    /**
+     * Deletes the evaluation with the provided ID.
+     * <p>
+     * Performs cascading deletes to the configuration, input graph and results as well.
+     *
+     * @param id the id of the evaluation to delete
+     */
+    @DeleteMapping("/{id}")
+    @ResponseStatus(NO_CONTENT)
+    public void deleteEvaluation(@PathVariable UUID id) {
+        service.deleteEvaluation(id);
+    }
 }

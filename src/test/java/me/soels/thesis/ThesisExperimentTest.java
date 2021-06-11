@@ -65,7 +65,7 @@ public class ThesisExperimentTest {
     private EvaluationInput getZipInput() throws URISyntaxException {
         var project = Path.of(this.getClass().getClassLoader().getResource(ZIP_FILE).toURI());
         var analysisInput = new StaticAnalysisInput(project, JAVA_11, null);
-        var modelBuilder = new EvaluationInputBuilder(UUID.randomUUID());
+        var modelBuilder = new EvaluationInputBuilder();
         staticAnalysis.analyze(modelBuilder, analysisInput);
         return modelBuilder.build();
     }
@@ -106,7 +106,7 @@ public class ThesisExperimentTest {
     }
 
     private EvaluationInput prepareMockInput() {
-        var builder = new EvaluationInputBuilder(UUID.randomUUID());
+        var builder = new EvaluationInputBuilder();
         var graph = getMockGraph();
         builder.withClasses(graph.getKey());
         builder.withDependencies(graph.getValue());

@@ -23,6 +23,13 @@ public class EvaluationConfigurationDto {
     @NotNull
     private final EncodingType encodingType;
 
+    @NotNull
+    @Size(min = 10)
+    private final int maxEvaluations;
+
+    @Size(min = 1000)
+    private final Long maxTime;
+
     @Size(min = 1)
     private final Integer clusterCountLowerBound;
 
@@ -32,6 +39,8 @@ public class EvaluationConfigurationDto {
     public EvaluationConfigurationDto(EvaluationConfiguration dao) {
         this.algorithm = dao.getAlgorithm();
         this.encodingType = dao.getEncodingType();
+        this.maxEvaluations = dao.getMaxEvaluations();
+        this.maxTime = dao.getMaxTime().orElse(null);
         this.clusterCountLowerBound = dao.getClusterCountLowerBound().orElse(null);
         this.clusterCountUpperBound = dao.getClusterCountUpperBound().orElse(null);
     }
@@ -40,9 +49,15 @@ public class EvaluationConfigurationDto {
         var dao = new EvaluationConfiguration();
         dao.setAlgorithm(algorithm);
         dao.setEncodingType(encodingType);
+        dao.setMaxEvaluations(maxEvaluations);
+        dao.setMaxTime(maxTime);
         dao.setClusterCountLowerBound(clusterCountLowerBound);
         dao.setClusterCountUpperBound(clusterCountUpperBound);
         return dao;
+    }
+
+    public Optional<Long> getMaxTime() {
+        return Optional.ofNullable(maxTime);
     }
 
     public Optional<Integer> getClusterCountLowerBound() {

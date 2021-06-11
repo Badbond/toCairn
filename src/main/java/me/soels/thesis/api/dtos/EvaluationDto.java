@@ -3,6 +3,7 @@ package me.soels.thesis.api.dtos;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.Getter;
 import me.soels.thesis.clustering.objectives.ObjectiveType;
+import me.soels.thesis.model.AnalysisType;
 import me.soels.thesis.model.Evaluation;
 import me.soels.thesis.model.EvaluationResult;
 import me.soels.thesis.model.EvaluationStatus;
@@ -37,6 +38,7 @@ public class EvaluationDto {
     @NotNull
     private final EvaluationConfigurationDto configuration;
     private final EvaluationStatus status;
+    private final Set<AnalysisType> executedAnalysis;
     private final List<UUID> results;
 
     @JsonCreator
@@ -48,6 +50,7 @@ public class EvaluationDto {
         // Non-settable properties by user
         this.id = null;
         this.status = null;
+        this.executedAnalysis = null;
         this.results = null;
     }
 
@@ -57,6 +60,7 @@ public class EvaluationDto {
         this.objectives = dao.getObjectives();
         this.configuration = new EvaluationConfigurationDto(dao.getConfiguration());
         this.status = dao.getStatus();
+        this.executedAnalysis = dao.getExecutedAnalysis();
         this.results = dao.getResults().stream()
                 .map(EvaluationResult::getId)
                 .collect(Collectors.toList());

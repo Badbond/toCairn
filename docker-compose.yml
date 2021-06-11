@@ -22,7 +22,7 @@ services:
       - NEO4J_dbms_memory_heap_initial__size=1G
       - NEO4J_dbms_memory_heap_max__size=1G
       # DO NOT copy paste these auth variables for a production environment
-      - NEO4J_AUTH=neo4j/local-development-secret
+      - NEO4J_AUTH=neo4j/password
 
 # Store data of databases between restarts in Docker volume
 volumes:

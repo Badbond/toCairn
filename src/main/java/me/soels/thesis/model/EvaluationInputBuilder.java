@@ -4,7 +4,6 @@ import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -15,18 +14,14 @@ import java.util.stream.Collectors;
  */
 @Getter
 public class EvaluationInputBuilder {
-    private final UUID evaluationId;
     private final List<AbstractClass> allClasses = new ArrayList<>();
     private final List<DependenceRelationship> dependencies = new ArrayList<>();
     private final List<DataRelationship> dataRelationships = new ArrayList<>();
 
     /**
-     * Creates a clean new builder for the evaluation with the given {@code evaluationId}.
-     *
-     * @param evaluationId the evaluation to create the input for
+     * Creates a clean new builder to construct an input graph with.
      */
-    public EvaluationInputBuilder(UUID evaluationId) {
-        this.evaluationId = evaluationId;
+    public EvaluationInputBuilder() {
     }
 
     /**
@@ -35,7 +30,6 @@ public class EvaluationInputBuilder {
      * @param input the input data to start this builder with
      */
     public EvaluationInputBuilder(EvaluationInput input) {
-        this.evaluationId = input.getEvaluationId();
         this.allClasses.addAll(input.getOtherClasses());
         this.allClasses.addAll(input.getDataClasses());
         this.dependencies.addAll(input.getDependencies());
@@ -87,7 +81,7 @@ public class EvaluationInputBuilder {
     }
 
     public EvaluationInput build() {
-        return new EvaluationInput(evaluationId, getOtherClasses(), getDataClasses(), dependencies, dataRelationships);
+        return new EvaluationInput(getOtherClasses(), getDataClasses(), dependencies, dataRelationships);
     }
 
     private <T extends AbstractClass> List<T> getTypesOfClasses(Class<T> expectedClass) {

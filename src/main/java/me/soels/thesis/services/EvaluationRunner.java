@@ -21,22 +21,22 @@ import static me.soels.thesis.model.EvaluationStatus.ERRORED;
 @Service
 public class EvaluationRunner {
     private final ClusteringExecutorProvider executorProvider;
-    private final GraphService graphService;
+    private final EvaluationInputService inputService;
     private final EvaluationService evaluationService;
     private static final Logger LOGGER = LoggerFactory.getLogger(EvaluationRunner.class);
 
     public EvaluationRunner(ClusteringExecutorProvider executorProvider,
-                            GraphService graphService,
+                            EvaluationInputService inputService,
                             EvaluationService evaluationService) {
         this.executorProvider = executorProvider;
-        this.graphService = graphService;
+        this.inputService = inputService;
         this.evaluationService = evaluationService;
     }
 
     @Async
     public void runEvaluation(Evaluation evaluation) {
         LOGGER.info("Running evaluation '{}' ({})", evaluation.getName(), evaluation.getId());
-        var input = graphService.getInput(evaluation.getId());
+        var input = inputService.getInput(evaluation);
         var executor = executorProvider.getExecutor(evaluation, input);
         var result = runWithExecutor(executor, evaluation.getId());
         // TODO: Set metric information (runtime etc.).

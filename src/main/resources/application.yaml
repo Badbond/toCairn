@@ -4,7 +4,7 @@ spring:
     uri: bolt://localhost:7687
     authentication:
       username: neo4j
-      password: local-development-secret
+      password: password
   data:
     neo4j.database: thesis
 

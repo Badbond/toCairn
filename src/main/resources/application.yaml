@@ -8,14 +8,6 @@ spring:
   data:
     neo4j.database: thesis
 
-  # PostgreSQL properties for local development
-  datasource:
-    url: jdbc:postgresql://127.0.0.1:5432/thesis
-    username: postgres
-    password: postgres
-  jpa:
-    open-in-view: false
-
   # Configuration of ObjectMapper
   jackson:
     default-property-inclusion: non_null

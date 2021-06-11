@@ -24,18 +24,6 @@ services:
       # DO NOT copy paste these auth variables for a production environment
       - NEO4J_AUTH=neo4j/local-development-secret
 
-  # PostgreSQL database for analysis configuration
-  postgres:
-    image: postgres:13.3
-    ports:
-      - 5432:5432
-    environment:
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_DB: thesis
-    volumes:
-      - postgres:/var/lib/postgresql/data
-
 # Store data of databases between restarts in Docker volume
 volumes:
   neo4j:

@@ -19,5 +19,5 @@ public enum ObjectiveType {
     /**
      * TODO See "You want to keep things that change at the same time in the same module" https://martinfowler.com/articles/microservices.html
      */
-    DEVELOPMENT_LIFECYCLE
+    SHARED_DEVELOPMENT_LIFECYCLE
 }

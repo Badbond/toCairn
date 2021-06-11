@@ -4,9 +4,9 @@ import me.soels.thesis.analysis.dynamic.DynamicAnalysis;
 import me.soels.thesis.analysis.dynamic.DynamicAnalysisInput;
 import me.soels.thesis.analysis.statik.StaticAnalysis;
 import me.soels.thesis.analysis.statik.StaticAnalysisInput;
+import me.soels.thesis.clustering.objectives.ObjectiveType;
 import me.soels.thesis.model.EvaluationInput;
 import me.soels.thesis.model.EvaluationInputBuilder;
-import me.soels.thesis.model.Objective;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -14,11 +14,11 @@ import org.springframework.stereotype.Service;
 import java.util.Set;
 import java.util.UUID;
 
-import static me.soels.thesis.model.Objective.DATA_AUTONOMY;
+import static me.soels.thesis.clustering.objectives.ObjectiveType.DATA_AUTONOMY;
 
 /**
  * Service responsible for validating whether an {@link EvaluationInput} contains the required information given a
- * set of {@link Objective}. Furthermore, this service has endpoints to construct this input or enhance it based on
+ * set of {@link ObjectiveType}. Furthermore, this service has endpoints to construct this input or enhance it based on
  * the analysis types supported in this application.
  */
 @Service
@@ -43,7 +43,7 @@ public class EvaluationInputService {
      * @param objectives   the objectives to meet input for
      * @return whether all input has been provided given the objectives
      */
-    public boolean hasAllRequiredInput(UUID evaluationId, Set<Objective> objectives) {
+    public boolean hasAllRequiredInput(UUID evaluationId, Set<ObjectiveType> objectives) {
         var input = graphService.getInput(evaluationId);
         // TODO: Check other objectives' input
         return hasPerformedStaticAnalysis(input) &&

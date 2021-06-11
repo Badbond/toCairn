@@ -2,10 +2,10 @@ package me.soels.thesis.api.dtos;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.Getter;
+import me.soels.thesis.clustering.objectives.ObjectiveType;
 import me.soels.thesis.model.Evaluation;
 import me.soels.thesis.model.EvaluationResult;
 import me.soels.thesis.model.EvaluationStatus;
-import me.soels.thesis.model.Objective;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -33,14 +33,14 @@ public class EvaluationDto {
     private final String name;
     @NotNull
     @Size(min = 2)
-    private final Set<Objective> objectives;
+    private final Set<ObjectiveType> objectives;
     @NotNull
     private final EvaluationConfigurationDto configuration;
     private final EvaluationStatus status;
     private final List<UUID> results;
 
     @JsonCreator
-    public EvaluationDto(String name, Set<Objective> objectives, EvaluationConfigurationDto configuration) {
+    public EvaluationDto(String name, Set<ObjectiveType> objectives, EvaluationConfigurationDto configuration) {
         this.name = name;
         this.configuration = configuration;
         this.objectives = objectives;

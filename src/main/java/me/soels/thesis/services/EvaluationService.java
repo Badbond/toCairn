@@ -1,10 +1,10 @@
 package me.soels.thesis.services;
 
 import me.soels.thesis.api.ResourceNotFoundException;
+import me.soels.thesis.api.dtos.EvaluationDto;
 import me.soels.thesis.model.Evaluation;
 import me.soels.thesis.model.EvaluationConfiguration;
 import me.soels.thesis.model.EvaluationStatus;
-import me.soels.thesis.api.dtos.EvaluationDto;
 import me.soels.thesis.repositories.EvaluationConfigurationRepository;
 import me.soels.thesis.repositories.EvaluationRepository;
 import org.springframework.stereotype.Service;
@@ -14,24 +14,20 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Service responsible for managing evaluations and their configuration.
- * <p>
- * Furthermore, this service allows the user to run the the evaluation after validation.
+ * Service responsible for managing evaluations and their configuration including preparation steps for running
+ * the evaluation and managing the status based on the provided inputs.
  */
 @Service
 public class EvaluationService {
     private final EvaluationRepository evaluationRepository;
     private final EvaluationConfigurationRepository configurationRepository;
-    private final EvaluationRunner runner;
     private final EvaluationInputService inputService;
 
     public EvaluationService(EvaluationRepository evaluationRepository,
                              EvaluationConfigurationRepository configurationRepository,
-                             EvaluationRunner runner,
                              EvaluationInputService inputService) {
         this.evaluationRepository = evaluationRepository;
         this.configurationRepository = configurationRepository;
-        this.runner = runner;
         this.inputService = inputService;
     }
 
@@ -73,7 +69,7 @@ public class EvaluationService {
     }
 
     /**
-     * Updates the evaluation identified with {@code id} based on the information given in {@code newEvaluation}.
+     * Updates the evaluation identified with {@code id} based on the information given in the provided {@code dto}.
      * <p>
      * Only modifiable fields are updated.
      *
@@ -95,44 +91,60 @@ public class EvaluationService {
         configurationRepository.save(newConfiguration);
 
         evaluation.setName(dto.getName());
-        updateEvaluationStatus(evaluation);
+        checkInputAndUpdateStatus(evaluation);
         return evaluationRepository.save(evaluation);
     }
 
     /**
-     * Runs the evaluation for the given {@code id}.
-     * <p>
-     * The evaluation runs asynchronously.
+     * Prepares the run of an {@link Evaluation} for the given {@code id}.
      *
-     * @param id the evaluation to run.
-     * @return the updated evaluation after initiating a run
+     * @param id the evaluation to prepare to run.
+     * @return the updated evaluation after preparation
      */
-    public Evaluation run(UUID id) {
+    public Evaluation prepareRun(UUID id) {
         var evaluation = getEvaluation(id);
         if (evaluation.getStatus() == EvaluationStatus.RUNNING) {
             throw new IllegalArgumentException("The evaluation is already running");
         }
 
-        updateEvaluationStatus(evaluation);
+        checkInputAndUpdateStatus(evaluation);
         if (evaluation.getStatus() == EvaluationStatus.INCOMPLETE) {
             throw new IllegalArgumentException("Can not initiate run while not all inputs are provided");
         }
 
         evaluation.setStatus(EvaluationStatus.RUNNING);
-        var result = evaluationRepository.save(evaluation);
-        runner.runEvaluation(evaluation);
-        return result;
-    }
-
-    public void updateEvaluationStatus(Evaluation evaluation) {
-        var status = inputService.hasAllRequiredInput(evaluation.getId(), evaluation.getObjectives()) ?
-                EvaluationStatus.PENDING :
-                EvaluationStatus.INCOMPLETE;
-        evaluation.setStatus(status);
+        return evaluationRepository.save(evaluation);
     }
 
     /**
-     * Validates the configuration.
+     * Updates and persists the status of the evaluation with the given {@code id} based on the given {@code status}.
+     *
+     * @param evaluationId the evaluation to update
+     * @param status       the status to persist
+     */
+    public void updateStatus(UUID evaluationId, EvaluationStatus status) {
+        var evaluation = evaluationRepository.getById(evaluationId);
+        evaluation.setStatus(status);
+        evaluationRepository.save(evaluation);
+    }
+
+    /**
+     * Checks which inputs are provided and required for performing analysis and updates the evaluation's status
+     * accordingly.
+     * <p>
+     * This does not persist the evaluation.
+     *
+     * @param evaluation the evaluation to check inputs and update the status for
+     */
+    public void checkInputAndUpdateStatus(Evaluation evaluation) {
+        var newStatus = inputService.hasAllRequiredInput(evaluation.getId(), evaluation.getObjectives()) ?
+                EvaluationStatus.PENDING :
+                EvaluationStatus.INCOMPLETE;
+        evaluation.setStatus(newStatus);
+    }
+
+    /**
+     * Validates the evaluation's configuration.
      * <p>
      * Partial validation is done through javax validation as this was not done yet on controller-level.
      *

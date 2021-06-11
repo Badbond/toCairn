@@ -2,9 +2,9 @@ package me.soels.thesis.clustering;
 
 import me.soels.thesis.clustering.encoding.EncodingType;
 import me.soels.thesis.clustering.encoding.VariableDecoder;
-import me.soels.thesis.clustering.encoding.VariableType;
-import me.soels.thesis.model.EvaluationInput;
 import me.soels.thesis.clustering.objectives.Objective;
+import me.soels.thesis.model.EvaluationConfiguration;
+import me.soels.thesis.model.EvaluationInput;
 import org.moeaframework.Executor;
 import org.moeaframework.core.Solution;
 import org.moeaframework.core.variable.EncodingUtils;
@@ -27,7 +27,7 @@ import java.util.List;
 public class ClusteringProblem extends AbstractProblem {
     private final List<Objective> objectives;
     private final EvaluationInput evaluationInput;
-    private final ProblemConfiguration problemConfiguration;
+    private final EvaluationConfiguration configuration;
     private final VariableDecoder variableDecoder = new VariableDecoder();
 
     /**
@@ -35,13 +35,13 @@ public class ClusteringProblem extends AbstractProblem {
      *
      * @param objectives           the objective functions to evaluate
      * @param analysisInput        the input to cluster
-     * @param problemConfiguration the configuration for the problem
+     * @param configuration the configuration for the problem
      */
-    public ClusteringProblem(List<Objective> objectives, EvaluationInput analysisInput, ProblemConfiguration problemConfiguration) {
+    public ClusteringProblem(List<Objective> objectives, EvaluationInput analysisInput, EvaluationConfiguration configuration) {
         super(analysisInput.getOtherClasses().size(), objectives.size());
         this.objectives = objectives;
         this.evaluationInput = analysisInput;
-        this.problemConfiguration = problemConfiguration;
+        this.configuration = configuration;
     }
 
     /**
@@ -55,14 +55,14 @@ public class ClusteringProblem extends AbstractProblem {
     @Override
     public void evaluate(Solution solution) {
         var variables = EncodingUtils.getInt(solution);
-        var decodedClustering = variableDecoder.decode(evaluationInput, variables, problemConfiguration.getEncodingType());
+        var decodedClustering = variableDecoder.decode(evaluationInput, variables, configuration.getEncodingType());
 
-        if (problemConfiguration.getClusterCountLowerBound().isPresent() &&
-                decodedClustering.getByCluster().size() < problemConfiguration.getClusterCountLowerBound().get()) {
+        if (configuration.getClusterCountLowerBound().isPresent() &&
+                decodedClustering.getByCluster().size() < configuration.getClusterCountLowerBound().get()) {
             solution.setConstraint(0, -1); // Too few clusters
             return;
-        } else if (problemConfiguration.getClusterCountUpperBound().isPresent() &&
-                decodedClustering.getByCluster().size() > problemConfiguration.getClusterCountUpperBound().get()) {
+        } else if (configuration.getClusterCountUpperBound().isPresent() &&
+                decodedClustering.getByCluster().size() > configuration.getClusterCountUpperBound().get()) {
             solution.setConstraint(0, 1); // Too many clusters
             return;
         }
@@ -97,19 +97,15 @@ public class ClusteringProblem extends AbstractProblem {
         for (var i = 0; i < getNumberOfVariables(); i++) {
             // We use floats instead of binary integers as those allow for more mutation/crossover operations,
             // Preliminary investigation showed there is not much of a performance increase into using binary integers
-            if (problemConfiguration.getVariableType() == VariableType.BINARY_INT) {
-                solution.setVariable(i, EncodingUtils.newBinaryInt(0, getUpperbound()));
-            } else {
-                solution.setVariable(i, EncodingUtils.newInt(0, getUpperbound()));
-            }
+            solution.setVariable(i, EncodingUtils.newInt(0, getUpperbound()));
         }
         return solution;
     }
 
     private int getUpperbound() {
-        if (problemConfiguration.getEncodingType() == EncodingType.CLUSTER_LABEL &&
-                problemConfiguration.getClusterCountUpperBound().isPresent()) {
-            return Integer.min(problemConfiguration.getClusterCountUpperBound().get(), getNumberOfVariables()) - 1;
+        if (configuration.getEncodingType() == EncodingType.CLUSTER_LABEL &&
+                configuration.getClusterCountUpperBound().isPresent()) {
+            return Integer.min(configuration.getClusterCountUpperBound().get(), getNumberOfVariables()) - 1;
         }
         return getNumberOfVariables() - 1;
     }

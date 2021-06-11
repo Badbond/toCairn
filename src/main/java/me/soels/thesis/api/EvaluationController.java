@@ -1,8 +1,9 @@
 package me.soels.thesis.api;
 
+import me.soels.thesis.api.dtos.EvaluationDto;
 import me.soels.thesis.model.Evaluation;
 import me.soels.thesis.model.EvaluationConfiguration;
-import me.soels.thesis.api.dtos.EvaluationDto;
+import me.soels.thesis.services.EvaluationRunner;
 import me.soels.thesis.services.EvaluationService;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,9 +19,11 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/evaluation")
 public class EvaluationController {
     private final EvaluationService service;
+    private final EvaluationRunner runner;
 
-    public EvaluationController(EvaluationService service) {
+    public EvaluationController(EvaluationService service, EvaluationRunner runner) {
         this.service = service;
+        this.runner = runner;
     }
 
     /**
@@ -74,7 +77,9 @@ public class EvaluationController {
      */
     @PostMapping("/{id}/run")
     public EvaluationDto runEvaluation(@PathVariable UUID id) {
-        return new EvaluationDto(service.run(id));
+        var evaluation = service.prepareRun(id);
+        runner.runEvaluation(evaluation);
+        return new EvaluationDto(evaluation);
     }
 
     /**

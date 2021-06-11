@@ -6,6 +6,10 @@ algorithms are used. As this is a Proof of Concept, please consider it for evalu
 
 This thesis project was conducted at the University of Amsterdam by Pieter Dirk Soels.
 
+## Features
+
+_Coming soon_
+
 ## Running the project locally
 
 To run the project locally, you must have an instance of Neo4j, the graph database that this project uses, running. For
@@ -29,7 +33,12 @@ These are common questions and problems encountered and how to solve them.
 
 When receiving an error message containing `Missing @TargetNode declaration in class`
 or `missing a property for the generated, internal ID (@Id @GeneratedValue Long id)`, it could be that the project did
-not compile correctly. Run `mvn clean compile` to recompile the project, and the problem should be gone.
+not compile correctly. Run `mvn clean compile` to recompile the project, and the problem should be gone. This happens
+when initializing the Spring context both during running the application and during tests.
+
+### NoClassDefFoundError during static analysis
+
+_Explanation coming soon_
 
 ## License
 

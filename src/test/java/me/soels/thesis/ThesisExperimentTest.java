@@ -3,17 +3,12 @@ package me.soels.thesis;
 import me.soels.thesis.analysis.statik.StaticAnalysis;
 import me.soels.thesis.analysis.statik.StaticAnalysisInput;
 import me.soels.thesis.clustering.ClusteringProblem;
-import me.soels.thesis.clustering.ProblemConfiguration;
 import me.soels.thesis.clustering.encoding.EncodingType;
 import me.soels.thesis.clustering.encoding.VariableDecoder;
-import me.soels.thesis.clustering.encoding.VariableType;
-import me.soels.thesis.model.DependenceRelationship;
-import me.soels.thesis.model.EvaluationInput;
-import me.soels.thesis.model.EvaluationInputBuilder;
-import me.soels.thesis.model.OtherClass;
 import me.soels.thesis.clustering.objectives.CohesionCarvalhoObjective;
 import me.soels.thesis.clustering.objectives.CouplingBetweenModuleClassesObjective;
 import me.soels.thesis.clustering.objectives.Objective;
+import me.soels.thesis.model.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -53,14 +48,16 @@ public class ThesisExperimentTest {
 
     @Test
     public void runExperimentTestWithMockData() {
-        var problemConfig = new ProblemConfiguration(EncodingType.CLUSTER_LABEL, VariableType.FLOAT_INT, null, null);
+        var problemConfig = new EvaluationConfiguration();
+        problemConfig.setEncodingType(EncodingType.CLUSTER_LABEL);
         var input = prepareMockInput();
         runExperiment(problemConfig, input);
     }
 
     @Test
     public void runExperimentWithSourceCode() throws URISyntaxException {
-        var problemConfig = new ProblemConfiguration(EncodingType.CLUSTER_LABEL, VariableType.FLOAT_INT, null, null);
+        var problemConfig = new EvaluationConfiguration();
+        problemConfig.setEncodingType(EncodingType.CLUSTER_LABEL);
         var input = getZipInput();
         runExperiment(problemConfig, input);
     }
@@ -73,7 +70,7 @@ public class ThesisExperimentTest {
         return modelBuilder.build();
     }
 
-    private void runExperiment(ProblemConfiguration config, EvaluationInput input) {
+    private void runExperiment(EvaluationConfiguration config, EvaluationInput input) {
         List<Objective> objectives = List.of(new CouplingBetweenModuleClassesObjective(), new CohesionCarvalhoObjective());
         var start = System.currentTimeMillis();
 

@@ -46,12 +46,12 @@ public class EvaluationController {
     /**
      * Retrieves the evaluation with the given {@code id}.
      *
-     * @param id the id of the evaluation to retrieve
+     * @param evaluationId the id of the evaluation to retrieve
      * @return the retrieved evaluation
      */
-    @GetMapping("/{id}")
-    public EvaluationDto getEvaluation(@PathVariable UUID id) {
-        return new EvaluationDto(service.getEvaluation(id));
+    @GetMapping("/{evaluationId}")
+    public EvaluationDto getEvaluation(@PathVariable UUID evaluationId) {
+        return new EvaluationDto(service.getEvaluation(evaluationId));
     }
 
     /**
@@ -71,13 +71,13 @@ public class EvaluationController {
     /**
      * Updates the evaluation object, overwriting all modifiable values with the given body.
      *
-     * @param id  the id of the evaluation to update
-     * @param dto the updated information.
+     * @param evaluationId the id of the evaluation to update
+     * @param dto          the updated information.
      * @return the updated evaluation
      */
-    @PutMapping("/{id}")
-    public EvaluationDto updateEvaluation(@PathVariable UUID id, @Valid @RequestBody EvaluationDto dto) {
-        return new EvaluationDto(service.updateEvaluation(id, dto));
+    @PutMapping("/{evaluationId}")
+    public EvaluationDto updateEvaluation(@PathVariable UUID evaluationId, @Valid @RequestBody EvaluationDto dto) {
+        return new EvaluationDto(service.updateEvaluation(evaluationId, dto));
     }
 
     /**
@@ -85,12 +85,12 @@ public class EvaluationController {
      * <p>
      * Performs cascading deletes to the configuration, input graph and results as well.
      *
-     * @param id the id of the evaluation to delete
+     * @param evaluationId the id of the evaluation to delete
      */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{evaluationId}")
     @ResponseStatus(NO_CONTENT)
-    public void deleteEvaluation(@PathVariable UUID id) {
-        service.deleteEvaluation(id);
+    public void deleteEvaluation(@PathVariable UUID evaluationId) {
+        service.deleteEvaluation(evaluationId);
     }
 
     /**
@@ -99,12 +99,12 @@ public class EvaluationController {
      * This run will be done asynchronously and the returned evaluation shows the state of the evaluation just after
      * starting this run.
      *
-     * @param id the id of the evaluation to run
+     * @param evaluationId the id of the evaluation to run
      * @return the updated evaluation
      */
-    @PostMapping("/{id}/run")
-    public EvaluationDto runEvaluation(@PathVariable UUID id) {
-        var evaluation = service.prepareRun(id);
+    @PostMapping("/{evaluationId}/run")
+    public EvaluationDto runEvaluation(@PathVariable UUID evaluationId) {
+        var evaluation = service.prepareRun(evaluationId);
         runner.runEvaluation(evaluation);
         return new EvaluationDto(evaluation);
     }

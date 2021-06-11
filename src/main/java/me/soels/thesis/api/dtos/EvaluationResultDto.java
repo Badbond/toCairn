@@ -3,6 +3,8 @@ package me.soels.thesis.api.dtos;
 import lombok.Getter;
 import me.soels.thesis.model.EvaluationResult;
 
+import java.util.UUID;
+
 /**
  * The data transfer object for {@link EvaluationResult}.
  * <p>
@@ -10,6 +12,9 @@ import me.soels.thesis.model.EvaluationResult;
  */
 @Getter
 public class EvaluationResultDto {
+    private final UUID id;
+
     public EvaluationResultDto(EvaluationResult result) {
+        id = result.getId();
     }
 }

@@ -6,6 +6,7 @@ import me.soels.thesis.util.ZipExtractor;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Files;
@@ -40,7 +41,9 @@ public class StaticAnalysis {
         this.zipExtractor = zipExtractor;
     }
 
-    // TODO: Perform static analysis async. Need a way of locking to prevent concurrent analysis or memory overflow.
+    @Async
+    // TODO: Analysis is async, need a way of locking to prevent concurrent analysis or memory overflow.
+    //  Also need a way to log or persist errors
     public void analyze(EvaluationInputBuilder modelBuilder, StaticAnalysisInput input) {
         LOGGER.info("Starting static analysis on {}", input.getPathToZip());
         var start = System.currentTimeMillis();

@@ -2,16 +2,22 @@ package me.soels.thesis.services;
 
 import me.soels.thesis.api.ResourceNotFoundException;
 import me.soels.thesis.api.dtos.EvaluationDto;
-import me.soels.thesis.model.Evaluation;
-import me.soels.thesis.model.EvaluationConfiguration;
-import me.soels.thesis.model.EvaluationStatus;
+import me.soels.thesis.clustering.objectives.ObjectiveType;
+import me.soels.thesis.model.*;
 import me.soels.thesis.repositories.EvaluationConfigurationRepository;
 import me.soels.thesis.repositories.EvaluationRepository;
 import org.springframework.stereotype.Service;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+
+import static me.soels.thesis.clustering.objectives.ObjectiveType.DATA_AUTONOMY;
+import static me.soels.thesis.clustering.objectives.ObjectiveType.SHARED_DEVELOPMENT_LIFECYCLE;
+import static me.soels.thesis.model.AnalysisType.*;
+import static me.soels.thesis.model.EvaluationStatus.INCOMPLETE;
+import static me.soels.thesis.model.EvaluationStatus.RUNNING;
 
 /**
  * Service responsible for managing evaluations and their configuration including preparation steps for running
@@ -22,13 +28,16 @@ public class EvaluationService {
     private final EvaluationRepository evaluationRepository;
     private final EvaluationConfigurationRepository configurationRepository;
     private final EvaluationInputService inputService;
+    private final EvaluationResultService resultService;
 
     public EvaluationService(EvaluationRepository evaluationRepository,
                              EvaluationConfigurationRepository configurationRepository,
-                             EvaluationInputService inputService) {
+                             EvaluationInputService inputService,
+                             EvaluationResultService resultService) {
         this.evaluationRepository = evaluationRepository;
         this.configurationRepository = configurationRepository;
         this.inputService = inputService;
+        this.resultService = resultService;
     }
 
     /**
@@ -60,7 +69,7 @@ public class EvaluationService {
     public Evaluation createEvaluation(EvaluationDto dto) {
         var newEvaluation = dto.toDao();
         newEvaluation.setObjectives(dto.getObjectives());
-        newEvaluation.setStatus(EvaluationStatus.INCOMPLETE);
+        newEvaluation.setStatus(INCOMPLETE);
 
         var configuration = validateConfiguration(newEvaluation.getConfiguration());
         newEvaluation.setConfiguration(configurationRepository.save(configuration));
@@ -79,7 +88,7 @@ public class EvaluationService {
      */
     public Evaluation updateEvaluation(UUID id, EvaluationDto dto) {
         var evaluation = getEvaluation(id);
-        if (evaluation.getStatus() == EvaluationStatus.RUNNING) {
+        if (evaluation.getStatus() == RUNNING) {
             throw new IllegalArgumentException("Can not change an evaluation that is running");
         }
 
@@ -91,7 +100,7 @@ public class EvaluationService {
         configurationRepository.save(newConfiguration);
 
         evaluation.setName(dto.getName());
-        checkInputAndUpdateStatus(evaluation);
+        checkRanAnalysesAndUpdateStatus(evaluation);
         return evaluationRepository.save(evaluation);
     }
 
@@ -104,9 +113,10 @@ public class EvaluationService {
      */
     public void deleteEvaluation(UUID id) {
         evaluationRepository.findById(id).ifPresent(evaluation -> {
-            // TODO: Validate delete inputs, implement delete results
+            // TODO: Validate deletion, are relationships also deleted?
             inputService.deleteAllInputs(evaluation);
             configurationRepository.deleteById(evaluation.getConfiguration().getId());
+            evaluation.getResults().stream().map(EvaluationResult::getId).forEach(resultService::deleteResult);
             evaluationRepository.deleteById(evaluation.getId());
         });
     }
@@ -119,16 +129,16 @@ public class EvaluationService {
      */
     public Evaluation prepareRun(UUID id) {
         var evaluation = getEvaluation(id);
-        if (evaluation.getStatus() == EvaluationStatus.RUNNING) {
+        if (evaluation.getStatus() == RUNNING) {
             throw new IllegalArgumentException("The evaluation is already running");
         }
 
-        checkInputAndUpdateStatus(evaluation);
-        if (evaluation.getStatus() == EvaluationStatus.INCOMPLETE) {
+        checkRanAnalysesAndUpdateStatus(evaluation);
+        if (evaluation.getStatus() == INCOMPLETE) {
             throw new IllegalArgumentException("Can not initiate run while not all inputs are provided");
         }
 
-        evaluation.setStatus(EvaluationStatus.RUNNING);
+        evaluation.setStatus(RUNNING);
         return evaluationRepository.save(evaluation);
     }
 
@@ -145,18 +155,50 @@ public class EvaluationService {
     }
 
     /**
-     * Checks which inputs are provided and required for performing analysis and updates the evaluation's status
-     * accordingly.
+     * Updates the analysis ran on the provided evaluation by adding the given analysis type.
+     * This furthermore checks if all required analysis have ran based on the configured objectives and updates the
+     * status of the evaluation accordingly. These changes to the evaluation are persisted.
+     *
+     * @param evaluation the evaluation to update
+     * @param analysis   the analysis type to add
+     */
+    public void updateAnalysisRan(Evaluation evaluation, AnalysisType analysis) {
+        evaluation.getExecutedAnalysis().add(analysis);
+        checkRanAnalysesAndUpdateStatus(evaluation);
+        evaluationRepository.save(evaluation);
+    }
+
+    /**
+     * Checks which analyses have been performed and are required for the running the evaluation. Then updates the
+     * evaluation's status to represent this accordingly.
      * <p>
      * This does not persist the evaluation.
      *
      * @param evaluation the evaluation to check inputs and update the status for
      */
-    public void checkInputAndUpdateStatus(Evaluation evaluation) {
-        var newStatus = inputService.hasAllRequiredInput(evaluation, evaluation.getObjectives()) ?
+    public void checkRanAnalysesAndUpdateStatus(Evaluation evaluation) {
+        var newStatus = hasAllRequiredInput(evaluation, evaluation.getObjectives()) ?
                 EvaluationStatus.PENDING :
-                EvaluationStatus.INCOMPLETE;
+                INCOMPLETE;
         evaluation.setStatus(newStatus);
+    }
+
+    /**
+     * Checks whether all the input is present for the given objectives.
+     * <p>
+     * Note that {@link AnalysisType#STATIC} analysis is always required as this generates a complete graph of classes
+     * to cluster. As {@link ObjectiveType#ONE_PURPOSE} and {@link ObjectiveType#BOUNDED_CONTEXT} only rely on the
+     * result from static analysis, we do not check them explicitly.
+     *
+     * @param evaluation the evaluation to check whether all input has been provided
+     * @param objectives the objectives to meet input for
+     * @return whether all input has been provided given the objectives
+     */
+    public boolean hasAllRequiredInput(Evaluation evaluation, Set<ObjectiveType> objectives) {
+        var executed = evaluation.getExecutedAnalysis();
+        return executed.contains(STATIC) &&
+                (!objectives.contains(DATA_AUTONOMY) || executed.contains(DYNAMIC)) &&
+                (!objectives.contains(SHARED_DEVELOPMENT_LIFECYCLE) || executed.contains(EVOLUTIONARY));
     }
 
     /**

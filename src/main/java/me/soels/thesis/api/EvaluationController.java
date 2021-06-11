@@ -17,6 +17,8 @@ import static org.springframework.http.HttpStatus.NO_CONTENT;
 
 /**
  * Controller for managing the {@link Evaluation} and its {@link EvaluationConfiguration}.
+ * <p>
+ * This controller furthermore allows to run an evaluation.
  */
 @RestController
 @RequestMapping("/api/evaluation")
@@ -43,8 +45,6 @@ public class EvaluationController {
 
     /**
      * Retrieves the evaluation with the given {@code id}.
-     * <p>
-     * Throws a 404 when the evaluation does not exist.
      *
      * @param id the id of the evaluation to retrieve
      * @return the retrieved evaluation
@@ -69,27 +69,7 @@ public class EvaluationController {
     }
 
     /**
-     * Runs the evaluation with the given {@code id}.
-     * <p>
-     * This run will be done asynchronously and the returned evaluation shows the state of the evaluation just after
-     * starting this run.
-     * <p>
-     * Throws a 404 when the evaluation does not exist.
-     *
-     * @param id the id of the evaluation to run
-     * @return the updated evaluation
-     */
-    @PostMapping("/{id}/run")
-    public EvaluationDto runEvaluation(@PathVariable UUID id) {
-        var evaluation = service.prepareRun(id);
-        runner.runEvaluation(evaluation);
-        return new EvaluationDto(evaluation);
-    }
-
-    /**
      * Updates the evaluation object, overwriting all modifiable values with the given body.
-     * <p>
-     * Throws a 404 when the evaluation does not exist.
      *
      * @param id  the id of the evaluation to update
      * @param dto the updated information.
@@ -111,5 +91,21 @@ public class EvaluationController {
     @ResponseStatus(NO_CONTENT)
     public void deleteEvaluation(@PathVariable UUID id) {
         service.deleteEvaluation(id);
+    }
+
+    /**
+     * Runs the evaluation with the given {@code id}.
+     * <p>
+     * This run will be done asynchronously and the returned evaluation shows the state of the evaluation just after
+     * starting this run.
+     *
+     * @param id the id of the evaluation to run
+     * @return the updated evaluation
+     */
+    @PostMapping("/{id}/run")
+    public EvaluationDto runEvaluation(@PathVariable UUID id) {
+        var evaluation = service.prepareRun(id);
+        runner.runEvaluation(evaluation);
+        return new EvaluationDto(evaluation);
     }
 }

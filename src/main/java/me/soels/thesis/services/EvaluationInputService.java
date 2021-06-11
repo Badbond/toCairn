@@ -6,22 +6,16 @@ import me.soels.thesis.analysis.evolutionary.EvolutionaryAnalysis;
 import me.soels.thesis.analysis.evolutionary.EvolutionaryAnalysisInput;
 import me.soels.thesis.analysis.statik.StaticAnalysis;
 import me.soels.thesis.analysis.statik.StaticAnalysisInput;
-import me.soels.thesis.clustering.objectives.ObjectiveType;
 import me.soels.thesis.model.*;
 import me.soels.thesis.repositories.ClassRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import java.util.Set;
-
-import static me.soels.thesis.clustering.objectives.ObjectiveType.DATA_AUTONOMY;
-import static me.soels.thesis.clustering.objectives.ObjectiveType.SHARED_DEVELOPMENT_LIFECYCLE;
 import static me.soels.thesis.model.AnalysisType.*;
 
 /**
- * Service responsible for validating whether an {@link EvaluationInput} contains the required information given a
- * set of {@link ObjectiveType}. Furthermore, this service has endpoints to construct this input or enhance it based on
- * the analysis types supported in this application.
+ * Service responsible for maintaining the {@link EvaluationInput} graph. This service allows for commanding certain
+ * analyses to be executed and stores the result of those analyses to the database.
  */
 @Service
 public class EvaluationInputService {
@@ -46,6 +40,12 @@ public class EvaluationInputService {
         this.dataClassRepository = dataClassRepository;
     }
 
+    /**
+     * Retrieves the input graph for the given evaluation.
+     *
+     * @param evaluation the evaluation to retrieve the input graph for
+     * @return the input graph
+     */
     public EvaluationInput getInput(Evaluation evaluation) {
         var classes = evaluation.getInputs();
         return new EvaluationInputBuilder()
@@ -53,30 +53,24 @@ public class EvaluationInputService {
                 .build();
     }
 
+    /**
+     * Store the given input graph.
+     *
+     * @param input the input graph to store
+     */
     public void storeInput(EvaluationInput input) {
+        // TODO: Can we do allClassRepository.saveAll(input.getAllClasses()); ? That would save 2 dependencies.
         otherClassRepository.saveAll(input.getOtherClasses());
         dataClassRepository.saveAll(input.getDataClasses());
     }
 
+    /**
+     * Delete the input graph for the given evaluation.
+     *
+     * @param evaluation the evaluation to delete the input graph for
+     */
     public void deleteAllInputs(Evaluation evaluation) {
         allClassRepository.deleteAll(evaluation.getInputs());
-    }
-
-    /**
-     * Checks whether all the input is present for the given objectives.
-     * <p>
-     * Note that {@link AnalysisType#STATIC} analysis is always required as this generates a complete graph of classes
-     * to cluster. As {@link ObjectiveType#ONE_PURPOSE} and {@link ObjectiveType#BOUNDED_CONTEXT} only rely on the
-     * result from static analysis, we do not check them explicitly.
-     *
-     * @param evaluation the evaluation to check whether all input has been provided
-     * @param objectives the objectives to meet input for
-     * @return whether all input has been provided given the objectives
-     */
-    public boolean hasAllRequiredInput(Evaluation evaluation, Set<ObjectiveType> objectives) {
-        return hasPerformedAnalysis(evaluation, STATIC) &&
-                (!objectives.contains(DATA_AUTONOMY) || hasPerformedAnalysis(evaluation, DYNAMIC)) &&
-                (!objectives.contains(SHARED_DEVELOPMENT_LIFECYCLE) || hasPerformedAnalysis(evaluation, EVOLUTIONARY));
     }
 
     /**
@@ -90,7 +84,7 @@ public class EvaluationInputService {
      * @param analysisInput the input required for performing static analysis
      */
     public void performStaticAnalysis(Evaluation evaluation, StaticAnalysisInput analysisInput) {
-        if (hasPerformedAnalysis(evaluation, STATIC)) {
+        if (evaluation.getExecutedAnalysis().contains(STATIC)) {
             throw new IllegalArgumentException("Static analysis already performed.");
         }
 
@@ -109,9 +103,9 @@ public class EvaluationInputService {
      */
     public void performDynamicAnalysis(Evaluation evaluation, DynamicAnalysisInput analysisInput) {
         var evaluationInput = getInput(evaluation);
-        if (hasPerformedAnalysis(evaluation, DYNAMIC)) {
+        if (evaluation.getExecutedAnalysis().contains(DYNAMIC)) {
             throw new IllegalArgumentException("Dynamic analysis already performed.");
-        } else if (!hasPerformedAnalysis(evaluation, STATIC)) {
+        } else if (!evaluation.getExecutedAnalysis().contains(STATIC)) {
             throw new IllegalArgumentException("Static analysis needs to be performed before dynamic analysis");
         }
 
@@ -127,27 +121,16 @@ public class EvaluationInputService {
      * @param evaluation    the evaluation to perform evolutionary analysis for
      * @param analysisInput the input required for performing evolutionary analysis
      */
-    private void performEvolutionaryAnalysis(Evaluation evaluation, EvolutionaryAnalysisInput analysisInput) {
+    public void performEvolutionaryAnalysis(Evaluation evaluation, EvolutionaryAnalysisInput analysisInput) {
         var evaluationInput = getInput(evaluation);
-        if (hasPerformedAnalysis(evaluation, EVOLUTIONARY)) {
+        if (evaluation.getExecutedAnalysis().contains(EVOLUTIONARY)) {
             throw new IllegalArgumentException("Evolutionary analysis already performed.");
-        } else if (!hasPerformedAnalysis(evaluation, STATIC)) {
+        } else if (!evaluation.getExecutedAnalysis().contains(STATIC)) {
             throw new IllegalArgumentException("Static analysis needs to be performed before evolutionary analysis");
         }
 
         var builder = new EvaluationInputBuilder(evaluationInput);
         evolutionaryAnalysis.analyze(builder, analysisInput);
         storeInput(builder.build());
-    }
-
-    /**
-     * Returns whether the expected analysis has been performed for the given evaluation.
-     *
-     * @param evaluation       the evaluation to validate
-     * @param expectedAnalysis the analysis to expect
-     * @return whether the expected analysis has been performed
-     */
-    private boolean hasPerformedAnalysis(Evaluation evaluation, AnalysisType expectedAnalysis) {
-        return evaluation.getExecutedAnalysis().contains(expectedAnalysis);
     }
 }

@@ -27,4 +27,8 @@ public class EvaluationResultService {
         return repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(id));
     }
+
+    public void deleteResult(UUID id) {
+        repository.deleteById(id);
+    }
 }

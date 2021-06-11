@@ -17,17 +17,17 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Controller for exposing the {@link EvaluationInput}.
+ * Controller for exposing the graph stored in the {@link EvaluationInput}.
  * <p>
  * This controller has endpoints to expose the nodes and the edges of the graph.
  */
 @RestController
 @RequestMapping("/api/evaluation/{evaluationId}/graph")
-public class EvaluationInputGraphController {
+public class GraphController {
     private final EvaluationService evaluationService;
     private final EvaluationInputService inputService;
 
-    public EvaluationInputGraphController(EvaluationService evaluationService, EvaluationInputService inputService) {
+    public GraphController(EvaluationService evaluationService, EvaluationInputService inputService) {
         this.evaluationService = evaluationService;
         this.inputService = inputService;
     }

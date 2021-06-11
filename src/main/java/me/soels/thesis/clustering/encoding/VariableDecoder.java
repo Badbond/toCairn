@@ -14,8 +14,8 @@ public class VariableDecoder {
      * Decodes the genes in the solution to the clusters identified.
      *
      * @param evaluationInput the additional analysis input information required to construct the clustering
-     * @param variables     the variables to decode
-     * @param encodingType  the type of encoding which the variables represents
+     * @param variables       the variables to decode
+     * @param encodingType    the type of encoding which the variables represents
      * @return the decoded clustering
      */
     public Clustering decode(EvaluationInput evaluationInput, int[] variables, EncodingType encodingType) {
@@ -33,7 +33,7 @@ public class VariableDecoder {
      * Decode the given variables based on {@link EncodingType#CLUSTER_LABEL} encoding.
      *
      * @param evaluationInput the additional analysis input information required to construct the clustering
-     * @param variables     the variables to decode
+     * @param variables       the variables to decode
      * @return the clustering that the given variables represent
      */
     public Clustering decodeClusterLabel(EvaluationInput evaluationInput, int[] variables) {
@@ -52,7 +52,7 @@ public class VariableDecoder {
      * Decode the given variables based on {@link EncodingType#GRAPH_ADJECENCY} encoding.
      *
      * @param evaluationInput the additional analysis input information required to construct the clustering
-     * @param variables     the variables to decode
+     * @param variables       the variables to decode
      * @return the clustering that the given variables represent
      */
     public Clustering decodeGraphAdjacency(EvaluationInput evaluationInput, int[] variables) {

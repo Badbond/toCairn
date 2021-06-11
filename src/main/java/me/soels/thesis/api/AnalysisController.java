@@ -1,18 +1,16 @@
 package me.soels.thesis.api;
 
-import me.soels.thesis.analysis.dynamic.DynamicAnalysisInput;
-import me.soels.thesis.analysis.evolutionary.EvolutionaryAnalysisInput;
-import me.soels.thesis.analysis.statik.StaticAnalysisInput;
+import me.soels.thesis.api.dtos.DynamicAnalysisInputDto;
+import me.soels.thesis.api.dtos.EvolutionaryAnalysisInputDto;
+import me.soels.thesis.api.dtos.StaticAnalysisInputDto;
 import me.soels.thesis.model.Evaluation;
 import me.soels.thesis.model.EvaluationInput;
 import me.soels.thesis.services.EvaluationInputService;
 import me.soels.thesis.services.EvaluationService;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.UUID;
 
 import static me.soels.thesis.model.AnalysisType.*;
@@ -35,33 +33,30 @@ public class AnalysisController {
         this.inputService = inputService;
     }
 
-    @Async
+    @Async // TODO: This does not work... (same goes for other 2)
     @PostMapping("/static")
-    public void performStaticAnalysis(@PathVariable UUID evaluationId /*, TODO: body*/) {
+    public void performStaticAnalysis(@PathVariable UUID evaluationId,
+                                      @RequestBody @Valid StaticAnalysisInputDto inputDto) {
         var evaluation = evaluationService.getEvaluation(evaluationId);
-        // TODO: Extract input configuration from body
-        var staticAnalysisInput = new StaticAnalysisInput(null, null, null);
-        inputService.performStaticAnalysis(evaluation, staticAnalysisInput);
+        inputService.performStaticAnalysis(evaluation, inputDto.toDao());
         evaluationService.updateAnalysisRan(evaluation, STATIC);
     }
 
     @Async
     @PostMapping("/dynamic")
-    public void performDynamicAnalysis(@PathVariable UUID evaluationId /*, TODO: body*/) {
+    public void performDynamicAnalysis(@PathVariable UUID evaluationId,
+                                       @RequestBody @Valid DynamicAnalysisInputDto inputDto) {
         var evaluation = evaluationService.getEvaluation(evaluationId);
-        // TODO: Extract input configuration from body
-        var dynamicAnalysisInput = new DynamicAnalysisInput(null);
-        inputService.performDynamicAnalysis(evaluation, dynamicAnalysisInput);
+        inputService.performDynamicAnalysis(evaluation, inputDto.toDao());
         evaluationService.updateAnalysisRan(evaluation, DYNAMIC);
     }
 
     @Async
     @PostMapping("/evolutionary")
-    public void performEvolutionaryAnalysis(@PathVariable UUID evaluationId /*, TODO: body*/) {
+    public void performEvolutionaryAnalysis(@PathVariable UUID evaluationId,
+                                            @RequestBody @Valid EvolutionaryAnalysisInputDto inputDto) {
         var evaluation = evaluationService.getEvaluation(evaluationId);
-        // TODO: Extract input configuration from body
-        var evolutionaryAnalysisInput = new EvolutionaryAnalysisInput(null);
-        inputService.performEvolutionaryAnalysis(evaluation, evolutionaryAnalysisInput);
+        inputService.performEvolutionaryAnalysis(evaluation, inputDto.toDao());
         evaluationService.updateAnalysisRan(evaluation, EVOLUTIONARY);
     }
 }

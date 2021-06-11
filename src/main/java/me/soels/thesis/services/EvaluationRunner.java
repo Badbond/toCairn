@@ -20,10 +20,10 @@ import static me.soels.thesis.model.EvaluationStatus.ERRORED;
  */
 @Service
 public class EvaluationRunner {
+    private static final Logger LOGGER = LoggerFactory.getLogger(EvaluationRunner.class);
     private final ClusteringExecutorProvider executorProvider;
     private final EvaluationInputService inputService;
     private final EvaluationService evaluationService;
-    private static final Logger LOGGER = LoggerFactory.getLogger(EvaluationRunner.class);
 
     public EvaluationRunner(ClusteringExecutorProvider executorProvider,
                             EvaluationInputService inputService,

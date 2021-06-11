@@ -41,16 +41,13 @@ public class EvaluationInputService {
     }
 
     /**
-     * Retrieves the input graph for the given evaluation.
+     * Retrieves the stored input graph for the given evaluation.
      *
      * @param evaluation the evaluation to retrieve the input graph for
-     * @return the input graph
+     * @return the stored input graph
      */
     public EvaluationInput getInput(Evaluation evaluation) {
-        var classes = evaluation.getInputs();
-        return new EvaluationInputBuilder()
-                .withClasses(classes)
-                .build();
+        return getPopulatedInputBuilder(evaluation).build();
     }
 
     /**
@@ -88,8 +85,7 @@ public class EvaluationInputService {
             throw new IllegalArgumentException("Static analysis already performed.");
         }
 
-        // We always start from static analysis and therefore we get a clean builder
-        var builder = new EvaluationInputBuilder();
+        var builder = getPopulatedInputBuilder(evaluation);
         staticAnalysis.analyze(builder, analysisInput);
         storeInput(builder.build());
     }
@@ -102,14 +98,13 @@ public class EvaluationInputService {
      * @param analysisInput the input required for performing dynamic analysis
      */
     public void performDynamicAnalysis(Evaluation evaluation, DynamicAnalysisInput analysisInput) {
-        var evaluationInput = getInput(evaluation);
         if (evaluation.getExecutedAnalysis().contains(DYNAMIC)) {
             throw new IllegalArgumentException("Dynamic analysis already performed.");
         } else if (!evaluation.getExecutedAnalysis().contains(STATIC)) {
             throw new IllegalArgumentException("Static analysis needs to be performed before dynamic analysis");
         }
 
-        var builder = new EvaluationInputBuilder(evaluationInput);
+        var builder = getPopulatedInputBuilder(evaluation);
         dynamicAnalysis.analyze(builder, analysisInput);
         storeInput(builder.build());
     }
@@ -122,15 +117,25 @@ public class EvaluationInputService {
      * @param analysisInput the input required for performing evolutionary analysis
      */
     public void performEvolutionaryAnalysis(Evaluation evaluation, EvolutionaryAnalysisInput analysisInput) {
-        var evaluationInput = getInput(evaluation);
         if (evaluation.getExecutedAnalysis().contains(EVOLUTIONARY)) {
             throw new IllegalArgumentException("Evolutionary analysis already performed.");
         } else if (!evaluation.getExecutedAnalysis().contains(STATIC)) {
             throw new IllegalArgumentException("Static analysis needs to be performed before evolutionary analysis");
         }
 
-        var builder = new EvaluationInputBuilder(evaluationInput);
+        var builder = getPopulatedInputBuilder(evaluation);
         evolutionaryAnalysis.analyze(builder, analysisInput);
         storeInput(builder.build());
+    }
+
+    /**
+     * Returns an {@link EvaluationInputBuilder} with populated data from persistance.
+     *
+     * @param evaluation the evaluation to create the input builder for
+     * @return the populated input builder
+     */
+    private EvaluationInputBuilder getPopulatedInputBuilder(Evaluation evaluation) {
+        return new EvaluationInputBuilder()
+                .withClasses(evaluation.getInputs());
     }
 }

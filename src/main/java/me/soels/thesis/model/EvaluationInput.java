@@ -5,7 +5,6 @@ import me.soels.thesis.clustering.objectives.Objective;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * The input for the multi-objective evolutionary algorithm.

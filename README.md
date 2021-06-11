@@ -12,7 +12,10 @@ _Coming soon_
 
 ## Running the project locally
 
-To run the project locally, you must have an instance of Neo4j, the graph database that this project uses, running. For
+Currently, the project is only built to be running locally. The project requires input files to be present on an
+available filesystem path.
+
+To run the project locally, you must have an instance of Neo4j running, the graph database that this project uses. For
 convenience, a `docker-compose.yml` definition is provided in the project root to run an instance already configured to
 run with this project. When you have `docker-compose` installed on your machine, you can boot up the Neo4j instance
 using `docker-compose up -d`. If you run your own instance, please configure the server application to use your own

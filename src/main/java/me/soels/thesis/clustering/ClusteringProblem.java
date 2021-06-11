@@ -33,8 +33,8 @@ public class ClusteringProblem extends AbstractProblem {
     /**
      * Constructs a new instance of the clustering problem
      *
-     * @param objectives           the objective functions to evaluate
-     * @param analysisInput        the input to cluster
+     * @param objectives    the objective functions to evaluate
+     * @param analysisInput the input to cluster
      * @param configuration the configuration for the problem
      */
     public ClusteringProblem(List<Objective> objectives, EvaluationInput analysisInput, EvaluationConfiguration configuration) {

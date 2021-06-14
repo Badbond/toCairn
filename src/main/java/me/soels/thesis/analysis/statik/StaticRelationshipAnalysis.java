@@ -24,6 +24,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static me.soels.thesis.analysis.statik.CustomClassOrInterfaceVisitor.VisitorResult;
 import static me.soels.thesis.model.DataRelationshipType.READ;
 import static me.soels.thesis.model.DataRelationshipType.WRITE;
+import static org.hamcrest.Matchers.*;
 
 /**
  * Performs static analysis on the provided project to determine the relationships between classes in the project.
@@ -70,7 +71,7 @@ public class StaticRelationshipAnalysis {
     private void storeClassDependencies(StaticAnalysisContext context,
                                         VisitorResult visitorResult,
                                         Set<String> allMethodNames) {
-        var allClasses = context.getResultBuilder().getAllClasses();
+        var allClasses = context.getResultBuilder().getClasses();
         var relevantNodes = new HashMap<AbstractClass, List<Expression>>();
         relevantNodes.putAll(getRelevantMethodCalls(context, visitorResult, allMethodNames, allClasses));
         relevantNodes.putAll(getRelevantMethodReferences(context, visitorResult, allMethodNames, allClasses));
@@ -134,6 +135,10 @@ public class StaticRelationshipAnalysis {
                                    AbstractClass callee,
                                    List<Expression> relevantNodes,
                                    StaticAnalysisContext context) {
+        // TODO: We need to handle polymorphism. If callee is casted to an interface or (abstract) super type, we
+        //  should check whether there are data objects that inherit from it. But how to select one? We could also
+        //  consider every interface / (abstract) super type a new node where we include the properties and
+        //  relationships of those super types when analyzing the properties/nodes of a subtype.
         if (caller instanceof OtherClass && callee instanceof DataClass) {
             var type = identifyReadWrite(relevantNodes);
             context.getResultBuilder().addDataRelationship((OtherClass) caller, (DataClass) callee, type, relevantNodes.size());
@@ -151,11 +156,14 @@ public class StaticRelationshipAnalysis {
      * <p>
      * Then we continue analyzing the {@link MethodCallExpr} to the callee. If any of these send arguments to the
      * callee in its call, we assume that the state of the data object is changed by what is passed as argument.
-     * Otherwise, we mark the relationship as {@link DataRelationshipType#READ}. We unfortunately can't analyze the
-     * return type as we have not always resolved the method call (whereas we did resolve the type) and therefore
-     * requires significant more effort to determine whether this method returns a value or not. Therefore, cases such
-     * as toggle-methods (void methods without parameters) to toggle state in the callee, can not be identified without
-     * significant additional effort.
+     * We unfortunately can't analyze the return type as we have not always resolved the method call (whereas we did
+     * resolve the type) and therefore requires significant more effort to determine whether this method returns a
+     * value or not. Therefore, cases such as toggle-methods (void methods without parameters) to toggle state in the
+     * callee, can not be identified without significant additional effort.
+     * <p>
+     * Lastly, if there are any {@link MethodReferenceExpr} that do not reference to a getter-like method, we assume
+     * the method call performs a modifiable operations on the target object. In such case we mark this relationship
+     * as {@link DataRelationshipType#WRITE}. If none of these predicates match, we mark it as READ.
      *
      * @param relevantNodes the AST nodes to analyze to determine the data relationship type
      * @return whether data is being read or written
@@ -171,14 +179,14 @@ public class StaticRelationshipAnalysis {
             return WRITE;
         }
 
-        // TODO: Actually process them.. But how? We don't know the parameters (can also be 0!) and naming seems not
-        //  consistent enough.
-        relevantNodes.stream()
+        return relevantNodes.stream()
                 .filter(MethodReferenceExpr.class::isInstance)
                 .map(MethodReferenceExpr.class::cast)
-                .findFirst().ifPresent(node -> LOGGER.info("Node {} is interesting", node.getIdentifier()));
-
-        return READ;
+                .anyMatch(reference -> not(anyOf(
+                        startsWithIgnoringCase("get"),
+                        startsWithIgnoringCase("has"),
+                        startsWithIgnoringCase("is")))
+                        .matches(reference.getIdentifier())) ? WRITE : READ;
     }
 
     private void printResults(StaticAnalysisContext context,

@@ -95,7 +95,7 @@ public class StaticClassAnalysis {
                         "\n\tTotal classes:       {}" +
                         "\n\tData classes:        {}" +
                         "\n\tOther classes:       {}",
-                context.getResultBuilder().getAllClasses().size(),
+                context.getResultBuilder().getClasses().size(),
                 context.getResultBuilder().getDataClasses().size(),
                 context.getResultBuilder().getOtherClasses().size());
         var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);

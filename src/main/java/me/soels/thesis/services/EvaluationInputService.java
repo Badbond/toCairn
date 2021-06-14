@@ -11,6 +11,8 @@ import me.soels.thesis.repositories.ClassRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import java.util.stream.Collectors;
+
 import static me.soels.thesis.model.AnalysisType.*;
 
 /**
@@ -135,7 +137,14 @@ public class EvaluationInputService {
      * @return the populated input builder
      */
     private EvaluationInputBuilder getPopulatedInputBuilder(Evaluation evaluation) {
-        return new EvaluationInputBuilder()
-                .withClasses(evaluation.getInputs());
+        var classes = evaluation.getInputs();
+        var builder = new EvaluationInputBuilder();
+        return builder.withClasses(classes)
+                .withDependencies(classes.stream()
+                        .flatMap(clazz -> clazz.getDependenceRelationships().stream())
+                        .collect(Collectors.toList()))
+                .withDataRelationships(builder.getOtherClasses().stream()
+                        .flatMap(clazz -> clazz.getDataRelationships().stream())
+                        .collect(Collectors.toList()));
     }
 }

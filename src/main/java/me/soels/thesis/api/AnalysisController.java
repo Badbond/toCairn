@@ -33,7 +33,7 @@ public class AnalysisController {
         this.inputService = inputService;
     }
 
-    @Async // TODO: This does not work... (same goes for other 2)
+    @Async
     @PostMapping("/static")
     public void performStaticAnalysis(@PathVariable UUID evaluationId,
                                       @RequestBody @Valid StaticAnalysisInputDto inputDto) {

@@ -6,8 +6,12 @@ import me.soels.thesis.analysis.evolutionary.EvolutionaryAnalysis;
 import me.soels.thesis.analysis.evolutionary.EvolutionaryAnalysisInput;
 import me.soels.thesis.analysis.statik.StaticAnalysis;
 import me.soels.thesis.analysis.statik.StaticAnalysisInput;
-import me.soels.thesis.model.*;
+import me.soels.thesis.model.AbstractClass;
+import me.soels.thesis.model.Evaluation;
+import me.soels.thesis.model.EvaluationInput;
+import me.soels.thesis.model.EvaluationInputBuilder;
 import me.soels.thesis.repositories.ClassRepository;
+import me.soels.thesis.repositories.EvaluationRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -24,22 +28,19 @@ public class EvaluationInputService {
     private final StaticAnalysis staticAnalysis;
     private final DynamicAnalysis dynamicAnalysis;
     private final EvolutionaryAnalysis evolutionaryAnalysis;
-    private final ClassRepository<AbstractClass> allClassRepository;
-    private final ClassRepository<OtherClass> otherClassRepository;
-    private final ClassRepository<DataClass> dataClassRepository;
+    private final ClassRepository<AbstractClass> classRepository;
+    private final EvaluationRepository evaluationRepository;
 
     public EvaluationInputService(StaticAnalysis staticAnalysis,
                                   DynamicAnalysis dynamicAnalysis,
                                   EvolutionaryAnalysis evolutionaryAnalysis,
-                                  @Qualifier("classRepository") ClassRepository<AbstractClass> allClassRepository,
-                                  @Qualifier("classRepository") ClassRepository<OtherClass> otherClassRepository,
-                                  @Qualifier("classRepository") ClassRepository<DataClass> dataClassRepository) {
+                                  @Qualifier("classRepository") ClassRepository<AbstractClass> classRepository,
+                                  EvaluationRepository evaluationRepository) {
         this.staticAnalysis = staticAnalysis;
         this.dynamicAnalysis = dynamicAnalysis;
         this.evolutionaryAnalysis = evolutionaryAnalysis;
-        this.allClassRepository = allClassRepository;
-        this.otherClassRepository = otherClassRepository;
-        this.dataClassRepository = dataClassRepository;
+        this.classRepository = classRepository;
+        this.evaluationRepository = evaluationRepository;
     }
 
     /**
@@ -54,13 +55,17 @@ public class EvaluationInputService {
 
     /**
      * Store the given input graph.
+     * <p>
+     * The {@link Evaluation} needs to be given as that contains the outgoing dependency
+     * to the input graph nodes.
      *
-     * @param input the input graph to store
+     * @param evaluation the evaluation to set the inputs for
+     * @param input      the input graph to store
      */
-    public void storeInput(EvaluationInput input) {
-        // TODO: Can we do allClassRepository.saveAll(input.getAllClasses()); ? That would save 2 dependencies.
-        otherClassRepository.saveAll(input.getOtherClasses());
-        dataClassRepository.saveAll(input.getDataClasses());
+    public void storeInput(Evaluation evaluation, EvaluationInput input) {
+        var inputs = classRepository.saveAll(input.getAllClasses());
+        evaluation.setInputs(inputs);
+        evaluationRepository.save(evaluation);
     }
 
     /**
@@ -69,7 +74,7 @@ public class EvaluationInputService {
      * @param evaluation the evaluation to delete the input graph for
      */
     public void deleteAllInputs(Evaluation evaluation) {
-        allClassRepository.deleteAll(evaluation.getInputs());
+        classRepository.deleteAll(evaluation.getInputs());
     }
 
     /**
@@ -89,7 +94,7 @@ public class EvaluationInputService {
 
         var builder = getPopulatedInputBuilder(evaluation);
         staticAnalysis.analyze(builder, analysisInput);
-        storeInput(builder.build());
+        storeInput(evaluation, builder.build());
     }
 
     /**
@@ -108,7 +113,7 @@ public class EvaluationInputService {
 
         var builder = getPopulatedInputBuilder(evaluation);
         dynamicAnalysis.analyze(builder, analysisInput);
-        storeInput(builder.build());
+        storeInput(evaluation, builder.build());
     }
 
     /**
@@ -127,7 +132,7 @@ public class EvaluationInputService {
 
         var builder = getPopulatedInputBuilder(evaluation);
         evolutionaryAnalysis.analyze(builder, analysisInput);
-        storeInput(builder.build());
+        storeInput(evaluation, builder.build());
     }
 
     /**

@@ -2,6 +2,7 @@ package me.soels.thesis.analysis.statik;
 
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ParserConfiguration;
+import com.github.javaparser.Range;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.nodeTypes.NodeWithName;
@@ -80,6 +81,7 @@ public class StaticClassAnalysis {
                 .filter(Objects::nonNull)
                 .filter(parseResult -> parseResult.getResult().isPresent())
                 .flatMap(parseResult -> parseResult.getResult().get().getTypes().stream())
+                // TODO: Include annotations, enums, interfaces?
                 // Also include the inner types, note we do not include annotations and enums
                 .flatMap(type -> type.findAll(ClassOrInterfaceDeclaration.class).stream())
                 // Print problems where FQN could not be determined and filter those cases out
@@ -107,8 +109,12 @@ public class StaticClassAnalysis {
                 .orElseThrow(() -> new IllegalStateException("Could not retrieve FQN from already filtered class"));
 
         if (isDataClass(clazz, input)) {
-            // TODO: Replace 1 size with default in case dynamic analysis has not seen data class
-            return context.getResultBuilder().addDataClass(fqn, clazz.getNameAsString(), 1);
+            // Use line count as initial size of the data class, to be overridden by dynamic analysis with more accurate
+            // size calculations.
+            var size = clazz.getRange()
+                    .map(Range::getLineCount)
+                    .orElse(1);
+            return context.getResultBuilder().addDataClass(fqn, clazz.getNameAsString(), size);
         } else {
             return context.getResultBuilder().addOtherClass(fqn, clazz.getNameAsString());
         }

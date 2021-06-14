@@ -41,6 +41,7 @@ public class EvaluationRunner {
         var result = runWithExecutor(executor, evaluation.getId());
         // TODO: Set metric information (runtime etc.).
         // TODO: Store results (in separate service?)
+        var a =1;
     }
 
     private Optional<NondominatedPopulation> runWithExecutor(Executor executor, UUID evaluationId) {

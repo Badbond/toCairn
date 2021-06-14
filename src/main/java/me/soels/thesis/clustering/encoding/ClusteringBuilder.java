@@ -30,7 +30,6 @@ public final class ClusteringBuilder {
      * @return the normalized clustering
      */
     public Map<Integer, List<OtherClass>> normalize(Map<Integer, List<OtherClass>> clustering) {
-        // TODO: Perhaps also assign cluster label ascending to class? This might impact performance and is not necessary
         var result = new HashMap<Integer, List<OtherClass>>(clustering.size());
         for (var i = 0; i < clustering.size(); i++) {
             result.put(i, new ArrayList<>(clustering.values()).get(i));

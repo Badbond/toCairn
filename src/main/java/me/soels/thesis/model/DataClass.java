@@ -3,7 +3,9 @@ package me.soels.thesis.model;
 import lombok.Getter;
 import org.springframework.data.neo4j.core.schema.Node;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 @Node
 @Getter

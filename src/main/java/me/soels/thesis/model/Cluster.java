@@ -10,21 +10,14 @@ import org.springframework.data.neo4j.core.schema.Relationship;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Models the result of an evaluation run.
- * <p>
- * The objectives stored are for identification purposes to see which objectives were included in the run.
- */
 @Node
 @Getter
 @Setter
-public class EvaluationResult {
+public class Cluster {
     @Id
     @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)
     private UUID id;
 
-    @Relationship("HAS_SOLUTIONS")
-    private List<Solution> solutions;
-
-    // TODO: Model metrics (performance metrics), created date
+    @Relationship("HAS_NODES")
+    private List<? extends AbstractClass> nodes;
 }

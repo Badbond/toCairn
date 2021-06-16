@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+
 @Node
 @Getter
 @Setter
@@ -19,8 +20,13 @@ public class Cluster {
     @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)
     private UUID id;
 
-    private int clusterNumber;
+    private final int clusterNumber;
 
     @Relationship("HAS_NODES")
-    private List<AbstractClass> nodes = new ArrayList<>();
+    private final List<AbstractClass> nodes = new ArrayList<>();
+
+    public Cluster(int clusterNumber, List<? extends AbstractClass> nodes) {
+        this.clusterNumber = clusterNumber;
+        this.nodes.addAll(nodes);
+    }
 }

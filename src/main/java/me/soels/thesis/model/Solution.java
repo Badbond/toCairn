@@ -20,5 +20,5 @@ public class Solution {
     private List<Cluster> clusters = new ArrayList<>();
 
     @CompositeProperty(prefix = "objectives")
-    private Map<ObjectiveType, List<Double>> objectiveValues = new EnumMap<>(ObjectiveType.class);
+    private Map<ObjectiveType, double[]> objectiveValues = new EnumMap<>(ObjectiveType.class);
 }

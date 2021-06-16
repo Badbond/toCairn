@@ -2,8 +2,11 @@ package me.soels.thesis.api.dtos;
 
 import lombok.Getter;
 import me.soels.thesis.model.EvaluationResult;
+import me.soels.thesis.model.Solution;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * The data transfer object for {@link EvaluationResult}.
@@ -13,8 +16,10 @@ import java.util.UUID;
 @Getter
 public class EvaluationResultDto {
     private final UUID id;
+    private final List<UUID> solutionIds;
 
     public EvaluationResultDto(EvaluationResult result) {
-        id = result.getId();
+        this.id = result.getId();
+        this.solutionIds = result.getSolutions().stream().map(Solution::getId).collect(Collectors.toList());
     }
 }

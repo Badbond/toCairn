@@ -28,14 +28,7 @@ public class EvaluationResultController {
         this.evaluationService = evaluationService;
     }
 
-    @GetMapping("/result")
-    public List<EvaluationResultDto> getAllEvaluationResults() {
-        return resultService.getAllResults().stream()
-                .map(EvaluationResultDto::new)
-                .collect(Collectors.toList());
-    }
-
-    @GetMapping("/result/{evaluationResultId}}")
+    @GetMapping("/result/{evaluationResultId}")
     public EvaluationResultDto getEvaluationResultById(@PathVariable UUID evaluationResultId) {
         return new EvaluationResultDto(resultService.getResult(evaluationResultId));
     }
@@ -46,6 +39,11 @@ public class EvaluationResultController {
         return evaluation.getResults().stream()
                 .map(EvaluationResultDto::new)
                 .collect(Collectors.toList());
+    }
+
+    @GetMapping("/solution/{solutionId}")
+    public SolutionDto getSolution(@PathVariable UUID solutionId) {
+        return new SolutionDto(resultService.getSolution(solutionId));
     }
 
     @ResponseStatus(NO_CONTENT)

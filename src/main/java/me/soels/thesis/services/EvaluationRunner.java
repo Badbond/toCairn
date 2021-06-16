@@ -1,9 +1,9 @@
 package me.soels.thesis.services;
 
 import me.soels.thesis.clustering.ClusteringExecutorProvider;
+import me.soels.thesis.clustering.encoding.Clustering;
 import me.soels.thesis.clustering.encoding.VariableDecoder;
 import me.soels.thesis.model.*;
-import org.apache.commons.lang3.ArrayUtils;
 import org.moeaframework.Executor;
 import org.moeaframework.core.NondominatedPopulation;
 import org.slf4j.Logger;
@@ -12,8 +12,9 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static me.soels.thesis.model.EvaluationStatus.DONE;
 import static me.soels.thesis.model.EvaluationStatus.ERRORED;
@@ -53,33 +54,56 @@ public class EvaluationRunner {
 
     private void processResult(Evaluation evaluation, NondominatedPopulation result) {
         var input = inputService.getInput(evaluation);
-        var storedResult = new EvaluationResult();
+        var newResult = new EvaluationResult();
         // TODO: Set metric information (runtime etc.).
-        result.forEach(solution -> processSolution(evaluation, input, storedResult, solution));
-        resultService.storeResult(evaluation, storedResult);
-        LOGGER.info("Result {} stored in database", storedResult.getId());
+
+        var solutions = StreamSupport.stream(result.spliterator(), false)
+                .map(solution -> setupSolution(evaluation, input, solution))
+                .collect(Collectors.toList());
+        resultService.storeSolutions(newResult, solutions);
+        LOGGER.info("Stored {} solutions", solutions.size());
+
+        var storedResult = resultService.storeResult(evaluation, newResult);
+        LOGGER.info("Stored result {}", storedResult.getId());
     }
 
-    private void processSolution(Evaluation evaluation, EvaluationInput input, EvaluationResult result, org.moeaframework.core.Solution solution) {
-        var storedSolution = new Solution();
+    /**
+     * Sets up a single solution with the already persisted clusterings for the solution.
+     *
+     * @param evaluation the evaluation
+     * @param input      the input to use in decoding the variables in the given solution
+     * @param solution   the MOEA solution to convert
+     * @return the yet unpersisted solution
+     */
+    private Solution setupSolution(Evaluation evaluation,
+                                   EvaluationInput input,
+                                   org.moeaframework.core.Solution solution) {
+        var newSolution = new Solution();
         var i = 0;
         for (var objective : evaluation.getObjectives()) {
             var metrics = executorProvider.getMetricsForObjective(objective);
-            var values = Arrays.asList(ArrayUtils.toObject(
-                    Arrays.copyOfRange(solution.getObjectives(), i, i + metrics.size())));
-            storedSolution.getObjectiveValues().put(objective, values);
+            var values = Arrays.copyOfRange(solution.getObjectives(), i, i + metrics.size());
+            newSolution.getObjectiveValues().put(objective, values);
             i += metrics.size();
         }
+
         var clustering = decoder.decode(solution, input, evaluation.getConfiguration());
-        clustering.getByCluster().forEach((clusterNumber, classes) -> processCluster(storedSolution, clusterNumber, classes));
-        resultService.storeSolution(result, storedSolution);
+        storeClusters(newSolution, clustering);
+        return newSolution;
     }
 
-    private void processCluster(Solution solution, int clusterNumber, List<? extends AbstractClass> classes) {
-        var storedCluster = new Cluster();
-        storedCluster.setClusterNumber(clusterNumber);
-        storedCluster.getNodes().addAll(classes);
-        resultService.storeCluster(solution, storedCluster);
+    /**
+     * Converts the clustering to the persisted clusters and sets it on the given solution.
+     *
+     * @param solution   the solution to apply the clusters to
+     * @param clustering the clustering to created clusters from
+     */
+    private void storeClusters(Solution solution, Clustering clustering) {
+        var clusters = clustering.getByCluster().entrySet().stream()
+                .map(entry -> new Cluster(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
+        resultService.storeClusters(solution, clusters);
+        LOGGER.info("Stored {} clusters", clusters.size());
     }
 
     private Optional<NondominatedPopulation> runWithExecutor(Executor executor, Evaluation evaluation) {

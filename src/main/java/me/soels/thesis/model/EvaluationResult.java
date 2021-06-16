@@ -7,6 +7,7 @@ import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,7 +25,7 @@ public class EvaluationResult {
     private UUID id;
 
     @Relationship("HAS_SOLUTIONS")
-    private List<Solution> solutions;
+    private List<Solution> solutions = new ArrayList<>();
 
     // TODO: Model metrics (performance metrics), created date
 }

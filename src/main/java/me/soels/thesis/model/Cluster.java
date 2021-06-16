@@ -7,6 +7,7 @@ import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,5 +22,5 @@ public class Cluster {
     private int clusterNumber;
 
     @Relationship("HAS_NODES")
-    private List<AbstractClass> nodes;
+    private List<AbstractClass> nodes = new ArrayList<>();
 }

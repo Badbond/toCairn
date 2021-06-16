@@ -13,6 +13,7 @@ import me.soels.thesis.model.EvaluationInput;
  * Note that the objectives that should be evaluated should be represented as a minimization problem. If it is not,
  * it should be negated.
  */
+// TODO: Rename to metric
 public interface Objective {
     /**
      * Calculate the objective function for the given clustering based on the given application input.

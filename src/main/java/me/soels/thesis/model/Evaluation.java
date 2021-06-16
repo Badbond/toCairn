@@ -49,8 +49,8 @@ public class Evaluation {
 
     @NotNull
     @Size(min = 2)
-    private Set<ObjectiveType> objectives = new HashSet<>();
+    private Set<ObjectiveType> objectives = new LinkedHashSet<>();
 
     @NotNull
-    private Set<AnalysisType> executedAnalysis = new HashSet<>();
+    private Set<AnalysisType> executedAnalysis = new LinkedHashSet<>();
 }

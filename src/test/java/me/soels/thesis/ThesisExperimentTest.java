@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.moeaframework.Executor;
 import org.moeaframework.core.NondominatedPopulation;
-import org.moeaframework.core.variable.EncodingUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,7 +103,7 @@ class ThesisExperimentTest {
         LOGGER.info("===================================");
         LOGGER.info("Amount of non-dominated solutions: " + result.size());
         LOGGER.info("Processing took: " + duration + " (H:m:s.millis)");
-        printSolutionsData(result, objectives, input, config.getEncodingType());
+        printSolutionsData(result, objectives, input, config);
         LOGGER.info("===================================");
     }
 
@@ -147,7 +146,7 @@ class ThesisExperimentTest {
         }
     }
 
-    private void printSolutionsData(NondominatedPopulation result, List<Objective> objectives, EvaluationInput input, EncodingType encodingType) {
+    private void printSolutionsData(NondominatedPopulation result, List<Objective> objectives, EvaluationInput input, EvaluationConfiguration config) {
         var objectivesNames = objectives.stream()
                 .map(objective -> objective.getClass().getSimpleName())
                 .collect(Collectors.toList());
@@ -163,7 +162,7 @@ class ThesisExperimentTest {
             }
             LOGGER.info(objectivesStringBuilder.toString());
 
-            var clustering = variableDecoder.decode(input, EncodingUtils.getInt(solution), encodingType);
+            var clustering = variableDecoder.decode(solution, input, config);
             if (clustering.getByClass().size() <= 12) {
                 var clusteringStringBuilder = new StringBuilder("Clustering:\n");
                 clustering.getByClass().forEach((clazz, cluster) ->

@@ -23,7 +23,6 @@
     <url>https://github.com/Badbond/thesis-project</url>
 
     <repositories>
-        <!-- TODO: Make this public... -->
         <repository>
             <id>central</id>
             <url>https://soels.jfrog.io/artifactory/default-maven-local</url>

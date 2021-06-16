@@ -1,5 +1,6 @@
 package me.soels.thesis.clustering;
 
+import me.soels.thesis.clustering.encoding.VariableDecoder;
 import me.soels.thesis.clustering.objectives.*;
 import me.soels.thesis.model.Evaluation;
 import me.soels.thesis.model.EvaluationConfiguration;
@@ -16,6 +17,12 @@ import java.util.stream.Collectors;
  */
 @Service
 public class ClusteringExecutorProvider {
+    protected final VariableDecoder variableDecoder;
+
+    public ClusteringExecutorProvider(VariableDecoder variableDecoder) {
+        this.variableDecoder = variableDecoder;
+    }
+
     public Executor getExecutor(Evaluation evaluation, EvaluationInput input) {
         var configuration = evaluation.getConfiguration();
         var objectives = evaluation.getObjectives().stream()
@@ -23,7 +30,7 @@ public class ClusteringExecutorProvider {
                 .collect(Collectors.toUnmodifiableList());
         return new Executor()
                 .distributeOnAllCores()
-                .withProblem(new ClusteringProblem(List.copyOf(objectives), input, evaluation.getConfiguration()))
+                .withProblem(new ClusteringProblem(List.copyOf(objectives), input, evaluation.getConfiguration(), variableDecoder))
                 .withMaxTime(configuration.getMaxTime().orElse(-1L))
                 .withMaxEvaluations(configuration.getMaxEvaluations())
                 .withAlgorithm(configuration.getAlgorithm().toString());

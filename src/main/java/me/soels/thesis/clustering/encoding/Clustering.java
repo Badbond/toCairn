@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
  * The clustering as decoded from the {@link Solution} based on {@link EncodingType}.
  */
 public final class Clustering {
+    // TODO: Should this not store any class? Also the data classes?
     private final Map<Integer, List<OtherClass>> byCluster;
     private final Map<OtherClass, Integer> byClass;
 

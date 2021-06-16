@@ -18,6 +18,8 @@ public class Cluster {
     @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)
     private UUID id;
 
+    private int clusterNumber;
+
     @Relationship("HAS_NODES")
-    private List<? extends AbstractClass> nodes;
+    private List<AbstractClass> nodes;
 }

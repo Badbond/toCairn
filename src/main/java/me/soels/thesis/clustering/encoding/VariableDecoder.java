@@ -1,6 +1,9 @@
 package me.soels.thesis.clustering.encoding;
 
+import me.soels.thesis.model.EvaluationConfiguration;
 import me.soels.thesis.model.EvaluationInput;
+import org.moeaframework.core.Solution;
+import org.moeaframework.core.variable.EncodingUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -10,22 +13,25 @@ import java.util.TreeMap;
 
 @Service
 public class VariableDecoder {
+
     /**
      * Decodes the genes in the solution to the clusters identified.
      *
-     * @param evaluationInput the additional analysis input information required to construct the clustering
-     * @param variables       the variables to decode
-     * @param encodingType    the type of encoding which the variables represents
+     * @param solution      the solution to decode
+     * @param input         the additional analysis input information required to construct the clustering
+     * @param configuration the configuration for the evaluation containing encoding configuration
      * @return the decoded clustering
      */
-    public Clustering decode(EvaluationInput evaluationInput, int[] variables, EncodingType encodingType) {
-        switch (encodingType) {
+    public Clustering decode(Solution solution, EvaluationInput input, EvaluationConfiguration configuration) {
+        var variables = EncodingUtils.getInt(solution);
+
+        switch (configuration.getEncodingType()) {
             case GRAPH_ADJECENCY:
-                return decodeGraphAdjacency(evaluationInput, variables);
+                return decodeGraphAdjacency(input, variables);
             case CLUSTER_LABEL:
-                return decodeClusterLabel(evaluationInput, variables);
+                return decodeClusterLabel(input, variables);
             default:
-                throw new IllegalStateException("Unknown encoding type " + encodingType);
+                throw new IllegalStateException("Unknown encoding type " + configuration.getEncodingType());
         }
     }
 
@@ -36,7 +42,7 @@ public class VariableDecoder {
      * @param variables       the variables to decode
      * @return the clustering that the given variables represent
      */
-    public Clustering decodeClusterLabel(EvaluationInput evaluationInput, int[] variables) {
+    private Clustering decodeClusterLabel(EvaluationInput evaluationInput, int[] variables) {
         var clusteringBuilder = new ClusteringBuilder();
         var clusterNormalizationMapping = new LinkedHashMap<Integer, Integer>();
         for (var i = 0; i < variables.length; i++) {
@@ -55,7 +61,7 @@ public class VariableDecoder {
      * @param variables       the variables to decode
      * @return the clustering that the given variables represent
      */
-    public Clustering decodeGraphAdjacency(EvaluationInput evaluationInput, int[] variables) {
+    private Clustering decodeGraphAdjacency(EvaluationInput evaluationInput, int[] variables) {
         var clusteringBuilder = new ClusteringBuilder();
         var nodeClusterPair = new TreeMap<Integer, Integer>();
         var clustersToMerge = new TreeMap<Integer, Integer>(Comparator.reverseOrder());

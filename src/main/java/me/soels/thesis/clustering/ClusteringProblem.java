@@ -28,20 +28,22 @@ public class ClusteringProblem extends AbstractProblem {
     private final List<Objective> objectives;
     private final EvaluationInput evaluationInput;
     private final EvaluationConfiguration configuration;
-    private final VariableDecoder variableDecoder = new VariableDecoder();
+    private final VariableDecoder variableDecoder;
 
     /**
      * Constructs a new instance of the clustering problem
      *
-     * @param objectives    the objective functions to evaluate
-     * @param analysisInput the input to cluster
-     * @param configuration the configuration for the problem
+     * @param objectives      the objective functions to evaluate
+     * @param analysisInput   the input to cluster
+     * @param configuration   the configuration for the problem
+     * @param variableDecoder the decoder service to decode the solution with
      */
-    public ClusteringProblem(List<Objective> objectives, EvaluationInput analysisInput, EvaluationConfiguration configuration) {
+    public ClusteringProblem(List<Objective> objectives, EvaluationInput analysisInput, EvaluationConfiguration configuration, VariableDecoder variableDecoder) {
         super(analysisInput.getOtherClasses().size(), objectives.size());
         this.objectives = objectives;
         this.evaluationInput = analysisInput;
         this.configuration = configuration;
+        this.variableDecoder = variableDecoder;
     }
 
     /**
@@ -54,8 +56,7 @@ public class ClusteringProblem extends AbstractProblem {
      */
     @Override
     public void evaluate(Solution solution) {
-        var variables = EncodingUtils.getInt(solution);
-        var decodedClustering = variableDecoder.decode(evaluationInput, variables, configuration.getEncodingType());
+        var decodedClustering = variableDecoder.decode(solution, evaluationInput, configuration);
 
         if (configuration.getClusterCountLowerBound().isPresent() &&
                 decodedClustering.getByCluster().size() < configuration.getClusterCountLowerBound().get()) {

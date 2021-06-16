@@ -14,8 +14,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.moeaframework.Executor;
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.variable.EncodingUtils;
@@ -23,20 +23,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.github.javaparser.ParserConfiguration.LanguageLevel.JAVA_11;
 
 @SpringBootTest
-@RunWith(SpringRunner.class)
-public class ThesisExperimentTest {
+@ExtendWith(SpringExtension.class)
+class ThesisExperimentTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ThesisExperimentTest.class);
     private static final String MOCK_GRAPH_NAME = "simple-graph-2";
     private static final String ZIP_FILE = "thesis-project-master.zip";
@@ -47,7 +50,7 @@ public class ThesisExperimentTest {
     private StaticAnalysis staticAnalysis;
 
     @Test
-    public void runExperimentTestWithMockData() {
+    void runExperimentTestWithMockData() {
         var problemConfig = new EvaluationConfiguration();
         problemConfig.setEncodingType(EncodingType.CLUSTER_LABEL);
         var input = prepareMockInput();
@@ -55,7 +58,7 @@ public class ThesisExperimentTest {
     }
 
     @Test
-    public void runExperimentWithSourceCode() throws URISyntaxException {
+    void runExperimentWithSourceCode() throws URISyntaxException {
         var problemConfig = new EvaluationConfiguration();
         problemConfig.setEncodingType(EncodingType.CLUSTER_LABEL);
         var input = getZipInput();
@@ -90,7 +93,7 @@ public class ThesisExperimentTest {
         // TODO: As suggested by Carvalho et al., try to disable crossover operators but only allow for mutation
         //  operators. Currently SBX and PM is enabled.
         NondominatedPopulation result = new Executor()
-                .withProblem(new ClusteringProblem(objectives, input, config))
+                .withProblem(new ClusteringProblem(objectives, input, config, variableDecoder))
                 .withAlgorithm("NSGAII")
                 .distributeOnAllCores()
                 .withMaxEvaluations(1000000)
@@ -117,7 +120,6 @@ public class ThesisExperimentTest {
         var graphLines = Arrays.stream(getGraphString().split("\n"))
                 .skip(2)
                 .collect(Collectors.toList());
-        var evaluationId = UUID.randomUUID();
         var classMapping = new LinkedHashMap<String, OtherClass>();
         var edges = new ArrayList<DependenceRelationship>();
         for (var line : graphLines) {

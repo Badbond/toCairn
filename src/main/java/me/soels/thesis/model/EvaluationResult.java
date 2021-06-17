@@ -28,4 +28,6 @@ public class EvaluationResult {
     private List<Solution> solutions = new ArrayList<>();
 
     // TODO: Model metrics (performance metrics), created date
+    // TODO: MOEAFramework provides a nice way to print significance results for the evaluation run. Perhaps I can
+    //  also extract that and store it in the graph.
 }

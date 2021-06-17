@@ -131,6 +131,11 @@ public class DeclaringClassResolver {
         } catch (Exception e) {
             LOGGER.trace("Could not resolve node " + node + " using full resolution", e);
             return Optional.empty();
+        } catch (NoClassDefFoundError e) {
+            // JavaParser uses a ReflectionTypeSolver that uses this application's classpath. Therefore, there can be
+            // conflicts between libraries / java packages used in this application versus the one we analyze.
+            LOGGER.warn("Could not resolve node " + node + " using full resolution due to reflection problems", e);
+            return Optional.empty();
         }
     }
 

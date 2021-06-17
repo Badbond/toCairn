@@ -20,7 +20,7 @@ import static me.soels.thesis.model.EvaluationStatus.DONE;
 import static me.soels.thesis.model.EvaluationStatus.ERRORED;
 
 /**
- * Service responsible for performing a run for a configured evaluation.
+ * Service responsible for performing a run for a configured evaluation and storing the result.
  */
 @Service
 public class EvaluationRunner {
@@ -49,10 +49,16 @@ public class EvaluationRunner {
         var input = inputService.getInput(evaluation);
         var executor = executorProvider.getExecutor(evaluation, input);
         runWithExecutor(executor, evaluation)
-                .ifPresent(result -> processResult(evaluation, result));
+                .ifPresent(result -> storeResult(evaluation, result));
     }
 
-    private void processResult(Evaluation evaluation, NondominatedPopulation result) {
+    /**
+     * Stores the MOEA algorithm result with its solutions, objective values and clusters for the given evaluation.
+     *
+     * @param evaluation the evaluation to store the result in
+     * @param result     the MOEA population result
+     */
+    private void storeResult(Evaluation evaluation, NondominatedPopulation result) {
         var input = inputService.getInput(evaluation);
         var newResult = new EvaluationResult();
         // TODO: Set metric information (runtime etc.).

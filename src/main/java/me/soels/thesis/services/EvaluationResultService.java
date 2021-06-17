@@ -57,6 +57,13 @@ public class EvaluationResultService {
                 .orElseThrow(() -> new ResourceNotFoundException(id));
     }
 
+    /**
+     * Stores the given result and persists it on the evaluation as well.
+     *
+     * @param evaluation the evaluation to store the persisted result in
+     * @param result     the result to persist
+     * @return the persisted managed instance of the result
+     */
     public EvaluationResult storeResult(Evaluation evaluation, EvaluationResult result) {
         var storedResult = resultRepository.save(result);
         evaluation.getResults().add(storedResult);

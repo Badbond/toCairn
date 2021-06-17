@@ -44,6 +44,7 @@ class StaticAnalysisContext {
 
     static class Counters {
         int unresolvedNodes = 0;
+        int matchingConstructorCalls = 0;
         int relevantConstructorCalls = 0;
         int matchingMethodReferences = 0;
         int relevantMethodReferences = 0;

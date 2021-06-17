@@ -59,9 +59,12 @@ public class StaticRelationshipAnalysis {
                 .flatMap(visitorResult -> visitorResult.getDeclaredMethods().stream())
                 .map(NodeWithSimpleName::getNameAsString)
                 .collect(Collectors.toSet());
+        var classNameSet = context.getTypesAndClasses().stream()
+                .map(pair -> pair.getKey().getNameAsString())
+                .collect(Collectors.toSet());
 
         visitorResults.forEach(visitorResult ->
-                this.storeClassDependencies(context, visitorResult, methodNameSet));
+                this.storeClassDependencies(context, visitorResult, methodNameSet, classNameSet));
 
         printResults(context, visitorResults, methodNameSet);
         var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);
@@ -70,18 +73,26 @@ public class StaticRelationshipAnalysis {
 
     private void storeClassDependencies(StaticAnalysisContext context,
                                         VisitorResult visitorResult,
-                                        Set<String> allMethodNames) {
+                                        Set<String> allMethodNames,
+                                        Set<String> classNameSet) {
         var allClasses = context.getResultBuilder().getClasses();
         var relevantNodes = new HashMap<AbstractClass, List<Expression>>();
         relevantNodes.putAll(getRelevantMethodCalls(context, visitorResult, allMethodNames, allClasses));
         relevantNodes.putAll(getRelevantMethodReferences(context, visitorResult, allMethodNames, allClasses));
-        relevantNodes.putAll(getRelevantConstructorCalls(context, visitorResult, allClasses));
+        relevantNodes.putAll(getRelevantConstructorCalls(context, visitorResult, allClasses, classNameSet));
 
         relevantNodes.forEach((key, value) -> storeRelationship(visitorResult.getCaller(), key, value, context));
     }
 
-    private Map<AbstractClass, List<Expression>> getRelevantConstructorCalls(StaticAnalysisContext context, VisitorResult visitorResult, List<AbstractClass> allClasses) {
+    private Map<AbstractClass, List<Expression>> getRelevantConstructorCalls(StaticAnalysisContext context,
+                                                                             VisitorResult visitorResult,
+                                                                             List<AbstractClass> allClasses,
+                                                                             Set<String> classNameSet) {
         return visitorResult.getObjectCreationExpressions().stream()
+                // Filter out only constructor calls to classes we have visited
+                .filter(expression -> classNameSet.contains(expression.getType().getNameAsString()))
+                .map(method -> executeSideEffect(() -> context.getCounters().matchingConstructorCalls++, method))
+                // Try to resolve the object creation expression to get the pair of callee and its method invoked.
                 .flatMap(node -> declaringClassResolver.resolveConstructorCall(context, node, allClasses).stream())
                 // Filter out self invocation (e.g. when having a static method to instantiate self)
                 .filter(calleePair -> !calleePair.getKey().getIdentifier().equals(visitorResult.getCaller().getIdentifier()))
@@ -89,7 +100,10 @@ public class StaticRelationshipAnalysis {
                 .collect(groupingBy(Pair::getKey, Collectors.mapping(pair -> (Expression) pair.getValue(), Collectors.toList())));
     }
 
-    private Map<AbstractClass, List<Expression>> getRelevantMethodReferences(StaticAnalysisContext context, VisitorResult visitorResult, Set<String> allMethodNames, List<AbstractClass> allClasses) {
+    private Map<AbstractClass, List<Expression>> getRelevantMethodReferences(StaticAnalysisContext context,
+                                                                             VisitorResult visitorResult,
+                                                                             Set<String> allMethodNames,
+                                                                             List<AbstractClass> allClasses) {
         return visitorResult.getMethodReferences().stream()
                 // Filter out method names that are definitely not within the application
                 .filter(methodRef -> allMethodNames.contains(methodRef.getIdentifier()))
@@ -103,7 +117,10 @@ public class StaticRelationshipAnalysis {
                 .collect(groupingBy(Pair::getKey, Collectors.mapping(pair -> (Expression) pair.getValue(), Collectors.toList())));
     }
 
-    private Map<AbstractClass, List<Expression>> getRelevantMethodCalls(StaticAnalysisContext context, VisitorResult visitorResult, Set<String> allMethodNames, List<AbstractClass> allClasses) {
+    private Map<AbstractClass, List<Expression>> getRelevantMethodCalls(StaticAnalysisContext context,
+                                                                        VisitorResult visitorResult,
+                                                                        Set<String> allMethodNames,
+                                                                        List<AbstractClass> allClasses) {
         // We need to iterate this way to resolve statements in a preorder for multiple types of nodes
         return visitorResult.getMethodCalls().stream()
                 // Filter out method names that are definitely not within the application
@@ -135,10 +152,6 @@ public class StaticRelationshipAnalysis {
                                    AbstractClass callee,
                                    List<Expression> relevantNodes,
                                    StaticAnalysisContext context) {
-        // TODO: We need to handle polymorphism. If callee is casted to an interface or (abstract) super type, we
-        //  should check whether there are data objects that inherit from it. But how to select one? We could also
-        //  consider every interface / (abstract) super type a new node where we include the properties and
-        //  relationships of those super types when analyzing the properties/nodes of a subtype.
         if (caller instanceof OtherClass && callee instanceof DataClass) {
             var type = identifyReadWrite(relevantNodes);
             context.getResultBuilder().addDataRelationship((OtherClass) caller, (DataClass) callee, type, relevantNodes.size());
@@ -199,6 +212,7 @@ public class StaticRelationshipAnalysis {
 
         LOGGER.info("Graph edges results:" +
                         "\n\tTotal constructor calls:           {}" +
+                        "\n\tMatching constructor calls         {}" +
                         "\n\tRelevant constructor calls         {}" +
                         "\n\tTotal unique method names:         {}" +
                         "\n\tTotal method references:           {}" +
@@ -210,6 +224,7 @@ public class StaticRelationshipAnalysis {
                         "\n\tTotal dependence relationships:    {}" +
                         "\n\tOf which data relationships:       {}",
                 visitorResults.stream().mapToInt(res -> res.getObjectCreationExpressions().size()).sum(),
+                counters.matchingConstructorCalls,
                 counters.relevantConstructorCalls,
                 methodNameSet.size(),
                 visitorResults.stream().mapToInt(res -> res.getMethodReferences().size()).sum(),

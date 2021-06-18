@@ -15,6 +15,7 @@ import me.soels.thesis.repositories.EvaluationRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static me.soels.thesis.model.AnalysisType.*;
@@ -30,6 +31,7 @@ public class EvaluationInputService {
     private final EvolutionaryAnalysis evolutionaryAnalysis;
     private final ClassRepository<AbstractClass> classRepository;
     private final EvaluationRepository evaluationRepository;
+    private final AtomicBoolean staticAnalysisRunning = new AtomicBoolean(false);
 
     public EvaluationInputService(StaticAnalysis staticAnalysis,
                                   DynamicAnalysis dynamicAnalysis,
@@ -90,11 +92,19 @@ public class EvaluationInputService {
     public void performStaticAnalysis(Evaluation evaluation, StaticAnalysisInput analysisInput) {
         if (evaluation.getExecutedAnalysis().contains(STATIC)) {
             throw new IllegalArgumentException("Static analysis already performed.");
+        } else if (!staticAnalysisRunning.compareAndSet(false, true)) {
+            throw new IllegalArgumentException("An static analysis is already running. The JavaParser library has " +
+                    "degraded coverage due to errors when running in parallel. Stopping analysis");
         }
 
-        var builder = getPopulatedInputBuilder(evaluation);
-        staticAnalysis.analyze(builder, analysisInput);
-        storeInput(evaluation, builder.build());
+        try {
+            var builder = getPopulatedInputBuilder(evaluation);
+            staticAnalysis.analyze(builder, analysisInput);
+            storeInput(evaluation, builder.build());
+        } finally {
+            // Always reset the lock
+            staticAnalysisRunning.set(false);
+        }
     }
 
     /**

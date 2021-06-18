@@ -40,7 +40,6 @@ public class StaticAnalysis {
         this.zipExtractor = zipExtractor;
     }
 
-    // TODO: Find a way to do locking
     public void analyze(EvaluationInputBuilder modelBuilder, StaticAnalysisInput input) {
         LOGGER.info("Starting static analysis on {}", input.getPathToZip());
         var start = System.currentTimeMillis();

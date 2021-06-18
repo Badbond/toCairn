@@ -112,10 +112,9 @@ public class EvaluationService {
      */
     public void deleteEvaluation(UUID id) {
         evaluationRepository.findById(id).ifPresent(evaluation -> {
-            // TODO: Check if delete evaluation is enough.
+            evaluation.getResults().stream().map(EvaluationResult::getId).forEach(resultService::deleteResult);
             inputService.deleteAllInputs(evaluation);
             configurationRepository.deleteById(evaluation.getConfiguration().getId());
-            evaluation.getResults().stream().map(EvaluationResult::getId).forEach(resultService::deleteResult);
             evaluationRepository.deleteById(evaluation.getId());
         });
     }

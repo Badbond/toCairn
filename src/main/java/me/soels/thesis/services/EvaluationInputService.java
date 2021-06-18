@@ -65,6 +65,9 @@ public class EvaluationInputService {
      * @param input      the input graph to store
      */
     public void storeInput(Evaluation evaluation, EvaluationInput input) {
+        // TODO: It seems we don't store the graph correctly here. Sometimes only a node with an AbstractClass label is
+        //  created. Sometimes two nodes; one with only AbstractClass and one with both labels. Also, dependencies seem
+        //  to vanish (due to this reason?).
         var inputs = classRepository.saveAll(input.getAllClasses());
         evaluation.setInputs(inputs);
         evaluationRepository.save(evaluation);

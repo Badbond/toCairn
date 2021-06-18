@@ -114,6 +114,7 @@ public class EvaluationRunner {
 
     private Optional<NondominatedPopulation> runWithExecutor(Executor executor, Evaluation evaluation) {
         try {
+            // TODO: There is also a runWithSeeds to perform multiple runs.. should I include that maybe?
             var result = executor.run();
             LOGGER.info("The evaluation with ID {} succeeded.", evaluation.getId());
             evaluationService.updateStatus(evaluation, DONE);

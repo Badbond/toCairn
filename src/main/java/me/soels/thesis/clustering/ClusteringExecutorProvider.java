@@ -28,9 +28,17 @@ public class ClusteringExecutorProvider {
         var objectives = evaluation.getObjectives().stream()
                 .flatMap(objectiveType -> getMetricsForObjective(objectiveType).stream())
                 .collect(Collectors.toUnmodifiableList());
+        // TODO: The problem is closable: I should close it.
+        var problem = new ClusteringProblem(List.copyOf(objectives), input, evaluation.getConfiguration(), variableDecoder);
+//         TODO: Add analyzer:
+//          Analyzer analyzer = new Analyzer()
+//                  .withProblem(problem)
+//                  .includeAllMetrics()
+//                  .showAll()
+//                  .add(configuration.getAlgorithm().toString(), null);
         return new Executor()
                 .distributeOnAllCores()
-                .withProblem(new ClusteringProblem(List.copyOf(objectives), input, evaluation.getConfiguration(), variableDecoder))
+                .withProblem(problem)
                 .withMaxTime(configuration.getMaxTime().orElse(-1L))
                 .withMaxEvaluations(configuration.getMaxEvaluations())
                 .withAlgorithm(configuration.getAlgorithm().toString());

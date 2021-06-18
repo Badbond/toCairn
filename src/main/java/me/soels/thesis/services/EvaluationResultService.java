@@ -34,6 +34,14 @@ public class EvaluationResultService {
         this.clusterRepository = clusterRepository;
     }
 
+    /**
+     * Delete the result with the given {@code id}.
+     * <p>
+     * Performs cascading delete for the solutions in this results and the clusters in the solutions. The input
+     * graph is not deleted.
+     *
+     * @param id the id of the result to delete
+     */
     public void deleteResult(UUID id) {
         var maybeResult = resultRepository.findById(id);
         // Delete the clusters associated with all the solutions in this result

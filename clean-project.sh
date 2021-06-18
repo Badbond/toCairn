@@ -49,7 +49,9 @@ find "$tmpProject" -type d -name generated-test-sources -print0 | xargs -0 rm -r
 find "$tmpProject" -type d -name '.git' -print0 | xargs -0 rm -rf
 
 # Zip the cleaned project and place it in the designated location
-zip -r -D ./src/test/resources/big-project-cleaned.zip "$tmpProject"
+targetLocation=$(realpath ./src/test/resources/big-project-cleaned.zip)
+rm "$targetLocation"
+cd "$tmpProject" && zip -r "$targetLocation" ./*
 
 # Remove the temporary project
 rm -rf "$tmpProject"

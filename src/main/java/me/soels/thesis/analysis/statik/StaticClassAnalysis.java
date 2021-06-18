@@ -36,40 +36,6 @@ public class StaticClassAnalysis {
         var start = System.currentTimeMillis();
         var config = new ParserConfiguration().setLanguageLevel(context.getInput().getLanguageLevel());
 
-        /**
-         *TODO: Investigate and solve the problems faced by the ReflectionTypeSolver
-         * As they document in their Javadoc, classes in OUR application's classpath will be included in the analysis.
-         * This means that, now that we introduced Spring, we include many of our own classes that AST nodes will be
-         * resolved against. This has the downside of having worse performance (mainly because this solver will always
-         * be checked first before the 'source root' class solvers (which matter most).
-         * <p>
-         * However, the biggest problems is conflicting with libraries used in the application analyzed and our own
-         * thesis application. Currently, the analysis fails on 'FilterRegistrationBean'. Of the analyzed application,
-         * this is referring to a Spring boot 2.4.5 dependency (which is not included in the type solvers because we
-         * don't include dependencies because of performance reasons). However, our Spring boot 2.5.0 version of the
-         * class is picked up instead (prior to us introducing Spring, this just failed as it could not be resolved).
-         * This class can not be parsed correctly because we don't have javax.servlet on our classpath (not sure why
-         * we don't) whereas at the analyzed application they do using jakarta.servlet-api dependency (but I can't see
-         * where it is declared).
-         * <p>
-         * We should not want to just omit this solver because many 'java' and 'javax' packages are very useful to
-         * solve allowing for a more complete analysis. For example, Objects.requireNonNull(T) is easily resolvable
-         * and allows us to continue resolving the provided argument to determine the actual type being returned.
-         * <p>
-         * We can influence the solvers using the ParserConfiguration above by using 'setSymbolResolver()'. However,
-         * it appears that upon doing so, the 'SymbolSolverCollectionStrategy' is not capable of injecting additional
-         * solvers that are generated while finding source roots. Even if we use the same solver as defined in
-         * SymbolSolverCollectionStrategy. These JavaParserTypeSolvers are most important in analysis to match classes
-         * within the application to analyze. For that matter, I have not been able to test whether the jreOnly
-         * argument on ReflectionTypeSolver would work.
-         * <p>
-         * I've also looked into catching the ClassDefNotFoundError. That might be a viable solution; completely
-         * ignoring the node that we can't resolve. Previously (before Spring) we could also not resolve it as we did
-         * not have the class on the classpath nor in the other solvers (as we don't include libraries). However,
-         * I would like to, once the model is final/mature, to run the analysis with libraries (which would likely take
-         * hours/days) in order to resolve more nodes and therefore get a more complete graph. The problem that we are
-         * facing now would still be present as ReflectionTypeSolver is the first solver.
-         **/
         var typesAndClasses = new SymbolSolverCollectionStrategy(config)
                 .collect(context.getProjectLocation()).getSourceRoots().stream()
                 // Don't include test directories (ideally, they were already filtered out by the user)
@@ -81,7 +47,6 @@ public class StaticClassAnalysis {
                 .filter(Objects::nonNull)
                 .filter(parseResult -> parseResult.getResult().isPresent())
                 .flatMap(parseResult -> parseResult.getResult().get().getTypes().stream())
-                // TODO: Include annotations, enums, interfaces?
                 // Also include the inner types, note we do not include annotations and enums
                 .flatMap(type -> type.findAll(ClassOrInterfaceDeclaration.class).stream())
                 // Print problems where FQN could not be determined and filter those cases out
@@ -113,7 +78,7 @@ public class StaticClassAnalysis {
             // size calculations.
             var size = clazz.getRange()
                     .map(Range::getLineCount)
-                    .orElse(1);
+                    .orElse(1); // TODO: Error here.
             return context.getResultBuilder().addDataClass(fqn, clazz.getNameAsString(), size);
         } else {
             return context.getResultBuilder().addOtherClass(fqn, clazz.getNameAsString());

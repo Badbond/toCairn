@@ -154,6 +154,7 @@ public class EvaluationInputService {
     private EvaluationInputBuilder getPopulatedInputBuilder(Evaluation evaluation) {
         var classes = evaluation.getInputs();
         var builder = new EvaluationInputBuilder();
+        // TODO: It appears that dependenceRelationships are not returned here!
         return builder.withClasses(classes)
                 .withDependencies(classes.stream()
                         .flatMap(clazz -> clazz.getDependenceRelationships().stream())

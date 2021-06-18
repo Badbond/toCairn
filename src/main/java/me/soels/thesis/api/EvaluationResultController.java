@@ -1,6 +1,7 @@
 package me.soels.thesis.api;
 
 import me.soels.thesis.api.dtos.EvaluationResultDto;
+import me.soels.thesis.api.dtos.SolutionDto;
 import me.soels.thesis.model.EvaluationResult;
 import me.soels.thesis.services.EvaluationResultService;
 import me.soels.thesis.services.EvaluationService;
@@ -14,8 +15,6 @@ import static org.springframework.http.HttpStatus.NO_CONTENT;
 
 /**
  * Controller for listing {@link EvaluationResult}.
- * <p>
- * TODO: How to expose the solutions in the clustering from optimization?
  */
 @RestController
 @RequestMapping("/api")

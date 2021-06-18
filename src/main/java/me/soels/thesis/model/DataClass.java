@@ -11,7 +11,8 @@ import java.util.UUID;
 @Getter
 public final class DataClass extends AbstractClass {
     private final Integer size;
-
+    // TODO: Store static analysis size as LoC. Have an optional measuredByteSize field for dynamic analysis
+    // TODO: Same goes for frequency.
     /**
      * Construct an instance of a data class.
      *

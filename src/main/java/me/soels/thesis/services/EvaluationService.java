@@ -92,7 +92,6 @@ public class EvaluationService {
             throw new IllegalArgumentException("Can not change an evaluation that is running");
         }
 
-        // TODO: Once all information is provided we need to (somewhere else) set the status to pending.
         var configuration = evaluation.getConfiguration();
         var newConfiguration = dto.getConfiguration().toDao();
         validateConfiguration(newConfiguration);
@@ -113,7 +112,7 @@ public class EvaluationService {
      */
     public void deleteEvaluation(UUID id) {
         evaluationRepository.findById(id).ifPresent(evaluation -> {
-            // TODO: Validate deletion, are relationships also deleted?
+            // TODO: Check if delete evaluation is enough.
             inputService.deleteAllInputs(evaluation);
             configurationRepository.deleteById(evaluation.getConfiguration().getId());
             evaluation.getResults().stream().map(EvaluationResult::getId).forEach(resultService::deleteResult);

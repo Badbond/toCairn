@@ -1,4 +1,4 @@
-package me.soels.thesis.api;
+package me.soels.thesis.api.dtos;
 
 import lombok.Getter;
 import me.soels.thesis.clustering.objectives.ObjectiveType;

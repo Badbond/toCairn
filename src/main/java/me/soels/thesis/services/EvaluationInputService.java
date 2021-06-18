@@ -65,11 +65,8 @@ public class EvaluationInputService {
      * @param input      the input graph to store
      */
     public void storeInput(Evaluation evaluation, EvaluationInput input) {
-        // TODO: It seems we don't store the graph correctly here. Sometimes only a node with an AbstractClass label is
-        //  created. Sometimes two nodes; one with only AbstractClass and one with both labels. Also, dependencies seem
-        //  to vanish (due to this reason?).
-        var inputs = classRepository.saveAll(input.getAllClasses());
-        evaluation.setInputs(inputs);
+        evaluation.setInputs(input.getAllClasses());
+        // This also saves/created the nodes in the graph
         evaluationRepository.save(evaluation);
     }
 
@@ -157,7 +154,6 @@ public class EvaluationInputService {
     private EvaluationInputBuilder getPopulatedInputBuilder(Evaluation evaluation) {
         var classes = evaluation.getInputs();
         var builder = new EvaluationInputBuilder();
-        // TODO: It appears that dependenceRelationships are not returned here!
         return builder.withClasses(classes)
                 .withDependencies(classes.stream()
                         .flatMap(clazz -> clazz.getDependenceRelationships().stream())

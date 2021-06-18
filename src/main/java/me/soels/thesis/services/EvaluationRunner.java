@@ -105,6 +105,7 @@ public class EvaluationRunner {
      * @param clustering the clustering to created clusters from
      */
     private void storeClusters(Solution solution, Clustering clustering) {
+        // TODO: It appears that not all OtherClasses are assigned a cluster! This should not be the case.
         var clusters = clustering.getByCluster().entrySet().stream()
                 .map(entry -> new Cluster(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());

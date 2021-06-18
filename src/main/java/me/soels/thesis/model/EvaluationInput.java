@@ -14,6 +14,8 @@ import java.util.List;
  * by the algorithm for the given objective function.
  * <p>
  * The data in this class is to be immutable such that it can be shared among solution evaluations.
+ * <p>
+ * TODO: Remove relationships from this and the input builder?
  *
  * @see EvaluationInputBuilder
  * @see Objective

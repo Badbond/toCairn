@@ -4,7 +4,8 @@ import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+
+import static me.soels.thesis.util.GenericCollectionExtractor.extractType;
 
 /**
  * Builder for an {@link EvaluationInput}.
@@ -126,7 +127,7 @@ public class EvaluationInputBuilder {
      * @return the data classes stored in the builder
      */
     public List<DataClass> getDataClasses() {
-        return getTypesOfClasses(DataClass.class);
+        return extractType(classes, DataClass.class);
     }
 
     /**
@@ -135,7 +136,7 @@ public class EvaluationInputBuilder {
      * @return the other classes stored in the builder
      */
     public List<OtherClass> getOtherClasses() {
-        return getTypesOfClasses(OtherClass.class);
+        return extractType(classes, OtherClass.class);
     }
 
     /**
@@ -144,13 +145,6 @@ public class EvaluationInputBuilder {
      * @return the input graph
      */
     public EvaluationInput build() {
-        return new EvaluationInput(getOtherClasses(), getDataClasses(), dependencies, dataRelationships);
-    }
-
-    private <T extends AbstractClass> List<T> getTypesOfClasses(Class<T> expectedClass) {
-        return classes.stream()
-                .filter(clazz -> expectedClass.isAssignableFrom(clazz.getClass()))
-                .map(expectedClass::cast)
-                .collect(Collectors.toList());
+        return new EvaluationInput(classes);
     }
 }

@@ -2,9 +2,11 @@ package me.soels.thesis.model;
 
 import me.soels.thesis.clustering.objectives.Objective;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static me.soels.thesis.util.GenericCollectionExtractor.extractType;
 
 /**
  * The input for the multi-objective evolutionary algorithm.
@@ -12,45 +14,27 @@ import java.util.List;
  * This input is to be constructed from initial analysis of the application that we wish to identify microservice
  * boundaries for. It has to contain all the necessary information to calculate the fitness of the clustering generated
  * by the algorithm for the given objective function.
- * <p>
- * The data in this class is to be immutable such that it can be shared among solution evaluations.
- * <p>
- * TODO: Remove relationships from this and the input builder?
  *
  * @see EvaluationInputBuilder
  * @see Objective
  */
 public final class EvaluationInput {
-    private final List<AbstractClass> allClasses;
-    private final List<OtherClass> otherClasses;
-    private final List<DataClass> dataClasses;
-    private final List<DataRelationship> dataRelations;
-    private final List<DependenceRelationship> dependencies;
+    private final List<? extends AbstractClass> classes;
 
-    EvaluationInput(List<OtherClass> otherClasses,
-                    List<DataClass> dataClasses,
-                    List<DependenceRelationship> dependencies,
-                    List<DataRelationship> dataRelationships) {
-        var classes = new ArrayList<AbstractClass>(otherClasses);
-        classes.addAll(dataClasses);
-        this.allClasses = Collections.unmodifiableList(classes);
-
-        this.dataClasses = Collections.unmodifiableList(dataClasses);
-        this.otherClasses = Collections.unmodifiableList(otherClasses);
-        this.dependencies = Collections.unmodifiableList(dependencies);
-        this.dataRelations = Collections.unmodifiableList(dataRelationships);
+    EvaluationInput(List<? extends AbstractClass> classes) {
+        this.classes = Collections.unmodifiableList(classes);
     }
-
 
     /**
      * Returns all the classes in the project.
      *
      * @return all the classes in the project
      */
-    public List<AbstractClass> getAllClasses() {
-        return allClasses;
+    public List<AbstractClass> getClasses() {
+        return classes.stream()
+                .map(AbstractClass.class::cast)
+                .collect(Collectors.toList());
     }
-
 
     /**
      * Returns the non-data classes (e.g. service classes, libraries) of the project.
@@ -58,7 +42,7 @@ public final class EvaluationInput {
      * @return the non-data classes of the project
      */
     public List<OtherClass> getOtherClasses() {
-        return otherClasses;
+        return extractType(classes, OtherClass.class);
     }
 
     /**
@@ -67,26 +51,6 @@ public final class EvaluationInput {
      * @return the data classes of the project
      */
     public List<DataClass> getDataClasses() {
-        return dataClasses;
-    }
-
-    /**
-     * Returns the data relationships of this input graph.
-     *
-     * @return the data relationships
-     */
-    public List<DataRelationship> getDataRelations() {
-        return dataRelations;
-    }
-
-    /**
-     * Returns the dependency relationships of this input graph.
-     * <p>
-     * Note, this also includes {@link DataRelationship}. A metric is responsible for exlcuding those if needed.
-     *
-     * @return the dependencies of classes
-     */
-    public List<DependenceRelationship> getDependencies() {
-        return dependencies;
+        return extractType(classes, DataClass.class);
     }
 }

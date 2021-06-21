@@ -65,7 +65,7 @@ public class EvaluationInputService {
      * @param input      the input graph to store
      */
     public void storeInput(Evaluation evaluation, EvaluationInput input) {
-        evaluation.setInputs(input.getAllClasses());
+        evaluation.setInputs(input.getClasses());
         // This also saves/created the nodes in the graph
         evaluationRepository.save(evaluation);
     }

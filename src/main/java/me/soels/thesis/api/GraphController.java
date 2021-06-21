@@ -35,7 +35,7 @@ public class GraphController {
     @GetMapping("/nodes")
     public List<AbstractClassDto> getNodes(@PathVariable UUID evaluationId) {
         var graph = inputService.getInput(evaluationService.getEvaluation(evaluationId));
-        return graph.getAllClasses().stream()
+        return graph.getClasses().stream()
                 .map(this::mapClass)
                 .collect(Collectors.toUnmodifiableList());
     }
@@ -43,7 +43,7 @@ public class GraphController {
     @GetMapping("/edges")
     public List<AbstractRelationshipDto> getEdges(@PathVariable UUID evaluationId) {
         var graph = inputService.getInput(evaluationService.getEvaluation(evaluationId));
-        List<AbstractRelationshipDto> edges = graph.getAllClasses().stream()
+        List<AbstractRelationshipDto> edges = graph.getClasses().stream()
                 .flatMap(abstractClass -> abstractClass.getDependenceRelationships().stream()
                         .map(relationship -> new DependenceRelationshipDto(abstractClass.getIdentifier(),
                                 relationship.getCallee().getIdentifier(),

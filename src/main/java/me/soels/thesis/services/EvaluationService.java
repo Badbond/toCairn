@@ -103,6 +103,10 @@ public class EvaluationService {
         return evaluationRepository.save(evaluation);
     }
 
+    public Evaluation save(Evaluation evaluation) {
+        return evaluationRepository.save(evaluation);
+    }
+
     /**
      * Deletes the evaluation with the provided {@code id}.
      * <p>

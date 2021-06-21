@@ -23,7 +23,7 @@ public final class EvaluationInput {
     private final List<? extends AbstractClass> classes;
 
     EvaluationInput(List<? extends AbstractClass> classes) {
-        classes.sort(Comparator.comparing(AbstractClass::getId));
+        classes.sort(Comparator.comparing(AbstractClass::getIdentifier));
         this.classes = Collections.unmodifiableList(classes);
     }
 

@@ -1,7 +1,6 @@
 package me.soels.thesis.services;
 
 import me.soels.thesis.clustering.ClusteringExecutorProvider;
-import me.soels.thesis.clustering.encoding.Clustering;
 import me.soels.thesis.clustering.encoding.VariableDecoder;
 import me.soels.thesis.model.*;
 import org.moeaframework.Executor;
@@ -13,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -27,26 +27,33 @@ public class EvaluationRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(EvaluationRunner.class);
     private final ClusteringExecutorProvider executorProvider;
     private final VariableDecoder decoder;
-    private final EvaluationResultService resultService;
     private final EvaluationService evaluationService;
+    private final AtomicBoolean runnerRunning = new AtomicBoolean(false);
 
     public EvaluationRunner(ClusteringExecutorProvider executorProvider,
                             VariableDecoder decoder,
-                            EvaluationResultService resultService,
                             EvaluationService evaluationService) {
         this.executorProvider = executorProvider;
         this.decoder = decoder;
-        this.resultService = resultService;
         this.evaluationService = evaluationService;
     }
 
     @Async
     public void runEvaluation(Evaluation evaluation) {
-        LOGGER.info("Running evaluation '{}' ({})", evaluation.getName(), evaluation.getId());
-        var input = new EvaluationInputBuilder(evaluation.getInputs()).build();
-        var executor = executorProvider.getExecutor(evaluation, input);
-        runWithExecutor(executor, evaluation)
-                .ifPresent(result -> storeResult(evaluation, input, result));
+        if (!runnerRunning.compareAndSet(false, true)) {
+            throw new IllegalArgumentException("An static analysis is already running. The JavaParser library has " +
+                    "degraded coverage due to errors when running in parallel. Stopping analysis");
+        }
+
+        try {
+            LOGGER.info("Running evaluation '{}' ({})", evaluation.getName(), evaluation.getId());
+            var input = new EvaluationInputBuilder(evaluation.getInputs()).build();
+            var executor = executorProvider.getExecutor(evaluation, input);
+            runWithExecutor(executor, evaluation)
+                    .ifPresent(result -> storeResult(evaluation, input, result));
+        } finally {
+            runnerRunning.set(false);
+        }
     }
 
     /**
@@ -63,15 +70,15 @@ public class EvaluationRunner {
         var solutions = StreamSupport.stream(result.spliterator(), false)
                 .map(solution -> setupSolution(evaluation, input, solution))
                 .collect(Collectors.toList());
-        resultService.storeSolutions(newResult, solutions);
-        LOGGER.info("Stored {} solutions", solutions.size());
-
-        var storedResult = resultService.storeResult(evaluation, newResult);
-        LOGGER.info("Stored result {}", storedResult.getId());
+        newResult.getSolutions().addAll(solutions);
+        evaluation.getResults().add(newResult);
+        evaluationService.save(evaluation);
+        LOGGER.info("Evaluation run complete. Result id: {}, Solutions: {}, Clusters: {}", newResult.getId(),
+                solutions.size(), solutions.stream().mapToInt(sol -> sol.getClusters().size()).sum());
     }
 
     /**
-     * Sets up a single solution with the already persisted clusterings for the solution.
+     * Sets up a single solution and its clusters.
      *
      * @param evaluation the evaluation
      * @param input      the input to use in decoding the variables in the given solution
@@ -83,6 +90,7 @@ public class EvaluationRunner {
                                    org.moeaframework.core.Solution solution) {
         var newSolution = new Solution();
         var i = 0;
+        // Retrieve metric information
         for (var objective : evaluation.getObjectives()) {
             var metrics = executorProvider.getMetricsForObjective(objective);
             var values = Arrays.copyOfRange(solution.getObjectives(), i, i + metrics.size());
@@ -90,24 +98,12 @@ public class EvaluationRunner {
             i += metrics.size();
         }
 
+        // Set up clusters
         var clustering = decoder.decode(solution, input, evaluation.getConfiguration());
-        storeClusters(newSolution, clustering);
-        return newSolution;
-    }
-
-    /**
-     * Converts the clustering to the persisted clusters and sets it on the given solution.
-     *
-     * @param solution   the solution to apply the clusters to
-     * @param clustering the clustering to created clusters from
-     */
-    private void storeClusters(Solution solution, Clustering clustering) {
-        // TODO: It appears that not all OtherClasses are assigned a cluster! This should not be the case.
-        var clusters = clustering.getByCluster().entrySet().stream()
+        clustering.getByCluster().entrySet().stream()
                 .map(entry -> new Cluster(entry.getKey(), entry.getValue()))
-                .collect(Collectors.toList());
-        resultService.storeClusters(solution, clusters);
-        LOGGER.info("Stored {} clusters", clusters.size());
+                .forEach(cluster -> newSolution.getClusters().add(cluster));
+        return newSolution;
     }
 
     private Optional<NondominatedPopulation> runWithExecutor(Executor executor, Evaluation evaluation) {

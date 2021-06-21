@@ -20,6 +20,10 @@ public abstract class AbstractClass {
     @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)
     protected UUID id;
     @Relationship
+    // TODO: This does not contain the DataRelationships, should we:
+    //  1. Add those here as well
+    //  2. Retrieve them in the objectives from DataClass procedurally
+    //  3. Don't consider them at all if not needed (they are data objects, those which we don't cluster, anyway).
     private List<DependenceRelationship> dependenceRelationships = new ArrayList<>();
 
     protected AbstractClass(String identifier, String humanReadableName) {

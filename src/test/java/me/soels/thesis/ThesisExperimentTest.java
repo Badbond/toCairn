@@ -12,8 +12,6 @@ import me.soels.thesis.model.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.moeaframework.Executor;
@@ -28,10 +26,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.github.javaparser.ParserConfiguration.LanguageLevel.JAVA_11;
@@ -67,7 +62,7 @@ class ThesisExperimentTest {
     private EvaluationInput getZipInput() throws URISyntaxException {
         var project = Path.of(this.getClass().getClassLoader().getResource(ZIP_FILE).toURI());
         var analysisInput = new StaticAnalysisInput(project, JAVA_11, null);
-        var modelBuilder = new EvaluationInputBuilder();
+        var modelBuilder = new EvaluationInputBuilder(Collections.emptyList());
         staticAnalysis.analyze(modelBuilder, analysisInput);
         return modelBuilder.build();
     }
@@ -108,30 +103,23 @@ class ThesisExperimentTest {
     }
 
     private EvaluationInput prepareMockInput() {
-        var builder = new EvaluationInputBuilder();
-        var graph = getMockGraph();
-        builder.withClasses(graph.getKey());
-        builder.withDependencies(graph.getValue());
-        return builder.build();
+        return new EvaluationInputBuilder(getMockGraph()).build();
     }
 
-    private Pair<List<OtherClass>, List<DependenceRelationship>> getMockGraph() {
+    private List<AbstractClass> getMockGraph() {
         var graphLines = Arrays.stream(getGraphString().split("\n"))
                 .skip(2)
                 .collect(Collectors.toList());
-        var classMapping = new LinkedHashMap<String, OtherClass>();
-        var edges = new ArrayList<DependenceRelationship>();
+        var classMapping = new LinkedHashMap<String, AbstractClass>();
         for (var line : graphLines) {
             var split = Arrays.stream(line.split(","))
                     .map(StringUtils::trim)
                     .collect(Collectors.toList());
             var classA = classMapping.computeIfAbsent(split.get(0), key -> new OtherClass("Class" + classMapping.size(), split.get(0)));
             var classB = classMapping.computeIfAbsent(split.get(1), key -> new OtherClass("Class" + classMapping.size(), split.get(1)));
-            var edge = new DependenceRelationship(classB, 1);
-            classA.getDependenceRelationships().add(edge);
-            edges.add(edge);
+            classA.getDependenceRelationships().add(new DependenceRelationship(classB, 1));
         }
-        return new ImmutablePair<>(new ArrayList<>(classMapping.values()), edges);
+        return new ArrayList<>(classMapping.values());
     }
 
     private String getGraphString() {

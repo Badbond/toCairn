@@ -233,8 +233,12 @@ public class StaticRelationshipAnalysis {
                 visitorResults.stream().mapToInt(res -> res.getMethodCalls().size()).sum(),
                 counters.matchingMethodCalls,
                 counters.relevantMethodCalls,
-                context.getResultBuilder().getDependencies().size(),
-                context.getResultBuilder().getDataRelationships().size()
+                context.getResultBuilder().getClasses().stream()
+                        .mapToLong(clazz -> clazz.getDependenceRelationships().size())
+                        .sum(),
+                context.getResultBuilder().getOtherClasses().stream()
+                        .mapToLong(clazz -> clazz.getDataRelationships().size())
+                        .sum()
         );
         LOGGER.info("Total means the amount of that type of AST node found within the project");
         LOGGER.info("Matching means that the method is in the unique set of declared method names.");

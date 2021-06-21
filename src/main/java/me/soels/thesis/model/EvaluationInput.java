@@ -3,6 +3,7 @@ package me.soels.thesis.model;
 import me.soels.thesis.clustering.objectives.Objective;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,6 +23,7 @@ public final class EvaluationInput {
     private final List<? extends AbstractClass> classes;
 
     EvaluationInput(List<? extends AbstractClass> classes) {
+        classes.sort(Comparator.comparing(AbstractClass::getId));
         this.classes = Collections.unmodifiableList(classes);
     }
 

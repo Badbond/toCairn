@@ -28,38 +28,35 @@ public class EvaluationRunner {
     private final ClusteringExecutorProvider executorProvider;
     private final VariableDecoder decoder;
     private final EvaluationResultService resultService;
-    private final EvaluationInputService inputService;
     private final EvaluationService evaluationService;
 
     public EvaluationRunner(ClusteringExecutorProvider executorProvider,
                             VariableDecoder decoder,
                             EvaluationResultService resultService,
-                            EvaluationInputService inputService,
                             EvaluationService evaluationService) {
         this.executorProvider = executorProvider;
         this.decoder = decoder;
         this.resultService = resultService;
-        this.inputService = inputService;
         this.evaluationService = evaluationService;
     }
 
     @Async
     public void runEvaluation(Evaluation evaluation) {
         LOGGER.info("Running evaluation '{}' ({})", evaluation.getName(), evaluation.getId());
-        var input = inputService.getInput(evaluation);
+        var input = new EvaluationInputBuilder(evaluation.getInputs()).build();
         var executor = executorProvider.getExecutor(evaluation, input);
         runWithExecutor(executor, evaluation)
-                .ifPresent(result -> storeResult(evaluation, result));
+                .ifPresent(result -> storeResult(evaluation, input, result));
     }
 
     /**
      * Stores the MOEA algorithm result with its solutions, objective values and clusters for the given evaluation.
      *
      * @param evaluation the evaluation to store the result in
+     * @param input      the input graph for decoding purposes
      * @param result     the MOEA population result
      */
-    private void storeResult(Evaluation evaluation, NondominatedPopulation result) {
-        var input = inputService.getInput(evaluation);
+    private void storeResult(Evaluation evaluation, EvaluationInput input, NondominatedPopulation result) {
         var newResult = new EvaluationResult();
         // TODO: Set metric information (runtime etc.).
 

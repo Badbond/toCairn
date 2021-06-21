@@ -5,7 +5,6 @@ import me.soels.thesis.model.AbstractClass;
 import me.soels.thesis.model.DataClass;
 import me.soels.thesis.model.EvaluationInput;
 import me.soels.thesis.model.OtherClass;
-import me.soels.thesis.services.EvaluationInputService;
 import me.soels.thesis.services.EvaluationService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +15,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static me.soels.thesis.util.GenericCollectionExtractor.extractType;
+
 /**
  * Controller for exposing the graph stored in the {@link EvaluationInput}.
  * <p>
@@ -25,31 +26,28 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/evaluation/{evaluationId}/graph")
 public class GraphController {
     private final EvaluationService evaluationService;
-    private final EvaluationInputService inputService;
 
-    public GraphController(EvaluationService evaluationService, EvaluationInputService inputService) {
+    public GraphController(EvaluationService evaluationService) {
         this.evaluationService = evaluationService;
-        this.inputService = inputService;
     }
 
     @GetMapping("/nodes")
     public List<AbstractClassDto> getNodes(@PathVariable UUID evaluationId) {
-        var graph = inputService.getInput(evaluationService.getEvaluation(evaluationId));
-        return graph.getClasses().stream()
+        return evaluationService.getEvaluation(evaluationId).getInputs().stream()
                 .map(this::mapClass)
                 .collect(Collectors.toUnmodifiableList());
     }
 
     @GetMapping("/edges")
     public List<AbstractRelationshipDto> getEdges(@PathVariable UUID evaluationId) {
-        var graph = inputService.getInput(evaluationService.getEvaluation(evaluationId));
-        List<AbstractRelationshipDto> edges = graph.getClasses().stream()
+        var classes = evaluationService.getEvaluation(evaluationId).getInputs();
+        List<AbstractRelationshipDto> edges = classes.stream()
                 .flatMap(abstractClass -> abstractClass.getDependenceRelationships().stream()
                         .map(relationship -> new DependenceRelationshipDto(abstractClass.getIdentifier(),
                                 relationship.getCallee().getIdentifier(),
                                 relationship.getFrequency())))
                 .collect(Collectors.toList());
-        edges.addAll(graph.getOtherClasses().stream()
+        edges.addAll(extractType(classes, OtherClass.class).stream()
                 .flatMap(otherClass -> otherClass.getDataRelationships().stream()
                         .map(relationship -> new DataRelationshipDto(otherClass.getIdentifier(),
                                 relationship.getCallee().getIdentifier(),

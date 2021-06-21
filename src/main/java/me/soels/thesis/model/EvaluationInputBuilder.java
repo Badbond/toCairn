@@ -16,46 +16,11 @@ import static me.soels.thesis.util.GenericCollectionExtractor.extractType;
  */
 @Getter
 public class EvaluationInputBuilder {
-    private final List<AbstractClass> classes = new ArrayList<>();
-    private final List<DependenceRelationship> dependencies = new ArrayList<>();
-    private final List<DataRelationship> dataRelationships = new ArrayList<>();
+    private final List<AbstractClass> classes;
 
-    /**
-     * Sets the {@link #getClasses()} of this builder.
-     *
-     * @param classes the classes to set
-     * @return this builder
-     */
-    public EvaluationInputBuilder withClasses(List<? extends AbstractClass> classes) {
-        this.classes.addAll(classes);
-        return this;
-    }
-
-    /**
-     * Sets the {@link #getDependencies()} of this builder.
-     * <p>
-     * Note, this should include all dependencies, also child dependencies such as {@link DataRelationship}.
-     *
-     * @param dependencies the dependencies to set
-     * @return this builder
-     */
-    public EvaluationInputBuilder withDependencies(List<DependenceRelationship> dependencies) {
-        this.dependencies.addAll(dependencies);
-        return this;
-    }
-
-    /**
-     * Sets the {@link #getDataRelationships()}} of this builder.
-     * <p>
-     * Note, that {@link #withDependencies(List)} does not set the {@code dataRelationships} and therefore you need to
-     * invoke this endpoint separately.
-     *
-     * @param dataRelationships the data relationships to set
-     * @return this builder
-     */
-    public EvaluationInputBuilder withDataRelationships(List<DataRelationship> dataRelationships) {
-        this.dataRelationships.addAll(dataRelationships);
-        return this;
+    public EvaluationInputBuilder(List<? extends AbstractClass> classes) {
+        // Construct an array list such that it will be mutable.
+        this.classes = new ArrayList<>(classes);
     }
 
     /**
@@ -86,10 +51,7 @@ public class EvaluationInputBuilder {
     }
 
     /**
-     * Adds a {@link DependenceRelationship} to the persisted state of this builder.
-     * <p>
-     * This furthermore adds the constructed relationship on the caller object as well such that it will be persisted
-     * once saved to the repository
+     * Creates a {@link DependenceRelationship} between the given {@code caller} and {@code callee}.
      *
      * @param caller    the class that calls the callee
      * @param callee    the class that is being called by the caller
@@ -98,14 +60,10 @@ public class EvaluationInputBuilder {
     public void addDependency(AbstractClass caller, AbstractClass callee, int frequency) {
         var dependency = new DependenceRelationship(callee, frequency);
         caller.getDependenceRelationships().add(dependency);
-        dependencies.add(dependency);
     }
 
     /**
-     * Adds a {@link DataRelationship} to the persisted state of this builder.
-     * <p>
-     * Note that this will also add this relationship to {@link #getDependencies()} as a {@link DataRelationship} is an
-     * {@link DependenceRelationship}.
+     * Creates a {@link DataRelationship} between the given {@code caller} and {@code callee}.
      * <p>
      * This furthermore adds the constructed relationship on the caller object as well such that it will be persisted
      * once saved to the repository
@@ -117,8 +75,6 @@ public class EvaluationInputBuilder {
     public void addDataRelationship(OtherClass caller, DataClass callee, DataRelationshipType type, int frequency) {
         var dataRelationship = new DataRelationship(callee, type, frequency);
         caller.getDataRelationships().add(dataRelationship);
-        dataRelationships.add(dataRelationship);
-        dependencies.add(dataRelationship);
     }
 
     /**

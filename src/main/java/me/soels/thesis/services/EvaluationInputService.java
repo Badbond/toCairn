@@ -16,7 +16,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 import static me.soels.thesis.model.AnalysisType.*;
 
@@ -46,16 +45,6 @@ public class EvaluationInputService {
     }
 
     /**
-     * Retrieves the stored input graph for the given evaluation.
-     *
-     * @param evaluation the evaluation to retrieve the input graph for
-     * @return the stored input graph
-     */
-    public EvaluationInput getInput(Evaluation evaluation) {
-        return getPopulatedInputBuilder(evaluation).build();
-    }
-
-    /**
      * Store the given input graph.
      * <p>
      * The {@link Evaluation} needs to be given as that contains the outgoing dependency
@@ -63,11 +52,12 @@ public class EvaluationInputService {
      *
      * @param evaluation the evaluation to set the inputs for
      * @param input      the input graph to store
+     * @return the evaluation with the persisted input
      */
-    public void storeInput(Evaluation evaluation, EvaluationInput input) {
+    public Evaluation storeInput(Evaluation evaluation, EvaluationInput input) {
         evaluation.setInputs(input.getClasses());
         // This also saves/created the nodes in the graph
-        evaluationRepository.save(evaluation);
+        return evaluationRepository.save(evaluation);
     }
 
     /**
@@ -153,13 +143,6 @@ public class EvaluationInputService {
      */
     private EvaluationInputBuilder getPopulatedInputBuilder(Evaluation evaluation) {
         var classes = evaluation.getInputs();
-        var builder = new EvaluationInputBuilder();
-        return builder.withClasses(classes)
-                .withDependencies(classes.stream()
-                        .flatMap(clazz -> clazz.getDependenceRelationships().stream())
-                        .collect(Collectors.toList()))
-                .withDataRelationships(builder.getOtherClasses().stream()
-                        .flatMap(clazz -> clazz.getDataRelationships().stream())
-                        .collect(Collectors.toList()));
+        return new EvaluationInputBuilder(classes);
     }
 }

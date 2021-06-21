@@ -12,6 +12,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Objects;
 
 import static com.github.javaparser.ParserConfiguration.LanguageLevel.JAVA_11;
@@ -40,7 +41,7 @@ class StaticAnalysisTest {
         // big-project-cleaned.zip (with generated sources by compilation & excluding jars+test: 4882 classes, 10021 unique method names):
         //      stack overflow error on 3.18
         //      87597 total, 7532 unresolved, 32984 relevant (excl. self-ref), 5186 relationships, -- 6m 35s on 3.22.1
-        var builder = new EvaluationInputBuilder();
+        var builder = new EvaluationInputBuilder(Collections.emptyList());
         analysis.analyze(builder, input);
         builder.build();
     }

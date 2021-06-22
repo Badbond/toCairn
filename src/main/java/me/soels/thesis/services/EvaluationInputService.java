@@ -107,6 +107,8 @@ public class EvaluationInputService {
             // the nodes and perform custom queries for storing the relationships.
             // See https://community.neo4j.com/t/super-frustrated-sdn-deleting-existing-relationships/35245/18
             // TODO: Perform custom queries for storing the relationships, see link above
+            //  Current experimentation throws warnings. I have not yet implemented the mapper. Perhaps enable
+            //  enterprise edition again and check the queries executed to see if they make sense.
             storeInput(evaluation, builder.build());
             LOGGER.info("Stored {} nodes", evaluation.getInputs().size());
 

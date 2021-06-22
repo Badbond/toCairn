@@ -8,6 +8,12 @@ spring:
   data:
     neo4j.database: thesis
 
+
   # Configuration of ObjectMapper
   jackson:
     default-property-inclusion: non_null
+
+# To log DEBUG statements from this application set (TRACE resp.):
+# logging=DEBUG
+# To log Neo4J queries executed uncomment:
+# logging.level.org.springframework.data.neo4j=DEBUG:

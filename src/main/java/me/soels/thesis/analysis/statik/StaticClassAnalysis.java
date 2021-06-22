@@ -55,6 +55,7 @@ public class StaticClassAnalysis {
                 .filter(clazz -> clazz.getFullyQualifiedName().isPresent())
                 // Create a pair of the type of class and its AST
                 .map(clazz -> Pair.of(clazz, storeClass(clazz, context.getInput(), context)))
+                .filter(pair -> pair.getValue() != null)
                 .collect(Collectors.toList());
         context.setTypesAndClasses(typesAndClasses);
 
@@ -76,16 +77,20 @@ public class StaticClassAnalysis {
         if (isDataClass(clazz, input)) {
             // Use line count as initial size of the data class, to be overridden by dynamic analysis with more accurate
             // size calculations.
-            var size = clazz.getRange()
+            return clazz.getRange()
                     .map(Range::getLineCount)
-                    .orElse(1); // TODO: Error here.
-            return context.getResultBuilder().addDataClass(fqn, clazz.getNameAsString(), size);
+                    .map(size -> context.getResultBuilder().addDataClass(fqn, clazz.getNameAsString(), size))
+                    .orElseGet(() -> {
+                        LOGGER.error("Could not extract Lines of Code from class {}. Ignoring class", fqn);
+                        return null;
+                    });
         } else {
             return context.getResultBuilder().addOtherClass(fqn, clazz.getNameAsString());
         }
     }
 
     private boolean isDataClass(ClassOrInterfaceDeclaration clazz, StaticAnalysisInput input) {
+        // TODO: Order summary is not marked as a data class.. :-( Perhaps we still need some heuristic..
         return classNameIndicatesDataStructure(clazz) ||
                 classContainsDataAnnotation(clazz, input);
     }

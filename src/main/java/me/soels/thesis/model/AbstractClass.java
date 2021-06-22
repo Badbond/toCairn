@@ -19,7 +19,7 @@ public abstract class AbstractClass {
     @Id
     @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)
     protected UUID id;
-    @Relationship
+    @Relationship("DEPENDS_ON")
     // TODO: This does not contain the DataRelationships, should we:
     //  1. Add those here as well
     //  2. Retrieve them in the objectives from DataClass procedurally

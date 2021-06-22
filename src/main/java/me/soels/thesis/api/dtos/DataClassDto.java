@@ -8,10 +8,10 @@ import me.soels.thesis.model.DataClass;
  */
 @Getter
 public class DataClassDto extends AbstractClassDto {
-    private final int size;
+    private final int loc;
 
     public DataClassDto(DataClass clazz) {
         super(clazz);
-        this.size = clazz.getSize();
+        this.loc = clazz.getLoc();
     }
 }

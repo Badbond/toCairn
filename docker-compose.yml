@@ -2,9 +2,9 @@ version: "3.6"
 
 # Development environment set up for this application
 services:
-  # Neo4j graph database for analysis input
+  # Neo4j graph database for storing input and result data
   neo4j:
-    image: neo4j:4.2.6
+    image: neo4j:4.3.0
     ports:
       - 7687:7687
       - 7474:7474
@@ -27,4 +27,3 @@ services:
 # Store data of databases between restarts in Docker volume
 volumes:
   neo4j:
-  postgres:

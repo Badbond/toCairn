@@ -11,7 +11,7 @@ import java.util.Objects;
 @Node
 @Getter
 public final class OtherClass extends AbstractClass {
-    @Relationship
+    @Relationship("DATA_DEPENDS_ON")
     private List<DataRelationship> dataRelationships = new ArrayList<>();
 
     public OtherClass(String identifier, String humanReadableName) {

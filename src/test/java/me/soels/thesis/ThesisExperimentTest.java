@@ -63,7 +63,9 @@ class ThesisExperimentTest {
         var project = Path.of(this.getClass().getClassLoader().getResource(ZIP_FILE).toURI());
         var analysisInput = new StaticAnalysisInput(project, JAVA_11, null);
         var modelBuilder = new EvaluationInputBuilder(Collections.emptyList());
-        staticAnalysis.analyze(modelBuilder, analysisInput);
+        var context = staticAnalysis.prepareContext(modelBuilder, analysisInput);
+        staticAnalysis.analyzeEdges(context);
+        staticAnalysis.analyzeEdges(context);
         return modelBuilder.build();
     }
 

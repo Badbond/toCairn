@@ -35,7 +35,7 @@ public class CouplingCarvalhoObjective implements OnePurposeMetric {
                         // Only include relationships to other clusters
                         .filter(relationship -> !cluster.contains(relationship.getCallee())))
                 // This metric uses the frequency of calls to other units
-                .mapToDouble(DependenceRelationship::getFrequency)
+                .mapToDouble(DependenceRelationship::getStaticFrequency)
                 .sum();
     }
 }

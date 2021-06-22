@@ -8,11 +8,11 @@ import me.soels.thesis.model.DependenceRelationship;
  */
 @Getter
 public abstract class AbstractRelationshipDto {
-    private final String calleeFqn;
     private final String callerFqn;
+    private final String calleeFqn;
 
-    protected AbstractRelationshipDto(String calleeFqn, String callerFqn) {
-        this.calleeFqn = calleeFqn;
+    protected AbstractRelationshipDto(String callerFqn, String calleeFqn) {
         this.callerFqn = callerFqn;
+        this.calleeFqn = calleeFqn;
     }
 }

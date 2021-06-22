@@ -42,7 +42,9 @@ class StaticAnalysisTest {
         //      stack overflow error on 3.18
         //      87597 total, 7532 unresolved, 32984 relevant (excl. self-ref), 5186 relationships, -- 6m 35s on 3.22.1
         var builder = new EvaluationInputBuilder(Collections.emptyList());
-        analysis.analyze(builder, input);
+        var context = analysis.prepareContext(builder, input);
+        analysis.analyzeNodes(context);
+        analysis.analyzeEdges(context);
         builder.build();
     }
 }

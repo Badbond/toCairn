@@ -1,28 +1,28 @@
 package me.soels.thesis.model;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.Node;
 
-import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 @Node
 @Getter
+@Setter
 public final class DataClass extends AbstractClass {
-    private final Integer size;
-    // TODO: Store static analysis size as LoC. Have an optional measuredByteSize field for dynamic analysis
-    // TODO: Same goes for frequency.
+    private final Integer loc;
+    private Integer measuredByteSize;
+
     /**
      * Construct an instance of a data class.
      *
      * @param identifier        the identifier for this data class (FQN)
      * @param humanReadableName the human readable name for this data class
-     * @param size              the size of the data class in bytes
+     * @param loc               the size of the data class in bytes
      */
-    public DataClass(String identifier, String humanReadableName, Integer size) {
+    public DataClass(String identifier, String humanReadableName, Integer loc) {
         super(identifier, humanReadableName);
-        this.size = size;
+        this.loc = loc;
     }
 
     @Override
@@ -32,6 +32,6 @@ public final class DataClass extends AbstractClass {
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), size);
+        return Objects.hash(super.hashCode(), loc);
     }
 }

@@ -12,6 +12,10 @@ import me.soels.thesis.model.EvaluationInput;
 import me.soels.thesis.model.EvaluationInputBuilder;
 import me.soels.thesis.repositories.ClassRepository;
 import me.soels.thesis.repositories.EvaluationRepository;
+import me.soels.thesis.repositories.OtherClassRepository;
+import org.apache.commons.lang3.time.DurationFormatUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -25,10 +29,12 @@ import static me.soels.thesis.model.AnalysisType.*;
  */
 @Service
 public class EvaluationInputService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(EvaluationInputService.class);
     private final StaticAnalysis staticAnalysis;
     private final DynamicAnalysis dynamicAnalysis;
     private final EvolutionaryAnalysis evolutionaryAnalysis;
     private final ClassRepository<AbstractClass> classRepository;
+    private final OtherClassRepository otherClassRepository;
     private final EvaluationRepository evaluationRepository;
     private final AtomicBoolean staticAnalysisRunning = new AtomicBoolean(false);
 
@@ -36,11 +42,13 @@ public class EvaluationInputService {
                                   DynamicAnalysis dynamicAnalysis,
                                   EvolutionaryAnalysis evolutionaryAnalysis,
                                   @Qualifier("classRepository") ClassRepository<AbstractClass> classRepository,
+                                  @Qualifier("otherClassRepository") OtherClassRepository otherClassRepository,
                                   EvaluationRepository evaluationRepository) {
         this.staticAnalysis = staticAnalysis;
         this.dynamicAnalysis = dynamicAnalysis;
         this.evolutionaryAnalysis = evolutionaryAnalysis;
         this.classRepository = classRepository;
+        this.otherClassRepository = otherClassRepository;
         this.evaluationRepository = evaluationRepository;
     }
 
@@ -52,12 +60,11 @@ public class EvaluationInputService {
      *
      * @param evaluation the evaluation to set the inputs for
      * @param input      the input graph to store
-     * @return the evaluation with the persisted input
      */
-    public Evaluation storeInput(Evaluation evaluation, EvaluationInput input) {
+    public void storeInput(Evaluation evaluation, EvaluationInput input) {
         evaluation.setInputs(input.getClasses());
         // This also saves/created the nodes in the graph
-        return evaluationRepository.save(evaluation);
+        evaluationRepository.save(evaluation);
     }
 
     /**
@@ -88,9 +95,49 @@ public class EvaluationInputService {
         }
 
         try {
+            var start = System.currentTimeMillis();
             var builder = getPopulatedInputBuilder(evaluation);
-            staticAnalysis.analyze(builder, analysisInput);
+            var context = staticAnalysis.prepareContext(builder, analysisInput);
+            staticAnalysis.analyzeNodes(context);
+
+            // SDN 6.0 is not efficient with storing relationships, especially if there are
+            // circular dependencies. It does many queries, including deleting nodes.
+            // Therefore, we first store the nodes without relationships (resulting in MERGE)
+            // queries for just those nodes. Then, we analyze the edges, populate the relationships on
+            // the nodes and perform custom queries for storing the relationships.
+            // See https://community.neo4j.com/t/super-frustrated-sdn-deleting-existing-relationships/35245/18
+            // TODO: Perform custom queries for storing the relationships, see link above
             storeInput(evaluation, builder.build());
+            LOGGER.info("Stored {} nodes", evaluation.getInputs().size());
+
+            builder = getPopulatedInputBuilder(evaluation);
+            staticAnalysis.analyzeEdges(context);
+            LOGGER.info("Storing relationships");
+            // Try 5
+            builder.getDataClasses().forEach(dataClass -> dataClass.getDependenceRelationships()
+                    .forEach(rel -> classRepository.addDependencyRelationship(dataClass, rel.getCallee(), rel)));
+            builder.getOtherClasses().forEach(otherClass -> {
+                otherClass.getDependenceRelationships().forEach(rel -> classRepository.addDependencyRelationship(otherClass, rel.getCallee(), rel));
+                otherClass.getDataRelationships().forEach(rel -> otherClassRepository.addDataRelationship(otherClass, rel.getCallee(), rel));
+            });
+            // Try 4
+//            builder.getClasses().forEach(clazz -> {
+//                LOGGER.info("Storing class {}", clazz.getIdentifier());
+//                classRepository.save(clazz);
+//            });
+            // Try 3
+//            Lists.partition(builder.getClasses(), builder.getClasses().size() / 100)
+//                    .forEach(subset -> {
+//                        classRepository.saveAll(subset);
+//                        LOGGER.info("Stored subset");
+//                    });
+            // Try 2
+//            classRepository.saveAll(builder.getClasses());
+            // Try 1
+//            storeInput(evaluation, builder.build());
+            LOGGER.info("Stored edges");
+            var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);
+            LOGGER.info("Total static analysis took {} (H:m:s.millis)", duration);
         } finally {
             // Always reset the lock
             staticAnalysisRunning.set(false);

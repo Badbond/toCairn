@@ -44,15 +44,11 @@ public class GraphController {
         List<AbstractRelationshipDto> edges = classes.stream()
                 .flatMap(abstractClass -> abstractClass.getDependenceRelationships().stream()
                         .map(relationship -> new DependenceRelationshipDto(abstractClass.getIdentifier(),
-                                relationship.getCallee().getIdentifier(),
-                                relationship.getFrequency())))
+                                relationship)))
                 .collect(Collectors.toList());
         edges.addAll(extractType(classes, OtherClass.class).stream()
                 .flatMap(otherClass -> otherClass.getDataRelationships().stream()
-                        .map(relationship -> new DataRelationshipDto(otherClass.getIdentifier(),
-                                relationship.getCallee().getIdentifier(),
-                                relationship.getFrequency(),
-                                relationship.getType())))
+                        .map(relationship -> new DataRelationshipDto(otherClass.getIdentifier(), relationship)))
                 .collect(Collectors.toList()));
         return edges;
     }

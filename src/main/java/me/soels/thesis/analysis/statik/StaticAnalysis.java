@@ -3,7 +3,6 @@ package me.soels.thesis.analysis.statik;
 import com.github.javaparser.JavaParser;
 import me.soels.thesis.model.EvaluationInputBuilder;
 import me.soels.thesis.util.ZipExtractor;
-import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -40,9 +39,8 @@ public class StaticAnalysis {
         this.zipExtractor = zipExtractor;
     }
 
-    public void analyze(EvaluationInputBuilder modelBuilder, StaticAnalysisInput input) {
+    public StaticAnalysisContext prepareContext(EvaluationInputBuilder builder, StaticAnalysisInput input) {
         LOGGER.info("Starting static analysis on {}", input.getPathToZip());
-        var start = System.currentTimeMillis();
 
         var inputZip = input.getPathToZip();
         if (!inputZip.getFileName().toString().toLowerCase().endsWith(".zip")) {
@@ -52,12 +50,14 @@ public class StaticAnalysis {
         }
 
         var projectLocation = zipExtractor.extractZip(inputZip);
-        var context = new StaticAnalysisContext(projectLocation, input, modelBuilder);
+        return new StaticAnalysisContext(projectLocation, input, builder);
+    }
 
+    public void analyzeNodes(StaticAnalysisContext context) {
         classAnalysis.analyze(context);
-        dependencyAnalysis.analyze(context);
+    }
 
-        var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);
-        LOGGER.info("Total static analysis took {} (H:m:s.millis)", duration);
+    public void analyzeEdges(StaticAnalysisContext context) {
+        dependencyAnalysis.analyze(context);
     }
 }

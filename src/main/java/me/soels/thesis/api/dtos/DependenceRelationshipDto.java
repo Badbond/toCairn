@@ -8,10 +8,10 @@ import me.soels.thesis.model.DependenceRelationship;
  */
 @Getter
 public class DependenceRelationshipDto extends AbstractRelationshipDto {
-    private final int frequency;
+    private final int staticFrequency;
 
-    public DependenceRelationshipDto(String calleeFqn, String callerFqn, int frequency) {
-        super(calleeFqn, callerFqn);
-        this.frequency = frequency;
+    public DependenceRelationshipDto(String callerFqn, DependenceRelationship dependenceRelationship) {
+        super(callerFqn, dependenceRelationship.getCallee().getIdentifier());
+        this.staticFrequency = dependenceRelationship.getStaticFrequency();
     }
 }

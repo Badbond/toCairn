@@ -1,6 +1,7 @@
 package me.soels.thesis.api.dtos;
 
 import lombok.Getter;
+import me.soels.thesis.model.DataRelationship;
 import me.soels.thesis.model.DataRelationshipType;
 import me.soels.thesis.model.DependenceRelationship;
 
@@ -10,9 +11,11 @@ import me.soels.thesis.model.DependenceRelationship;
 @Getter
 public class DataRelationshipDto extends DependenceRelationshipDto {
     private final DataRelationshipType type;
+    private final Integer dynamicFrequency;
 
-    public DataRelationshipDto(String calleeFqn, String callerFqn, int frequency, DataRelationshipType type) {
-        super(calleeFqn, callerFqn, frequency);
-        this.type = type;
+    public DataRelationshipDto(String callerFqn, DataRelationship relationship) {
+        super(callerFqn, relationship);
+        this.type = relationship.getType();
+        this.dynamicFrequency = relationship.getDynamicFrequency();
     }
 }

@@ -1,13 +1,29 @@
 package me.soels.thesis.repositories;
 
-import me.soels.thesis.model.DataClass;
 import me.soels.thesis.model.DataRelationship;
+import me.soels.thesis.model.DependenceRelationship;
 import me.soels.thesis.model.OtherClass;
 import org.springframework.data.neo4j.repository.query.Query;
 
+import java.util.UUID;
+
 public interface OtherClassRepository extends ClassRepository<OtherClass> {
-    @Query("MATCH (caller:OtherClass), (callee:DataClass) " +
-            "WHERE ID(caller) = $0.__id__ AND ID(callee) = $1.__id__ " +
-            "CREATE (caller)-[r:DATA_DEPENDS_ON]->(callee) SET r = $2.__properties__")
-    void addDataRelationship(OtherClass caller, DataClass callee, DataRelationship relationship);
+    /**
+     * Adds a data dependency relationship between the two given nodes with the given relationship properties.
+     * <p>
+     * See {@link ClassRepository#addDependencyRelationship(UUID, UUID, DependenceRelationship)} for more information
+     * on this query.
+     *
+     * @param callerId     the id of the caller, the start node
+     * @param calleeId     the id of the callee, the end node
+     * @param relationship the relationship containing the properties to set
+     */
+    @Query("MATCH (a:OtherClass) " +
+            "WITH a " +
+            "MATCH (b:DataClass) " +
+            "WITH a, b " +
+            "WHERE ID(a) = $0 AND ID(b) = $1 " +
+            "CREATE (a)-[r:DATA_DEPENDS_ON]->(b) " +
+            "SET r = $relationship.__properties__")
+    void addDataRelationship(UUID callerId, UUID calleeId, DataRelationship relationship);
 }

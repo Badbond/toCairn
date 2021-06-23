@@ -5,6 +5,7 @@ import me.soels.thesis.analysis.dynamic.DynamicAnalysisInput;
 import me.soels.thesis.analysis.evolutionary.EvolutionaryAnalysis;
 import me.soels.thesis.analysis.evolutionary.EvolutionaryAnalysisInput;
 import me.soels.thesis.analysis.statik.StaticAnalysis;
+import me.soels.thesis.analysis.statik.StaticAnalysisContext;
 import me.soels.thesis.analysis.statik.StaticAnalysisInput;
 import me.soels.thesis.model.AbstractClass;
 import me.soels.thesis.model.Evaluation;
@@ -98,52 +99,38 @@ public class EvaluationInputService {
             var start = System.currentTimeMillis();
             var builder = getPopulatedInputBuilder(evaluation);
             var context = staticAnalysis.prepareContext(builder, analysisInput);
-            staticAnalysis.analyzeNodes(context);
-
-            // SDN 6.0 is not efficient with storing relationships, especially if there are
-            // circular dependencies. It does many queries, including deleting nodes.
-            // Therefore, we first store the nodes without relationships (resulting in MERGE)
-            // queries for just those nodes. Then, we analyze the edges, populate the relationships on
-            // the nodes and perform custom queries for storing the relationships.
-            // See https://community.neo4j.com/t/super-frustrated-sdn-deleting-existing-relationships/35245/18
-            // TODO: Perform custom queries for storing the relationships, see link above
-            //  Current experimentation throws warnings. I have not yet implemented the mapper. Perhaps enable
-            //  enterprise edition again and check the queries executed to see if they make sense.
-            storeInput(evaluation, builder.build());
-            LOGGER.info("Stored {} nodes", evaluation.getInputs().size());
-
-            builder = getPopulatedInputBuilder(evaluation);
-            staticAnalysis.analyzeEdges(context);
-            LOGGER.info("Storing relationships");
-            // Try 5
-            builder.getDataClasses().forEach(dataClass -> dataClass.getDependenceRelationships()
-                    .forEach(rel -> classRepository.addDependencyRelationship(dataClass, rel.getCallee(), rel)));
-            builder.getOtherClasses().forEach(otherClass -> {
-                otherClass.getDependenceRelationships().forEach(rel -> classRepository.addDependencyRelationship(otherClass, rel.getCallee(), rel));
-                otherClass.getDataRelationships().forEach(rel -> otherClassRepository.addDataRelationship(otherClass, rel.getCallee(), rel));
-            });
-            // Try 4
-//            builder.getClasses().forEach(clazz -> {
-//                LOGGER.info("Storing class {}", clazz.getIdentifier());
-//                classRepository.save(clazz);
-//            });
-            // Try 3
-//            Lists.partition(builder.getClasses(), builder.getClasses().size() / 100)
-//                    .forEach(subset -> {
-//                        classRepository.saveAll(subset);
-//                        LOGGER.info("Stored subset");
-//                    });
-            // Try 2
-//            classRepository.saveAll(builder.getClasses());
-            // Try 1
-//            storeInput(evaluation, builder.build());
-            LOGGER.info("Stored edges");
+            // We split the extraction and persistence of nodes and edges as we can then more efficiently create the
+            // relationships based on existent nodes with generated IDs.
+            extractNodes(evaluation, builder, context);
+            extractEdges(evaluation, context);
             var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);
             LOGGER.info("Total static analysis took {} (H:m:s.millis)", duration);
         } finally {
             // Always reset the lock
             staticAnalysisRunning.set(false);
         }
+    }
+
+    private void extractEdges(Evaluation evaluation, StaticAnalysisContext context) {
+        // Construct builder again from persisted state now that we have nodes with generated IDs
+        var builder = getPopulatedInputBuilder(evaluation);
+        staticAnalysis.analyzeEdges(context);
+
+        LOGGER.info("Storing relationships");
+        builder.getDataClasses().forEach(dataClass -> dataClass.getDependenceRelationships()
+                .forEach(rel -> classRepository.addDependencyRelationship(dataClass.getId(), rel.getCallee().getId(), rel)));
+        builder.getOtherClasses().forEach(otherClass -> {
+            otherClass.getDependenceRelationships().forEach(rel -> classRepository.addDependencyRelationship(otherClass.getId(), rel.getCallee().getId(), rel));
+            otherClass.getDataRelationships().forEach(rel -> otherClassRepository.addDataRelationship(otherClass.getId(), rel.getCallee().getId(), rel));
+        });
+        LOGGER.info("Stored relationships");
+    }
+
+    private void extractNodes(Evaluation evaluation, EvaluationInputBuilder builder, StaticAnalysisContext context) {
+        staticAnalysis.analyzeNodes(context);
+        LOGGER.info("Storing nodes");
+        storeInput(evaluation, builder.build());
+        LOGGER.info("Stored {} nodes", evaluation.getInputs().size());
     }
 
     /**
@@ -185,7 +172,7 @@ public class EvaluationInputService {
     }
 
     /**
-     * Returns an {@link EvaluationInputBuilder} with populated data from persistance.
+     * Returns an {@link EvaluationInputBuilder} with populated data from persistence.
      *
      * @param evaluation the evaluation to create the input builder for
      * @return the populated input builder

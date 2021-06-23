@@ -18,7 +18,7 @@ import java.util.List;
  * stored within this context, and additional data in favor of debugging such as counters.
  */
 @Getter
-class StaticAnalysisContext {
+public class StaticAnalysisContext {
     private final Path projectLocation;
     private final StaticAnalysisInput input;
     private final EvaluationInputBuilder resultBuilder;

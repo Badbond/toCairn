@@ -6,6 +6,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Setter
@@ -13,7 +14,7 @@ import java.util.List;
 public final class JacocoSourceFile {
     @JsonProperty("line")
     @JacksonXmlElementWrapper(useWrapping = false)
-    private List<JacocoLine> lines;
+    private List<JacocoLine> lines = new ArrayList<>();
 
     @JacksonXmlProperty(isAttribute = true)
     private String name;

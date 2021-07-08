@@ -6,6 +6,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -13,7 +14,7 @@ import java.util.List;
 public final class JacocoPackage {
     @JsonProperty("sourcefile")
     @JacksonXmlElementWrapper(useWrapping = false)
-    private List<JacocoSourceFile> sourceFiles;
+    private List<JacocoSourceFile> sourceFiles = new ArrayList<>();
 
     @JacksonXmlProperty(isAttribute = true)
     private String name;

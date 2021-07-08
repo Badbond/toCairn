@@ -37,6 +37,7 @@ class ThesisExperimentTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ThesisExperimentTest.class);
     private static final String MOCK_GRAPH_NAME = "simple-graph-2";
     private static final String ZIP_FILE = "thesis-project-master.zip";
+    private static final String JACOCO_REPORT_FILE = "jacoco.xml";
 
     @Autowired
     private VariableDecoder variableDecoder;
@@ -52,16 +53,18 @@ class ThesisExperimentTest {
     }
 
     @Test
-    void runExperimentWithSourceCode() throws URISyntaxException {
+    void runExperimentWithSourceCode() throws URISyntaxException, IOException {
         var problemConfig = new EvaluationConfiguration();
         problemConfig.setEncodingType(EncodingType.CLUSTER_LABEL);
         var input = getZipInput();
         runExperiment(problemConfig, input);
     }
 
-    private EvaluationInput getZipInput() throws URISyntaxException {
-        var project = Path.of(this.getClass().getClassLoader().getResource(ZIP_FILE).toURI());
-        var analysisInput = new SourceAnalysisInput(project, JAVA_11, null);
+    private EvaluationInput getZipInput() throws URISyntaxException, IOException {
+        var project = tryGetResource(ZIP_FILE)
+                .orElseThrow(() -> new IllegalStateException("Could not find required file " + ZIP_FILE));
+        var jacocoXML = tryGetResource(JACOCO_REPORT_FILE).orElse(null);
+        var analysisInput = new SourceAnalysisInput(project, jacocoXML, JAVA_11, null);
         var modelBuilder = new EvaluationInputBuilder(Collections.emptyList());
         var context = sourceAnalysis.prepareContext(modelBuilder, analysisInput);
         sourceAnalysis.analyzeEdges(context);
@@ -164,5 +167,13 @@ class ThesisExperimentTest {
             }
             LOGGER.info("Amount of clusters: {}", clustering.getByCluster().size());
         }
+    }
+
+    private Optional<Path> tryGetResource(String resource) throws URISyntaxException {
+        var url = this.getClass().getClassLoader().getResource(resource);
+        if (url != null) {
+            return Optional.of(Path.of(url.toURI()));
+        }
+        return Optional.empty();
     }
 }

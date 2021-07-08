@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static me.soels.thesis.model.AnalysisType.*;
@@ -82,7 +83,7 @@ public class EvaluationInputService {
      * @param evaluation    the evaluation to perform source analysis for
      * @param analysisInput the input required for performing source analysis
      */
-    public void performSourceAnalysis(Evaluation evaluation, SourceAnalysisInput analysisInput) {
+    public void performSourceAnalysis(Evaluation evaluation, SourceAnalysisInput analysisInput) throws IOException {
         if (evaluation.getExecutedAnalysis().contains(SOURCE)) {
             throw new IllegalArgumentException("Source analysis already performed.");
         } else if (!sourceAnalysisRunning.compareAndSet(false, true)) {

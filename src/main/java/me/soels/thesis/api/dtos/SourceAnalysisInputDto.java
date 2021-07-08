@@ -14,12 +14,13 @@ import java.nio.file.Path;
 public final class SourceAnalysisInputDto {
     @NotNull
     private final Path pathToProjectZip;
+    private final Path pathToJacocoXml;
     @NotNull
     private final ParserConfiguration.LanguageLevel languageLevel;
     @Pattern(regexp = ".*\\S+.*") // Don't allow empty. @Pattern allows null.
     private final String customDataAnnotation;
 
     public SourceAnalysisInput toDao() {
-        return new SourceAnalysisInput(pathToProjectZip, languageLevel, customDataAnnotation);
+        return new SourceAnalysisInput(pathToProjectZip, pathToJacocoXml, languageLevel, customDataAnnotation);
     }
 }

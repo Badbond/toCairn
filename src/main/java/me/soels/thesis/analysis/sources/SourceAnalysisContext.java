@@ -8,7 +8,9 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Context holder for source analysis.
@@ -24,6 +26,7 @@ public class SourceAnalysisContext {
     private final EvaluationInputBuilder resultBuilder;
     private final Counters counters = new Counters();
     private final List<Pair<ClassOrInterfaceDeclaration, AbstractClass>> typesAndClasses = new ArrayList<>();
+    private final Map<String, Map<Integer, Integer>> sourceExecutions = new HashMap<>();
 
     public SourceAnalysisContext(Path projectLocation,
                                  SourceAnalysisInput input,

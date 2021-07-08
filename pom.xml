@@ -56,6 +56,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-xml</artifactId>
+        </dependency>
+        <dependency>
             <groupId>me.soels</groupId>
             <artifactId>moeaframework</artifactId>
             <version>${moeaframework.version}</version>

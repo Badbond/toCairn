@@ -1,12 +1,14 @@
 package me.soels.thesis.analysis.sources;
 
 import com.github.javaparser.JavaParser;
+import me.soels.thesis.analysis.sources.jacoco.JacocoReportExtractor;
 import me.soels.thesis.model.EvaluationInputBuilder;
 import me.soels.thesis.util.ZipExtractor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.nio.file.Files;
 
 /**
@@ -35,16 +37,19 @@ public class SourceAnalysis {
     private final SourceClassAnalysis classAnalysis;
     private final SourceRelationshipAnalysis dependencyAnalysis;
     private final ZipExtractor zipExtractor;
+    private final JacocoReportExtractor reportExtractor;
 
     public SourceAnalysis(SourceClassAnalysis classAnalysis,
                           SourceRelationshipAnalysis dependencyAnalysis,
-                          ZipExtractor zipExtractor) {
+                          ZipExtractor zipExtractor,
+                          JacocoReportExtractor reportExtractor) {
         this.classAnalysis = classAnalysis;
         this.dependencyAnalysis = dependencyAnalysis;
         this.zipExtractor = zipExtractor;
+        this.reportExtractor = reportExtractor;
     }
 
-    public SourceAnalysisContext prepareContext(EvaluationInputBuilder builder, SourceAnalysisInput input) {
+    public SourceAnalysisContext prepareContext(EvaluationInputBuilder builder, SourceAnalysisInput input) throws IOException {
         LOGGER.info("Starting source analysis on {}", input.getPathToZip());
 
         var inputZip = input.getPathToZip();
@@ -53,10 +58,12 @@ public class SourceAnalysis {
         } else if (!Files.exists(inputZip)) {
             throw new IllegalArgumentException("The zip file does not exist for path " + inputZip);
         }
-        // TODO: Add context for JaCoCo XML report and parse it to a Map<SourceFile, Map<LineNumber, Count>>
-
         var projectLocation = zipExtractor.extractZip(inputZip);
-        return new SourceAnalysisContext(projectLocation, input, builder);
+        var context = new SourceAnalysisContext(projectLocation, input, builder);
+        if(input.getPathToJacocoXml().isPresent()) {
+            reportExtractor.extractJaCoCoReport(input.getPathToJacocoXml().get(), context.getSourceExecutions());
+        }
+        return context;
     }
 
     public void analyzeNodes(SourceAnalysisContext context) {

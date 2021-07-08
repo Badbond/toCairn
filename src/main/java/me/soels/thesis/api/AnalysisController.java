@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.io.IOException;
 import java.util.UUID;
 
 import static me.soels.thesis.model.AnalysisType.*;
@@ -35,7 +36,7 @@ public class AnalysisController {
     @Async
     @PostMapping("/source")
     public void performSourceAnalysis(@PathVariable UUID evaluationId,
-                                      @RequestBody @Valid SourceAnalysisInputDto inputDto) {
+                                      @RequestBody @Valid SourceAnalysisInputDto inputDto) throws IOException {
         var evaluation = evaluationService.getEvaluation(evaluationId);
         inputService.performSourceAnalysis(evaluation, inputDto.toDao());
         evaluationService.updateAnalysisRan(evaluation, SOURCE);

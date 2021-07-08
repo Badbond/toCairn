@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -24,14 +25,15 @@ class SourceAnalysisTest {
     private SourceAnalysis analysis;
 
     @Test
-    void testSourceAnalysis() throws URISyntaxException {
+    void testSourceAnalysis() throws URISyntaxException, IOException {
         var resource = this.getClass().getClassLoader().getResource("./thesis-project-master.zip");
         runAnalysis(resource);
     }
 
-    private void runAnalysis(URL resource) throws URISyntaxException {
+    private void runAnalysis(URL resource) throws URISyntaxException, IOException {
         var project = Path.of(Objects.requireNonNull(resource).toURI());
-        var input = new SourceAnalysisInput(project, JAVA_11, null);
+        var jacoco = getJaCoCoXML();
+        var input = new SourceAnalysisInput(project, jacoco, JAVA_11, null);
         // thesis-project-master.zip (28 classes, 64 unique method names):
         //      117 total, 17 unresolved, 68 relevant (excl. self-ref), 29 relationships on 3.18.0 -- 2s
         //      117 total, 38 unresolved, 57 relevant (excl. self-ref), 25 relationships on 3.22.1 -- 1s
@@ -46,5 +48,10 @@ class SourceAnalysisTest {
         analysis.analyzeNodes(context);
         analysis.analyzeEdges(context);
         builder.build();
+    }
+
+    private Path getJaCoCoXML() throws URISyntaxException {
+        var url =  this.getClass().getClassLoader().getResource("./jacoco.xml");
+        return url == null ? null : Path.of(url.toURI());
     }
 }

@@ -1,4 +1,4 @@
-package me.soels.thesis.analysis.statik;
+package me.soels.thesis.analysis.sources;
 
 import com.github.javaparser.JavaParser;
 import me.soels.thesis.model.EvaluationInputBuilder;
@@ -10,9 +10,9 @@ import org.springframework.stereotype.Service;
 import java.nio.file.Files;
 
 /**
- * Performs static analysis of the given {@code .zip} file containing the application's source files.
+ * Performs source analysis of the given {@code .zip} file containing the application's source files.
  * <p>
- * With static analysis, we build the model that contains the data classes identified in the application, the other
+ * With source analysis, we build the model that contains the data classes identified in the application, the other
  * classes containing business logic, relationships between these other classes and relationships between other classes
  * and data classes.
  * <p>
@@ -20,27 +20,32 @@ import java.nio.file.Files;
  * is based on their book <i>'JavaParser: Visited'</i>. Please note that we do not introduce any concurrency ourselves
  * on purpose as the library used returns more errors when doing so (both during parsing classes and resolving methods).
  * <p>
- * Note that this static analysis does not allow for resolving relations that are constructed at runtime. Therefore,
+ * Note that this source analysis does not allow for resolving relations that are constructed at runtime. Therefore,
  * it does not allow to represent injection and polymorphism relations. We can mitigate this if desired using dynamic
  * analysis.
+ * <p>
+ * During this analysis, we don't only do static analysis but also incorporate data from dynamic analysis. For static
+ * analysis we use the abstract syntax tree of the Java sources. For dynamic analysis (if provided), we use the
+ * custom JaCoCo XMl report produced by <a href="https://github.com/Badbond/jacoco">our JaCoCo fork</a>. This will
+ * then match the execution counts of source lines with those found in the abstract syntax tree.
  */
 @Service
-public class StaticAnalysis {
-    private static final Logger LOGGER = LoggerFactory.getLogger(StaticAnalysis.class);
-    private final StaticClassAnalysis classAnalysis;
-    private final StaticRelationshipAnalysis dependencyAnalysis;
+public class SourceAnalysis {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SourceAnalysis.class);
+    private final SourceClassAnalysis classAnalysis;
+    private final SourceRelationshipAnalysis dependencyAnalysis;
     private final ZipExtractor zipExtractor;
 
-    public StaticAnalysis(StaticClassAnalysis classAnalysis,
-                          StaticRelationshipAnalysis dependencyAnalysis,
+    public SourceAnalysis(SourceClassAnalysis classAnalysis,
+                          SourceRelationshipAnalysis dependencyAnalysis,
                           ZipExtractor zipExtractor) {
         this.classAnalysis = classAnalysis;
         this.dependencyAnalysis = dependencyAnalysis;
         this.zipExtractor = zipExtractor;
     }
 
-    public StaticAnalysisContext prepareContext(EvaluationInputBuilder builder, StaticAnalysisInput input) {
-        LOGGER.info("Starting static analysis on {}", input.getPathToZip());
+    public SourceAnalysisContext prepareContext(EvaluationInputBuilder builder, SourceAnalysisInput input) {
+        LOGGER.info("Starting source analysis on {}", input.getPathToZip());
 
         var inputZip = input.getPathToZip();
         if (!inputZip.getFileName().toString().toLowerCase().endsWith(".zip")) {
@@ -48,16 +53,17 @@ public class StaticAnalysis {
         } else if (!Files.exists(inputZip)) {
             throw new IllegalArgumentException("The zip file does not exist for path " + inputZip);
         }
+        // TODO: Add context for JaCoCo XML report and parse it to a Map<SourceFile, Map<LineNumber, Count>>
 
         var projectLocation = zipExtractor.extractZip(inputZip);
-        return new StaticAnalysisContext(projectLocation, input, builder);
+        return new SourceAnalysisContext(projectLocation, input, builder);
     }
 
-    public void analyzeNodes(StaticAnalysisContext context) {
+    public void analyzeNodes(SourceAnalysisContext context) {
         classAnalysis.analyze(context);
     }
 
-    public void analyzeEdges(StaticAnalysisContext context) {
+    public void analyzeEdges(SourceAnalysisContext context) {
         dependencyAnalysis.analyze(context);
     }
 }

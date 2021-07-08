@@ -187,9 +187,9 @@ public class EvaluationService {
     /**
      * Checks whether all the input is present for the given objectives.
      * <p>
-     * Note that {@link AnalysisType#STATIC} analysis is always required as this generates a complete graph of classes
+     * Note that {@link AnalysisType#SOURCE} analysis is always required as this generates a complete graph of classes
      * to cluster. As {@link ObjectiveType#ONE_PURPOSE} and {@link ObjectiveType#BOUNDED_CONTEXT} only rely on the
-     * result from static analysis, we do not check them explicitly.
+     * result from source analysis, we do not check them explicitly.
      *
      * @param evaluation the evaluation to check whether all input has been provided
      * @param objectives the objectives to meet input for
@@ -197,7 +197,7 @@ public class EvaluationService {
      */
     public boolean hasAllRequiredInput(Evaluation evaluation, Set<ObjectiveType> objectives) {
         var executed = evaluation.getExecutedAnalysis();
-        return executed.contains(STATIC) &&
+        return executed.contains(SOURCE) &&
                 (!objectives.contains(DATA_AUTONOMY) || executed.contains(DYNAMIC)) &&
                 (!objectives.contains(SHARED_DEVELOPMENT_LIFECYCLE) || executed.contains(EVOLUTIONARY));
     }

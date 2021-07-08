@@ -1,4 +1,4 @@
-package me.soels.thesis.analysis.statik;
+package me.soels.thesis.analysis.sources;
 
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ParserConfiguration;
@@ -25,13 +25,13 @@ import static me.soels.thesis.util.StringContainsIgnoreCaseMatcher.containsStrin
 import static org.hamcrest.CoreMatchers.anyOf;
 
 /**
- * Performs static analysis on the provided project to determine the classes defined in that project.
+ * Performs source analysis on the provided project to determine the classes defined in that project.
  */
 @Service
-public class StaticClassAnalysis {
-    private static final Logger LOGGER = LoggerFactory.getLogger(StaticClassAnalysis.class);
+public class SourceClassAnalysis {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SourceClassAnalysis.class);
 
-    public void analyze(StaticAnalysisContext context) {
+    public void analyze(SourceAnalysisContext context) {
         LOGGER.info("Extracting classes");
         var start = System.currentTimeMillis();
         var config = new ParserConfiguration().setLanguageLevel(context.getInput().getLanguageLevel());
@@ -67,10 +67,10 @@ public class StaticClassAnalysis {
                 context.getResultBuilder().getDataClasses().size(),
                 context.getResultBuilder().getOtherClasses().size());
         var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);
-        LOGGER.info("Static class analysis took {} (H:m:s.millis)", duration);
+        LOGGER.info("Source class analysis took {} (H:m:s.millis)", duration);
     }
 
-    private AbstractClass storeClass(ClassOrInterfaceDeclaration clazz, StaticAnalysisInput input, StaticAnalysisContext context) {
+    private AbstractClass storeClass(ClassOrInterfaceDeclaration clazz, SourceAnalysisInput input, SourceAnalysisContext context) {
         var fqn = clazz.getFullyQualifiedName()
                 .orElseThrow(() -> new IllegalStateException("Could not retrieve FQN from already filtered class"));
 
@@ -89,7 +89,7 @@ public class StaticClassAnalysis {
         }
     }
 
-    private boolean isDataClass(ClassOrInterfaceDeclaration clazz, StaticAnalysisInput input) {
+    private boolean isDataClass(ClassOrInterfaceDeclaration clazz, SourceAnalysisInput input) {
         // TODO: Order summary is not marked as a data class.. :-( Perhaps we still need some heuristic..
         return classNameIndicatesDataStructure(clazz) ||
                 classContainsDataAnnotation(clazz, input);
@@ -102,7 +102,7 @@ public class StaticClassAnalysis {
                 StringUtils.endsWithIgnoreCase(clazz.getNameAsString(), "DAO");
     }
 
-    private boolean classContainsDataAnnotation(ClassOrInterfaceDeclaration clazz, StaticAnalysisInput input) {
+    private boolean classContainsDataAnnotation(ClassOrInterfaceDeclaration clazz, SourceAnalysisInput input) {
         return clazz.getAnnotations().stream()
                 .map(NodeWithName::getNameAsString)
                 .anyMatch(annotation -> anyOf(containsStringIgnoringCase("immutable"),

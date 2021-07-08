@@ -1,4 +1,4 @@
-package me.soels.thesis.analysis.statik;
+package me.soels.thesis.analysis.sources;
 
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.resolution.Resolvable;
@@ -39,7 +39,7 @@ public class DeclaringClassResolver {
      * @param allClasses all the identified classes in the application
      * @return an optional result of the called class as part of the given constructor call
      */
-    Optional<Pair<AbstractClass, ObjectCreationExpr>> resolveConstructorCall(StaticAnalysisContext context,
+    Optional<Pair<AbstractClass, ObjectCreationExpr>> resolveConstructorCall(SourceAnalysisContext context,
                                                                              ObjectCreationExpr node,
                                                                              List<AbstractClass> allClasses) {
         var resolvedConstructor = tryGetUsingCompleteResolution(node)
@@ -63,7 +63,7 @@ public class DeclaringClassResolver {
      * @param allClasses all the identified classes in the application
      * @return an optional result of the called class as part of the given method reference
      */
-    Optional<Pair<AbstractClass, MethodReferenceExpr>> resolveMethodReference(StaticAnalysisContext context,
+    Optional<Pair<AbstractClass, MethodReferenceExpr>> resolveMethodReference(SourceAnalysisContext context,
                                                                               MethodReferenceExpr node,
                                                                               List<AbstractClass> allClasses) {
         var resolvedMethodReference = tryGetUsingCompleteResolution(node)
@@ -88,7 +88,7 @@ public class DeclaringClassResolver {
      * @param allClasses all the identified classes in the application
      * @return an optional result of the called class as part of the given method call
      */
-    Optional<Pair<AbstractClass, MethodCallExpr>> resolveMethodCall(StaticAnalysisContext context,
+    Optional<Pair<AbstractClass, MethodCallExpr>> resolveMethodCall(SourceAnalysisContext context,
                                                                     MethodCallExpr node,
                                                                     List<AbstractClass> allClasses) {
         var foundCallee = tryGetUsingCompleteResolution(node)

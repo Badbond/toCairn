@@ -1,25 +1,25 @@
-package me.soels.thesis.analysis.statik;
+package me.soels.thesis.analysis.sources;
 
 import com.github.javaparser.ParserConfiguration;
 
 import java.nio.file.Path;
 
 /**
- * The input required to perform static analysis
+ * The input required to perform source analysis
  */
-public final class StaticAnalysisInput {
+public final class SourceAnalysisInput {
     private final Path pathToZip;
     private final ParserConfiguration.LanguageLevel languageLevel;
     private final String customDataAnnotation;
 
     /**
-     * Creates the input required to perform static analysis.
+     * Creates the input required to perform source analysis.
      *
      * @param pathToZip            the path to the .zip file to analyze containing (generated) source code
      * @param languageLevel        the Java language to parse the project with
      * @param customDataAnnotation the custom annotation to apply on classes identifying data
      */
-    public StaticAnalysisInput(Path pathToZip,
+    public SourceAnalysisInput(Path pathToZip,
                                ParserConfiguration.LanguageLevel languageLevel,
                                String customDataAnnotation) {
         this.pathToZip = pathToZip;

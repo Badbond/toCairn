@@ -1,7 +1,7 @@
 package me.soels.thesis;
 
-import me.soels.thesis.analysis.statik.StaticAnalysis;
-import me.soels.thesis.analysis.statik.StaticAnalysisInput;
+import me.soels.thesis.analysis.sources.SourceAnalysis;
+import me.soels.thesis.analysis.sources.SourceAnalysisInput;
 import me.soels.thesis.clustering.ClusteringProblem;
 import me.soels.thesis.clustering.encoding.EncodingType;
 import me.soels.thesis.clustering.encoding.VariableDecoder;
@@ -41,7 +41,7 @@ class ThesisExperimentTest {
     @Autowired
     private VariableDecoder variableDecoder;
     @Autowired
-    private StaticAnalysis staticAnalysis;
+    private SourceAnalysis sourceAnalysis;
 
     @Test
     void runExperimentTestWithMockData() {
@@ -61,11 +61,11 @@ class ThesisExperimentTest {
 
     private EvaluationInput getZipInput() throws URISyntaxException {
         var project = Path.of(this.getClass().getClassLoader().getResource(ZIP_FILE).toURI());
-        var analysisInput = new StaticAnalysisInput(project, JAVA_11, null);
+        var analysisInput = new SourceAnalysisInput(project, JAVA_11, null);
         var modelBuilder = new EvaluationInputBuilder(Collections.emptyList());
-        var context = staticAnalysis.prepareContext(modelBuilder, analysisInput);
-        staticAnalysis.analyzeEdges(context);
-        staticAnalysis.analyzeEdges(context);
+        var context = sourceAnalysis.prepareContext(modelBuilder, analysisInput);
+        sourceAnalysis.analyzeEdges(context);
+        sourceAnalysis.analyzeEdges(context);
         return modelBuilder.build();
     }
 

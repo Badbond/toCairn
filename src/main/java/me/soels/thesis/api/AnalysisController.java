@@ -1,8 +1,7 @@
 package me.soels.thesis.api;
 
-import me.soels.thesis.api.dtos.DynamicAnalysisInputDto;
 import me.soels.thesis.api.dtos.EvolutionaryAnalysisInputDto;
-import me.soels.thesis.api.dtos.StaticAnalysisInputDto;
+import me.soels.thesis.api.dtos.SourceAnalysisInputDto;
 import me.soels.thesis.model.Evaluation;
 import me.soels.thesis.model.EvaluationInput;
 import me.soels.thesis.services.EvaluationInputService;
@@ -34,21 +33,12 @@ public class AnalysisController {
     }
 
     @Async
-    @PostMapping("/static")
-    public void performStaticAnalysis(@PathVariable UUID evaluationId,
-                                      @RequestBody @Valid StaticAnalysisInputDto inputDto) {
+    @PostMapping("/source")
+    public void performSourceAnalysis(@PathVariable UUID evaluationId,
+                                      @RequestBody @Valid SourceAnalysisInputDto inputDto) {
         var evaluation = evaluationService.getEvaluation(evaluationId);
-        inputService.performStaticAnalysis(evaluation, inputDto.toDao());
-        evaluationService.updateAnalysisRan(evaluation, STATIC);
-    }
-
-    @Async
-    @PostMapping("/dynamic")
-    public void performDynamicAnalysis(@PathVariable UUID evaluationId,
-                                       @RequestBody @Valid DynamicAnalysisInputDto inputDto) {
-        var evaluation = evaluationService.getEvaluation(evaluationId);
-        inputService.performDynamicAnalysis(evaluation, inputDto.toDao());
-        evaluationService.updateAnalysisRan(evaluation, DYNAMIC);
+        inputService.performSourceAnalysis(evaluation, inputDto.toDao());
+        evaluationService.updateAnalysisRan(evaluation, SOURCE);
     }
 
     @Async

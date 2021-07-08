@@ -1,4 +1,4 @@
-package me.soels.thesis.analysis.statik;
+package me.soels.thesis.analysis.sources;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import lombok.Getter;
@@ -11,22 +11,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Context holder for static analysis.
+ * Context holder for source analysis.
  * <p>
  * This context holder will hold the resulting analysis results and populates that in the {@link EvaluationInputBuilder}.
- * It furthermore contains data needed to share between stages of the static analysis, utility functions on the data
+ * It furthermore contains data needed to share between stages of the source analysis, utility functions on the data
  * stored within this context, and additional data in favor of debugging such as counters.
  */
 @Getter
-public class StaticAnalysisContext {
+public class SourceAnalysisContext {
     private final Path projectLocation;
-    private final StaticAnalysisInput input;
+    private final SourceAnalysisInput input;
     private final EvaluationInputBuilder resultBuilder;
     private final Counters counters = new Counters();
     private final List<Pair<ClassOrInterfaceDeclaration, AbstractClass>> typesAndClasses = new ArrayList<>();
 
-    public StaticAnalysisContext(Path projectLocation,
-                                 StaticAnalysisInput input,
+    public SourceAnalysisContext(Path projectLocation,
+                                 SourceAnalysisInput input,
                                  EvaluationInputBuilder resultBuilder) {
         this.projectLocation = projectLocation;
         this.input = input;

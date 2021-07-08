@@ -3,7 +3,7 @@ package me.soels.thesis.api.dtos;
 import com.github.javaparser.ParserConfiguration;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import me.soels.thesis.analysis.statik.StaticAnalysisInput;
+import me.soels.thesis.analysis.sources.SourceAnalysisInput;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
@@ -11,7 +11,7 @@ import java.nio.file.Path;
 
 @Getter
 @AllArgsConstructor
-public final class StaticAnalysisInputDto {
+public final class SourceAnalysisInputDto {
     @NotNull
     private final Path pathToProjectZip;
     @NotNull
@@ -19,7 +19,7 @@ public final class StaticAnalysisInputDto {
     @Pattern(regexp = ".*\\S+.*") // Don't allow empty. @Pattern allows null.
     private final String customDataAnnotation;
 
-    public StaticAnalysisInput toDao() {
-        return new StaticAnalysisInput(pathToProjectZip, languageLevel, customDataAnnotation);
+    public SourceAnalysisInput toDao() {
+        return new SourceAnalysisInput(pathToProjectZip, languageLevel, customDataAnnotation);
     }
 }

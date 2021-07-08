@@ -1,7 +1,7 @@
 package me.soels.thesis.analysis;
 
-import me.soels.thesis.analysis.statik.StaticAnalysis;
-import me.soels.thesis.analysis.statik.StaticAnalysisInput;
+import me.soels.thesis.analysis.sources.SourceAnalysis;
+import me.soels.thesis.analysis.sources.SourceAnalysisInput;
 import me.soels.thesis.model.EvaluationInputBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,19 +19,19 @@ import static com.github.javaparser.ParserConfiguration.LanguageLevel.JAVA_11;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-class StaticAnalysisTest {
+class SourceAnalysisTest {
     @Autowired
-    private StaticAnalysis analysis;
+    private SourceAnalysis analysis;
 
     @Test
-    void testStaticAnalysis() throws URISyntaxException {
+    void testSourceAnalysis() throws URISyntaxException {
         var resource = this.getClass().getClassLoader().getResource("./thesis-project-master.zip");
         runAnalysis(resource);
     }
 
     private void runAnalysis(URL resource) throws URISyntaxException {
         var project = Path.of(Objects.requireNonNull(resource).toURI());
-        var input = new StaticAnalysisInput(project, JAVA_11, null);
+        var input = new SourceAnalysisInput(project, JAVA_11, null);
         // thesis-project-master.zip (28 classes, 64 unique method names):
         //      117 total, 17 unresolved, 68 relevant (excl. self-ref), 29 relationships on 3.18.0 -- 2s
         //      117 total, 38 unresolved, 57 relevant (excl. self-ref), 25 relationships on 3.22.1 -- 1s

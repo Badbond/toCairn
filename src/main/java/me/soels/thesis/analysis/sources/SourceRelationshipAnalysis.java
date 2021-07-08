@@ -1,4 +1,4 @@
-package me.soels.thesis.analysis.statik;
+package me.soels.thesis.analysis.sources;
 
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
@@ -21,7 +21,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
-import static me.soels.thesis.analysis.statik.CustomClassOrInterfaceVisitor.VisitorResult;
+import static me.soels.thesis.analysis.sources.CustomClassOrInterfaceVisitor.VisitorResult;
 import static me.soels.thesis.model.DataRelationshipType.READ;
 import static me.soels.thesis.model.DataRelationshipType.WRITE;
 import static org.hamcrest.Matchers.*;
@@ -38,17 +38,17 @@ import static org.hamcrest.Matchers.*;
  * those influence the outer class.
  */
 @Service
-public class StaticRelationshipAnalysis {
-    private static final Logger LOGGER = LoggerFactory.getLogger(StaticRelationshipAnalysis.class);
+public class SourceRelationshipAnalysis {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SourceRelationshipAnalysis.class);
     private final DeclaringClassResolver declaringClassResolver;
     private final CustomClassOrInterfaceVisitor classVisitor;
 
-    public StaticRelationshipAnalysis(DeclaringClassResolver declaringClassResolver, CustomClassOrInterfaceVisitor classVisitor) {
+    public SourceRelationshipAnalysis(DeclaringClassResolver declaringClassResolver, CustomClassOrInterfaceVisitor classVisitor) {
         this.declaringClassResolver = declaringClassResolver;
         this.classVisitor = classVisitor;
     }
 
-    public void analyze(StaticAnalysisContext context) {
+    public void analyze(SourceAnalysisContext context) {
         LOGGER.info("Extracting relationships");
         var start = System.currentTimeMillis();
 
@@ -71,7 +71,7 @@ public class StaticRelationshipAnalysis {
         LOGGER.info("Static method call analysis took {} (H:m:s.millis)", duration);
     }
 
-    private void storeClassDependencies(StaticAnalysisContext context,
+    private void storeClassDependencies(SourceAnalysisContext context,
                                         VisitorResult visitorResult,
                                         Set<String> allMethodNames,
                                         Set<String> classNameSet) {
@@ -84,7 +84,7 @@ public class StaticRelationshipAnalysis {
         relevantNodes.forEach((key, value) -> storeRelationship(visitorResult.getCaller(), key, value, context));
     }
 
-    private Map<AbstractClass, List<Expression>> getRelevantConstructorCalls(StaticAnalysisContext context,
+    private Map<AbstractClass, List<Expression>> getRelevantConstructorCalls(SourceAnalysisContext context,
                                                                              VisitorResult visitorResult,
                                                                              List<AbstractClass> allClasses,
                                                                              Set<String> classNameSet) {
@@ -100,7 +100,7 @@ public class StaticRelationshipAnalysis {
                 .collect(groupingBy(Pair::getKey, Collectors.mapping(pair -> (Expression) pair.getValue(), Collectors.toList())));
     }
 
-    private Map<AbstractClass, List<Expression>> getRelevantMethodReferences(StaticAnalysisContext context,
+    private Map<AbstractClass, List<Expression>> getRelevantMethodReferences(SourceAnalysisContext context,
                                                                              VisitorResult visitorResult,
                                                                              Set<String> allMethodNames,
                                                                              List<AbstractClass> allClasses) {
@@ -117,7 +117,7 @@ public class StaticRelationshipAnalysis {
                 .collect(groupingBy(Pair::getKey, Collectors.mapping(pair -> (Expression) pair.getValue(), Collectors.toList())));
     }
 
-    private Map<AbstractClass, List<Expression>> getRelevantMethodCalls(StaticAnalysisContext context,
+    private Map<AbstractClass, List<Expression>> getRelevantMethodCalls(SourceAnalysisContext context,
                                                                         VisitorResult visitorResult,
                                                                         Set<String> allMethodNames,
                                                                         List<AbstractClass> allClasses) {
@@ -151,7 +151,7 @@ public class StaticRelationshipAnalysis {
     private void storeRelationship(AbstractClass caller,
                                    AbstractClass callee,
                                    List<Expression> relevantNodes,
-                                   StaticAnalysisContext context) {
+                                   SourceAnalysisContext context) {
         if (caller instanceof OtherClass && callee instanceof DataClass) {
             var type = identifyReadWrite(relevantNodes);
             context.getResultBuilder().addDataRelationship((OtherClass) caller, (DataClass) callee, type, relevantNodes.size());
@@ -202,7 +202,7 @@ public class StaticRelationshipAnalysis {
                         .matches(reference.getIdentifier())) ? WRITE : READ;
     }
 
-    private void printResults(StaticAnalysisContext context,
+    private void printResults(SourceAnalysisContext context,
                               List<VisitorResult> visitorResults,
                               Set<String> methodNameSet) {
         var counters = context.getCounters();

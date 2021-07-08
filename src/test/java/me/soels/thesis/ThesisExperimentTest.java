@@ -122,7 +122,7 @@ class ThesisExperimentTest {
                     .collect(Collectors.toList());
             var classA = classMapping.computeIfAbsent(split.get(0), key -> new OtherClass("Class" + classMapping.size(), split.get(0)));
             var classB = classMapping.computeIfAbsent(split.get(1), key -> new OtherClass("Class" + classMapping.size(), split.get(1)));
-            classA.getDependenceRelationships().add(new DependenceRelationship(classB, 1));
+            classA.getDependenceRelationships().add(new DependenceRelationship(classB, 1, 1));
         }
         return new ArrayList<>(classMapping.values());
     }

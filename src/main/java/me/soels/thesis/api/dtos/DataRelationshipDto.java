@@ -11,11 +11,9 @@ import me.soels.thesis.model.DependenceRelationship;
 @Getter
 public class DataRelationshipDto extends DependenceRelationshipDto {
     private final DataRelationshipType type;
-    private final Integer dynamicFrequency;
 
     public DataRelationshipDto(String callerFqn, DataRelationship relationship) {
         super(callerFqn, relationship);
         this.type = relationship.getType();
-        this.dynamicFrequency = relationship.getDynamicFrequency();
     }
 }

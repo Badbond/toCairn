@@ -152,12 +152,45 @@ public class SourceRelationshipAnalysis {
                                    AbstractClass callee,
                                    List<Expression> relevantNodes,
                                    SourceAnalysisContext context) {
+        var dynamicFreq = getDynamicFreq(caller, relevantNodes, context);
         if (caller instanceof OtherClass && callee instanceof DataClass) {
             var type = identifyReadWrite(relevantNodes);
-            context.getResultBuilder().addDataRelationship((OtherClass) caller, (DataClass) callee, type, relevantNodes.size());
+            context.getResultBuilder().addDataRelationship((OtherClass) caller,
+                    (DataClass) callee,
+                    type,
+                    relevantNodes.size(),
+                    dynamicFreq
+            );
         } else {
-            context.getResultBuilder().addDependency(caller, callee, relevantNodes.size());
+            context.getResultBuilder().addDependency(caller, callee, relevantNodes.size(), dynamicFreq);
         }
+    }
+
+    private Integer getDynamicFreq(AbstractClass caller, List<Expression> relevantNodes, SourceAnalysisContext context) {
+        var source = context.getSourceExecutions().entrySet().stream()
+                .filter(entry -> caller.getIdentifier().contains(entry.getKey()))
+                .map(Map.Entry::getValue)
+                .findFirst();
+        if (source.isEmpty()) {
+            // We do not have dynamic data present for this caller.
+            return null;
+        }
+
+        var callerExecutionCounts = source.get();
+
+        return relevantNodes.stream()
+                .filter(node -> node.getRange().isPresent())
+                .map(node -> node.getRange().get())
+                .map(range -> Pair.of(range.begin.line, range.end.line))
+                .mapToInt(pair -> callerExecutionCounts.entrySet().stream()
+                        // Retrieve lines matching with the range
+                        .filter(entry -> entry.getKey() >= pair.getKey() && entry.getValue() <= pair.getValue())
+                        .mapToInt(Map.Entry::getValue)
+                        // If this expression spans multiple lines, get the maximum execution counts on those lines
+                        .max()
+                        .orElse(0))
+                // Sum all the execution counts of all the relevant expressions
+                .sum();
     }
 
     /**

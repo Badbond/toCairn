@@ -166,6 +166,19 @@ public class SourceRelationshipAnalysis {
         }
     }
 
+    /**
+     * Retrieves the frequency from dynamic analysis based on the source file stored in the JaCoCo report matching
+     * {@code caller}.
+     * <p>
+     * The dynamic analysis will be determined from the execution counts on the lines matching the given expressions
+     * {@code relevantNodes}. If an expression spans multiple lines, we will take the {@code max} of those lines.
+     * All frequencies measured on these expressions are summed to determine the dynamic frequency.
+     *
+     * @param caller        the caller to retrieve dynamic frequency for
+     * @param relevantNodes the expressions that we need to retrieve dynamic frequency for
+     * @param context       the context containing the JaCoCo execution counts
+     * @return the dynamic frequency or {@code null} if the source file was not found
+     */
     private Integer getDynamicFreq(AbstractClass caller, List<Expression> relevantNodes, SourceAnalysisContext context) {
         var source = context.getSourceExecutions().entrySet().stream()
                 .filter(entry -> caller.getIdentifier().contains(entry.getKey()))
@@ -173,11 +186,18 @@ public class SourceRelationshipAnalysis {
                 .findFirst();
         if (source.isEmpty()) {
             // We do not have dynamic data present for this caller.
+            if (!context.getSourceExecutions().isEmpty()) {
+                // TODO:
+                //  Test whether big-project works as expected and we retrieved all the results from dynamic analysis
+                //  especially for inner classes and generated (inner) classes.
+                // We did do some dynamic analysis, so we should better warn our users
+                LOGGER.warn("Could not find source file for {} in JaCoCo report", caller.getIdentifier());
+            }
+            LOGGER.debug("Not applying dynamic frequency from {} as its source file in dynamic analysis was not found", caller.getIdentifier());
             return null;
         }
 
         var callerExecutionCounts = source.get();
-
         return relevantNodes.stream()
                 .filter(node -> node.getRange().isPresent())
                 .map(node -> node.getRange().get())

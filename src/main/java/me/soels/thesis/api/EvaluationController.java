@@ -38,7 +38,7 @@ public class EvaluationController {
      */
     @GetMapping
     public List<EvaluationDto> getAllEvaluations() {
-        return service.getEvaluations().stream()
+        return service.getShallowEvaluations().stream()
                 .map(EvaluationDto::new)
                 .collect(Collectors.toList());
     }
@@ -51,7 +51,7 @@ public class EvaluationController {
      */
     @GetMapping("/{evaluationId}")
     public EvaluationDto getEvaluation(@PathVariable UUID evaluationId) {
-        return new EvaluationDto(service.getEvaluation(evaluationId));
+        return new EvaluationDto(service.getShallowEvaluation(evaluationId));
     }
 
     /**

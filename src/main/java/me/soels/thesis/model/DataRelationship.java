@@ -3,8 +3,6 @@ package me.soels.thesis.model;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.annotation.Nullable;
-
 /**
  * Indicates that there is a relationship between an {@link OtherClass} and a {@link DataClass}.
  * <p>
@@ -17,8 +15,8 @@ import javax.annotation.Nullable;
 public final class DataRelationship extends DependenceRelationship {
     private DataRelationshipType type;
 
-    public DataRelationship(DataClass callee, DataRelationshipType type, int staticFrequency, @Nullable Integer dynamicFreq) {
-        super(callee, staticFrequency, dynamicFreq);
+    public DataRelationship(DataClass callee, DataRelationshipType type, int staticFrequency, Integer dynamicFrequency) {
+        super(callee, staticFrequency, dynamicFrequency);
         this.type = type;
     }
 

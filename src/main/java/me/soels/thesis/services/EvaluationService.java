@@ -41,12 +41,12 @@ public class EvaluationService {
     }
 
     /**
-     * Retrieve all stored evaluations.
+     * Retrieve all stored evaluations without the input graph data.
      *
-     * @return the stored evaluations
+     * @return the stored shallow evaluations
      */
-    public List<Evaluation> getEvaluations() {
-        return evaluationRepository.findAll();
+    public List<Evaluation> getShallowEvaluations() {
+        return evaluationRepository.findAllShallow();
     }
 
     /**
@@ -57,6 +57,17 @@ public class EvaluationService {
      */
     public Evaluation getEvaluation(UUID id) {
         return evaluationRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(id));
+    }
+
+    /**
+     * Retrieve a specific evaluation without input graph data.
+     *
+     * @param id the id of the evaluation to retrieve
+     * @return the requested shallow evaluation
+     */
+    public Evaluation getShallowEvaluation(UUID id) {
+        return evaluationRepository.getByIdShallow(id)
                 .orElseThrow(() -> new ResourceNotFoundException(id));
     }
 

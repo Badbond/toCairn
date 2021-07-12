@@ -69,13 +69,13 @@ public class EvaluationInputBuilder {
      * This furthermore adds the constructed relationship on the caller object as well such that it will be persisted
      * once saved to the repository
      *
-     * @param caller      the class that calls the callee
-     * @param callee      the class that is being called by the caller
-     * @param frequency   the frequency in which these two classes depend on each other
-     * @param dynamicFreq
+     * @param caller          the class that calls the callee
+     * @param callee          the class that is being called by the caller
+     * @param staticFrequency the number of places these two classes depend on each other
+     * @param dynamicFreq     the dynamic frequency in which these two classes depend on each other
      */
-    public void addDataRelationship(OtherClass caller, DataClass callee, DataRelationshipType type, int frequency, Integer dynamicFreq) {
-        var dataRelationship = new DataRelationship(callee, type, frequency, dynamicFreq);
+    public void addDataRelationship(OtherClass caller, DataClass callee, DataRelationshipType type, int staticFrequency, Integer dynamicFreq) {
+        var dataRelationship = new DataRelationship(callee, type, staticFrequency, dynamicFreq);
         caller.getDataRelationships().add(dataRelationship);
     }
 

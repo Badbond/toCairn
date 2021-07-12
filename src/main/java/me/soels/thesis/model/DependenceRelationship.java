@@ -3,7 +3,7 @@ package me.soels.thesis.model;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 import java.util.Optional;
 
 /**
@@ -22,16 +22,18 @@ import java.util.Optional;
 @Getter
 @Setter
 public class DependenceRelationship extends Relationship {
+    @NotNull
     private int staticFrequency;
     private Integer dynamicFrequency;
 
-    public DependenceRelationship(AbstractClass callee, int staticFrequency, @Nullable Integer dynamicFrequency) {
+    public DependenceRelationship(AbstractClass callee, int staticFrequency, Integer dynamicFrequency) {
         super(callee);
         this.staticFrequency = staticFrequency;
         this.dynamicFrequency = dynamicFrequency;
     }
 
     public Optional<Integer> getDynamicFrequency() {
+        // We could not store the relationship with optional properties and thus set it to -1 instead for not present
         return Optional.ofNullable(dynamicFrequency);
     }
 }

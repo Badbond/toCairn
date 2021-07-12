@@ -60,9 +60,18 @@ public class SourceAnalysis {
         }
         var projectLocation = zipExtractor.extractZip(inputZip);
         var context = new SourceAnalysisContext(projectLocation, input, builder);
-        if(input.getPathToJacocoXml().isPresent()) {
+
+        if (input.getPathToJacocoXml().isPresent()) {
+            var jacocoPath = input.getPathToJacocoXml().get();
+            if (!jacocoPath.getFileName().toString().toLowerCase().endsWith(".xml")) {
+                throw new IllegalArgumentException("The path does not refer to a .xml file, for path " + jacocoPath);
+            } else if (!Files.exists(jacocoPath)) {
+                throw new IllegalArgumentException("The XML file does not exist for path " + jacocoPath);
+            }
+
             reportExtractor.extractJaCoCoReport(input.getPathToJacocoXml().get(), context.getSourceExecutions());
         }
+
         return context;
     }
 

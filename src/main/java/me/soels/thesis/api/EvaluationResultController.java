@@ -29,20 +29,21 @@ public class EvaluationResultController {
 
     @GetMapping("/result/{evaluationResultId}")
     public EvaluationResultDto getEvaluationResultById(@PathVariable UUID evaluationResultId) {
-        return new EvaluationResultDto(resultService.getResult(evaluationResultId));
+        return new EvaluationResultDto(resultService.getShallowResult(evaluationResultId));
     }
 
     @GetMapping("/evaluation/{evaluationId}/result")
     public List<EvaluationResultDto> getEvaluationResultsForEvaluation(@PathVariable UUID evaluationId) {
-        var evaluation = evaluationService.getEvaluation(evaluationId);
+        var evaluation = evaluationService.getShallowEvaluation(evaluationId);
         return evaluation.getResults().stream()
+                .map(result -> resultService.getShallowResult(result.getId()))
                 .map(EvaluationResultDto::new)
                 .collect(Collectors.toList());
     }
 
     @GetMapping("/solution/{solutionId}")
     public SolutionDto getSolution(@PathVariable UUID solutionId) {
-        return new SolutionDto(resultService.getSolution(solutionId));
+        return new SolutionDto(resultService.getShallowSolution(solutionId));
     }
 
     @ResponseStatus(NO_CONTENT)

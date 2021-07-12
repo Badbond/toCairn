@@ -13,9 +13,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static me.soels.thesis.clustering.objectives.ObjectiveType.DATA_AUTONOMY;
 import static me.soels.thesis.clustering.objectives.ObjectiveType.SHARED_DEVELOPMENT_LIFECYCLE;
-import static me.soels.thesis.model.AnalysisType.*;
+import static me.soels.thesis.model.AnalysisType.EVOLUTIONARY;
+import static me.soels.thesis.model.AnalysisType.SOURCE;
 import static me.soels.thesis.model.EvaluationStatus.INCOMPLETE;
 import static me.soels.thesis.model.EvaluationStatus.RUNNING;
 
@@ -209,7 +209,6 @@ public class EvaluationService {
     public boolean hasAllRequiredInput(Evaluation evaluation, Set<ObjectiveType> objectives) {
         var executed = evaluation.getExecutedAnalysis();
         return executed.contains(SOURCE) &&
-                (!objectives.contains(DATA_AUTONOMY) || executed.contains(DYNAMIC)) &&
                 (!objectives.contains(SHARED_DEVELOPMENT_LIFECYCLE) || executed.contains(EVOLUTIONARY));
     }
 

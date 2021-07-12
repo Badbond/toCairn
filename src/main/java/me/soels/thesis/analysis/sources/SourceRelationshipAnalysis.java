@@ -27,7 +27,7 @@ import static me.soels.thesis.model.DataRelationshipType.WRITE;
 import static org.hamcrest.Matchers.*;
 
 /**
- * Performs static analysis on the provided project to determine the relationships between classes in the project.
+ * Performs source analysis on the provided project to determine the relationships between classes in the project.
  * <p>
  * We analyze method calls, constructor usage and method references on a per-class basis to determine relationships
  * between classes. For method calls and references, we optimize the search algorithm by only including those referenced

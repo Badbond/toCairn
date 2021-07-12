@@ -36,7 +36,7 @@ public class EvaluationResultService {
      * @param id the id of the result to delete
      */
     public void deleteResult(UUID id) {
-        var maybeResult = resultRepository.findById(id);
+        var maybeResult = resultRepository.getByIdShallow(id);
         // Delete the clusters associated with all the solutions in this result
         maybeResult.ifPresent(result -> result.getSolutions().stream()
                 .flatMap(solution -> solution.getClusters().stream())
@@ -48,13 +48,13 @@ public class EvaluationResultService {
         maybeResult.ifPresent(resultRepository::delete);
     }
 
-    public EvaluationResult getResult(UUID id) {
-        return resultRepository.findById(id)
+    public EvaluationResult getShallowResult(UUID id) {
+        return resultRepository.getByIdShallow(id)
                 .orElseThrow(() -> new ResourceNotFoundException(id));
     }
 
-    public Solution getSolution(UUID id) {
-        return solutionRepository.findById(id)
+    public Solution getShallowSolution(UUID id) {
+        return solutionRepository.getByIdShallow(id)
                 .orElseThrow(() -> new ResourceNotFoundException(id));
     }
 }

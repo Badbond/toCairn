@@ -1,8 +1,6 @@
 package me.soels.thesis.analysis.sources;
 
-import com.github.javaparser.ast.expr.Expression;
-import com.github.javaparser.ast.expr.MethodCallExpr;
-import com.github.javaparser.ast.expr.MethodReferenceExpr;
+import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 import me.soels.thesis.model.AbstractClass;
 import me.soels.thesis.model.DataClass;
@@ -80,6 +78,7 @@ public class SourceRelationshipAnalysis {
         relevantNodes.putAll(getRelevantMethodCalls(context, visitorResult, allMethodNames, allClasses));
         relevantNodes.putAll(getRelevantMethodReferences(context, visitorResult, allMethodNames, allClasses));
         relevantNodes.putAll(getRelevantConstructorCalls(context, visitorResult, allClasses, classNameSet));
+        relevantNodes.putAll(getRelevantFieldAccess(context, visitorResult, allClasses));
 
         relevantNodes.forEach((key, value) -> storeRelationship(visitorResult.getCaller(), key, value, context));
     }
@@ -131,6 +130,23 @@ public class SourceRelationshipAnalysis {
                 // Filter out self invocation
                 .filter(calleePair -> !calleePair.getKey().getIdentifier().equals(visitorResult.getCaller().getIdentifier()))
                 .map(calleePair -> executeSideEffect(() -> context.getCounters().relevantMethodCalls++, calleePair))
+                // Group by callee class based on FQN with value the AST nodes relevant
+                .collect(groupingBy(Pair::getKey, Collectors.mapping(pair -> (Expression) pair.getValue(), Collectors.toList())));
+    }
+
+    private Map<AbstractClass, List<Expression>> getRelevantFieldAccess(SourceAnalysisContext context,
+                                                                        VisitorResult visitorResult,
+                                                                        List<AbstractClass> allClasses) {
+        // We need to iterate this way to resolve statements in a preorder for multiple types of nodes
+        return visitorResult.getFieldAccesses().stream()
+                // Filter out field access for this and super
+                .filter(fieldAccessExpr -> !(fieldAccessExpr.getScope() instanceof ThisExpr) &&
+                        !(fieldAccessExpr.getScope() instanceof SuperExpr))
+                // Try to resolve the field access to get the pair of callee and its field accessed.
+                .flatMap(fieldAccess -> declaringClassResolver.resolveFieldAccess(context, fieldAccess, allClasses).stream())
+                // Filter out self invocation
+                .filter(calleePair -> !calleePair.getKey().getIdentifier().equals(visitorResult.getCaller().getIdentifier()))
+                .map(calleePair -> executeSideEffect(() -> context.getCounters().relevantFieldAccesses++, calleePair))
                 // Group by callee class based on FQN with value the AST nodes relevant
                 .collect(groupingBy(Pair::getKey, Collectors.mapping(pair -> (Expression) pair.getValue(), Collectors.toList())));
     }
@@ -273,7 +289,9 @@ public class SourceRelationshipAnalysis {
                         "\n\tRelevant method references:        {}" +
                         "\n\tTotal method calls:                {}" +
                         "\n\tMatching method calls:             {}" +
-                        "\n\tRelevant method calls:             {}" + // To other classes within the project
+                        "\n\tRelevant method calls:             {}" +
+                        "\n\tTotal field accesses:              {}" +
+                        "\n\tRelevant field accesses:           {}" +
                         "\n\tTotal dependence relationships:    {}" +
                         "\n\tOf which data relationships:       {}",
                 visitorResults.stream().mapToInt(res -> res.getObjectCreationExpressions().size()).sum(),
@@ -286,6 +304,8 @@ public class SourceRelationshipAnalysis {
                 visitorResults.stream().mapToInt(res -> res.getMethodCalls().size()).sum(),
                 counters.matchingMethodCalls,
                 counters.relevantMethodCalls,
+                visitorResults.stream().mapToInt(res -> res.getFieldAccesses().size()).sum(),
+                counters.relevantFieldAccesses,
                 context.getResultBuilder().getClasses().stream()
                         .mapToLong(clazz -> clazz.getDependenceRelationships().size())
                         .sum(),

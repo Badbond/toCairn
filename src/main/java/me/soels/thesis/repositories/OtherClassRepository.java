@@ -22,8 +22,8 @@ public interface OtherClassRepository extends ClassRepository<OtherClass> {
             "WITH a " +
             "MATCH (b:DataClass) " +
             "WITH a, b " +
-            "WHERE ID(a) = $0 AND ID(b) = $1 " +
+            "WHERE a.id = $0 AND b.id = $1 " +
             "CREATE (a)-[r:DATA_DEPENDS_ON]->(b) " +
-            "SET r = $relationship.__properties__")
+            "SET r = $2.__properties__")
     void addDataRelationship(UUID callerId, UUID calleeId, DataRelationship relationship);
 }

@@ -5,6 +5,7 @@ import me.soels.thesis.analysis.evolutionary.EvolutionaryAnalysisInput;
 import me.soels.thesis.analysis.sources.SourceAnalysis;
 import me.soels.thesis.analysis.sources.SourceAnalysisContext;
 import me.soels.thesis.analysis.sources.SourceAnalysisInput;
+import me.soels.thesis.api.ResourceNotFoundException;
 import me.soels.thesis.model.AbstractClass;
 import me.soels.thesis.model.Evaluation;
 import me.soels.thesis.model.EvaluationInput;
@@ -19,9 +20,12 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static me.soels.thesis.model.AnalysisType.*;
+import static me.soels.thesis.model.AnalysisType.EVOLUTIONARY;
+import static me.soels.thesis.model.AnalysisType.SOURCE;
 
 /**
  * Service responsible for maintaining the {@link EvaluationInput} graph. This service allows for commanding certain
@@ -47,21 +51,6 @@ public class EvaluationInputService {
         this.classRepository = classRepository;
         this.otherClassRepository = otherClassRepository;
         this.evaluationRepository = evaluationRepository;
-    }
-
-    /**
-     * Store the given input graph.
-     * <p>
-     * The {@link Evaluation} needs to be given as that contains the outgoing dependency
-     * to the input graph nodes.
-     *
-     * @param evaluation the evaluation to set the inputs for
-     * @param input      the input graph to store
-     */
-    public void storeInput(Evaluation evaluation, EvaluationInput input) {
-        evaluation.setInputs(input.getClasses());
-        // This also saves/created the nodes in the graph
-        evaluationRepository.save(evaluation);
     }
 
     /**
@@ -97,7 +86,7 @@ public class EvaluationInputService {
             var context = sourceAnalysis.prepareContext(builder, analysisInput);
             // We split the extraction and persistence of nodes and edges as we can then more efficiently create the
             // relationships based on existent nodes with generated IDs.
-            extractNodes(evaluation, builder, context);
+            extractNodes(evaluation, context);
             extractEdges(evaluation, context);
             var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);
             LOGGER.info("Total source analysis took {} (H:m:s.millis)", duration);
@@ -105,6 +94,14 @@ public class EvaluationInputService {
             // Always reset the lock
             sourceAnalysisRunning.set(false);
         }
+    }
+
+    private void extractNodes(Evaluation evaluation, SourceAnalysisContext context) {
+        sourceAnalysis.analyzeNodes(context);
+
+        LOGGER.info("Storing nodes");
+        storeInput(evaluation, context.getResultBuilder().build());
+        LOGGER.info("Stored {} nodes", evaluation.getInputs().size());
     }
 
     private void extractEdges(Evaluation evaluation, SourceAnalysisContext context) {
@@ -120,13 +117,6 @@ public class EvaluationInputService {
             otherClass.getDataRelationships().forEach(rel -> otherClassRepository.addDataRelationship(otherClass.getId(), rel.getCallee().getId(), rel));
         });
         LOGGER.info("Stored relationships");
-    }
-
-    private void extractNodes(Evaluation evaluation, EvaluationInputBuilder builder, SourceAnalysisContext context) {
-        sourceAnalysis.analyzeNodes(context);
-        LOGGER.info("Storing nodes");
-        storeInput(evaluation, builder.build());
-        LOGGER.info("Stored {} nodes", evaluation.getInputs().size());
     }
 
     /**
@@ -157,5 +147,20 @@ public class EvaluationInputService {
     private EvaluationInputBuilder getPopulatedInputBuilder(Evaluation evaluation) {
         var classes = evaluation.getInputs();
         return new EvaluationInputBuilder(classes);
+    }
+
+    /**
+     * Store the given input graph.
+     * <p>
+     * The {@link Evaluation} needs to be given as that contains the outgoing dependency
+     * to the input graph nodes.
+     *
+     * @param evaluation the evaluation to set the inputs for
+     * @param input      the input graph to store
+     */
+    private void storeInput(Evaluation evaluation, EvaluationInput input) {
+        evaluation.setInputs(input.getClasses());
+        // This also saves/created the nodes in the graph
+        evaluationRepository.save(evaluation);
     }
 }

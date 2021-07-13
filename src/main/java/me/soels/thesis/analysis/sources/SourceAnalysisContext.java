@@ -52,6 +52,7 @@ public class SourceAnalysisContext {
         int matchingMethodReferences = 0;
         int relevantMethodReferences = 0;
         int matchingMethodCalls = 0;
-        int relevantMethodCalls;
+        int relevantMethodCalls = 0;
+        int relevantFieldAccesses = 0;
     }
 }

@@ -2,6 +2,7 @@ package me.soels.thesis.analysis.sources;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.expr.FieldAccessExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.MethodReferenceExpr;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
@@ -70,10 +71,17 @@ class CustomClassOrInterfaceVisitor extends VoidVisitorAdapter<CustomClassOrInte
         super.visit(node, result);
     }
 
+    @Override
+    public void visit(FieldAccessExpr node, VisitorResult result) {
+        result.fieldAccesses.add(node);
+        super.visit(node, result);
+    }
+
     static class VisitorResult {
         private final List<MethodCallExpr> methodCalls = new ArrayList<>();
         private final List<ObjectCreationExpr> objectCreationExpressions = new ArrayList<>();
         private final List<MethodReferenceExpr> methodReferences = new ArrayList<>();
+        private final List<FieldAccessExpr> fieldAccesses = new ArrayList<>();
         private final List<MethodDeclaration> declaredMethods = new ArrayList<>();
         private final ClassOrInterfaceDeclaration callerDefinition;
         private final AbstractClass caller;
@@ -93,6 +101,10 @@ class CustomClassOrInterfaceVisitor extends VoidVisitorAdapter<CustomClassOrInte
 
         public List<MethodReferenceExpr> getMethodReferences() {
             return methodReferences;
+        }
+
+        public List<FieldAccessExpr> getFieldAccesses() {
+            return fieldAccesses;
         }
 
         public List<MethodDeclaration> getDeclaredMethods() {

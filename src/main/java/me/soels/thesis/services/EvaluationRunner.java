@@ -4,7 +4,6 @@ import me.soels.thesis.clustering.ClusteringContextProvider;
 import me.soels.thesis.clustering.encoding.VariableDecoder;
 import me.soels.thesis.model.*;
 import org.apache.commons.lang3.time.DurationFormatUtils;
-import org.moeaframework.Analyzer;
 import org.moeaframework.Analyzer.AnalyzerResults;
 import org.moeaframework.Executor;
 import org.moeaframework.core.NondominatedPopulation;
@@ -90,7 +89,10 @@ public class EvaluationRunner {
                 .flatMap(algorithmResult ->
                         algorithmResult.getIndicators().stream()
                                 .map(algorithmResult::get))
-                .forEach(indicator -> setMetric(newResult, indicator));
+                .forEach(indicator -> newResult.getPopulationMetrics().put(
+                        indicator.getIndicator(),
+                        indicator.getValues()[0])
+                );
 
         var solutions = StreamSupport.stream(result.spliterator(), false)
                 .map(solution -> setupSolution(evaluation, input, solution))
@@ -98,47 +100,10 @@ public class EvaluationRunner {
         newResult.getSolutions().addAll(solutions);
         evaluation.getResults().add(newResult);
         evaluationService.save(evaluation);
-        var duration = DurationFormatUtils.formatDurationHMS(ChronoUnit.MILLIS.between(newResult.getFinishDate(), startDate));
+        var duration = DurationFormatUtils.formatDurationHMS(ChronoUnit.MILLIS.between(startDate, newResult.getFinishDate()));
         LOGGER.info("Evaluation run complete. Took {} (H:m:s.millis)", duration);
         LOGGER.info("Result id: {}, Solutions: {}, Clusters: {}", newResult.getId(), solutions.size(),
                 solutions.stream().mapToInt(sol -> sol.getClusters().size()).sum());
-    }
-
-    private void setMetric(EvaluationResult newResult, Analyzer.IndicatorResult indicator) {
-        switch (indicator.getIndicator()) {
-            case "Hypervolume":
-                newResult.setHyperVolume(indicator.getValues()[0]);
-                break;
-            case "GenerationalDistance":
-                newResult.setGenerationalDistance(indicator.getValues()[0]);
-                break;
-            case "InvertedGenerationalDistance":
-                newResult.setInvertedGenerationalDistance(indicator.getValues()[0]);
-                break;
-            case "AdditiveEpsilonIndicator":
-                newResult.setAdditiveEpsilonIndicator(indicator.getValues()[0]);
-                break;
-            case "MaximumParetoFrontError":
-                newResult.setMaximumParetoFrontError(indicator.getValues()[0]);
-                break;
-            case "Spacing":
-                newResult.setSpacing(indicator.getValues()[0]);
-                break;
-            case "Contribution":
-                newResult.setContribution(indicator.getValues()[0]);
-                break;
-            case "R1Indicator":
-                newResult.setR1Indicator(indicator.getValues()[0]);
-                break;
-            case "R2Indicator":
-                newResult.setR2Indicator(indicator.getValues()[0]);
-                break;
-            case "R3Indicator":
-                newResult.setR3Indicator(indicator.getValues()[0]);
-                break;
-            default:
-                LOGGER.warn("Unknown metric {} found. Not storing this metric and its values {}", indicator.getIndicator(), indicator.getValues());
-        }
     }
 
     /**

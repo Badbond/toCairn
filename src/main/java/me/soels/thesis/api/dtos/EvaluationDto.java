@@ -33,7 +33,7 @@ public class EvaluationDto {
     @NotBlank
     private final String name;
     @NotNull
-    @Size(min = 2)
+    @Size(min = 1)
     private final Set<ObjectiveType> objectives;
     @NotNull
     private final EvaluationConfigurationDto configuration;

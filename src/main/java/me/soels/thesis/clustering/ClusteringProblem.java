@@ -25,6 +25,7 @@ import java.util.List;
  * @see EncodingType
  */
 public class ClusteringProblem extends AbstractProblem {
+    public static final String PROBLEM_NAME = "MOEAC";
     private final List<Objective> objectives;
     private final EvaluationInput evaluationInput;
     private final EvaluationConfiguration configuration;

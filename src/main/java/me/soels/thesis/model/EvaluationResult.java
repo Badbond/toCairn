@@ -7,6 +7,7 @@ import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -27,7 +28,18 @@ public class EvaluationResult {
     @Relationship("HAS_SOLUTIONS")
     private List<Solution> solutions = new ArrayList<>();
 
-    // TODO: Model metrics (performance metrics), created date
-    // TODO: MOEAFramework provides a nice way to print significance results for the evaluation run. Perhaps I can
-    //  also extract that and store it in the graph.
+    private ZonedDateTime createdDate;
+    private Double hyperVolume;
+    private Double generationalDistance;
+    private Double invertedGenerationalDistance;
+    private Double additiveEpsilonIndicator;
+    private Double maximumParetoFrontError;
+    private Double spacing;
+    private Double contribution;
+    private Double r1Indicator;
+    private Double r2Indicator;
+    private Double r3Indicator;
+
+
+    // TODO: Model metrics (performance metrics)
 }

@@ -1,9 +1,9 @@
 package me.soels.thesis.clustering.objectives;
 
 /**
- * Functional interface to identify a metric as a {@link ObjectiveType#ONE_PURPOSE} metric.
+ * Functional interface to identify a metric for the {@link ObjectiveType#ONE_PURPOSE} objective.
  */
-public interface OnePurposeMetric extends Objective {
+public interface OnePurposeMetric extends Metric {
 }
 
 

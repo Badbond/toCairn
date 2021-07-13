@@ -5,9 +5,9 @@ import me.soels.thesis.analysis.sources.SourceAnalysisInput;
 import me.soels.thesis.clustering.ClusteringProblem;
 import me.soels.thesis.clustering.encoding.EncodingType;
 import me.soels.thesis.clustering.encoding.VariableDecoder;
-import me.soels.thesis.clustering.objectives.CohesionCarvalhoObjective;
-import me.soels.thesis.clustering.objectives.CouplingBetweenModuleClassesObjective;
-import me.soels.thesis.clustering.objectives.Objective;
+import me.soels.thesis.clustering.objectives.CohesionCarvalhoMetric;
+import me.soels.thesis.clustering.objectives.CouplingBetweenModuleClassesMetric;
+import me.soels.thesis.clustering.objectives.Metric;
 import me.soels.thesis.model.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -73,7 +73,7 @@ class ThesisExperimentTest {
     }
 
     private void runExperiment(EvaluationConfiguration config, EvaluationInput input) {
-        List<Objective> objectives = List.of(new CouplingBetweenModuleClassesObjective(), new CohesionCarvalhoObjective());
+        List<Metric> metrics = List.of(new CouplingBetweenModuleClassesMetric(), new CohesionCarvalhoMetric());
         var start = System.currentTimeMillis();
 
         // TODO:
@@ -87,12 +87,12 @@ class ThesisExperimentTest {
         //  Further investigate control over duplicates. Desirable:
         //      - Being able to normalize the solution
         //      - Have non-duplicated solutions (results in same clustering)
-        //      - Allow duplicated objectives (same result, different clustering, is still interesting)
+        //      - Allow equal metric values (same result, different clustering, is still interesting)
 
         // TODO: As suggested by Carvalho et al., try to disable crossover operators but only allow for mutation
         //  operators. Currently SBX and PM is enabled.
         NondominatedPopulation result = new Executor()
-                .withProblem(new ClusteringProblem(objectives, input, config, variableDecoder))
+                .withProblem(new ClusteringProblem(metrics, input, config, variableDecoder))
                 .withAlgorithm("NSGAII")
                 .distributeOnAllCores()
                 .withMaxEvaluations(1000000)
@@ -103,7 +103,7 @@ class ThesisExperimentTest {
         LOGGER.info("===================================");
         LOGGER.info("Amount of non-dominated solutions: " + result.size());
         LOGGER.info("Processing took: " + duration + " (H:m:s.millis)");
-        printSolutionsData(result, objectives, input, config);
+        printSolutionsData(result, metrics, input, config);
         LOGGER.info("===================================");
     }
 
@@ -139,21 +139,21 @@ class ThesisExperimentTest {
         }
     }
 
-    private void printSolutionsData(NondominatedPopulation result, List<Objective> objectives, EvaluationInput input, EvaluationConfiguration config) {
-        var objectivesNames = objectives.stream()
-                .map(objective -> objective.getClass().getSimpleName())
+    private void printSolutionsData(NondominatedPopulation result, List<Metric> metrics, EvaluationInput input, EvaluationConfiguration config) {
+        var metricNames = metrics.stream()
+                .map(metric -> metric.getClass().getSimpleName())
                 .collect(Collectors.toList());
 
         for (var solution : result) {
-            var objectivesStringBuilder = new StringBuilder("-----------------------------------\n")
-                    .append(StringUtils.join(objectivesNames, "  "))
+            var metricsStringBuilder = new StringBuilder("-----------------------------------\n")
+                    .append(StringUtils.join(metricNames, "  "))
                     .append("\n");
-            for (int i = 0; i < objectivesNames.size(); i++) {
+            for (int i = 0; i < metricNames.size(); i++) {
                 var numberLength = Double.compare(solution.getObjective(i), 0.0) < 0 ? 7 : 6;
-                var spacing = " ".repeat(objectivesNames.get(i).length() - numberLength) + "  ";
-                objectivesStringBuilder.append(String.format("%.4f%s", solution.getObjective(i), spacing));
+                var spacing = " ".repeat(metricNames.get(i).length() - numberLength) + "  ";
+                metricsStringBuilder.append(String.format("%.4f%s", solution.getObjective(i), spacing));
             }
-            LOGGER.info(objectivesStringBuilder.toString());
+            LOGGER.info(metricsStringBuilder.toString());
 
             var clustering = variableDecoder.decode(solution, input, config);
             if (clustering.getByClass().size() <= 12) {

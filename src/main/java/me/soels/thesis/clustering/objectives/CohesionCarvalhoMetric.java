@@ -13,7 +13,7 @@ import java.util.List;
  * This metric should be maximized but, as the framework only allows for minimization objectives, we negate the value.
  * <p>
  * The only addition we have made is to give clusters of 1 node a value of 0.25 as they, like a cluster with 2 nodes
- * and a joining edge, the most cohesive form. This counters the 'cluster everything together' effect of coupling
+ * and a joining edge, are the most cohesive form. This counters the 'cluster everything together' effect of coupling
  * metrics. Otherwise, we would have a division by 0 returning in NaN.
  * <p>
  * See related work 'Carvalho, L., Garcia, A., Colanzi, T. E., Assunção, W. K., Pereira, J. A., Fonseca, B., ... &
@@ -22,7 +22,7 @@ import java.util.List;
  * (pp. 569-580). IEEE.' and 'Chidamber, S. R., & Kemerer, C. F. (1994). A metrics suite for object oriented design.
  * <i>IEEE Transactions on software engineering, 20</i>(6), 476-493.'.
  */
-public class CohesionCarvalhoObjective implements OnePurposeMetric {
+public class CohesionCarvalhoMetric implements OnePurposeMetric {
     @Override
     public double calculate(Clustering clustering, EvaluationInput evaluationInput) {
         var clusteringByCluster = clustering.getByCluster();

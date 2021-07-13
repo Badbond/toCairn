@@ -1,6 +1,6 @@
 package me.soels.thesis.model;
 
-import me.soels.thesis.clustering.objectives.Objective;
+import me.soels.thesis.clustering.objectives.Metric;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -17,7 +17,7 @@ import static me.soels.thesis.util.GenericCollectionExtractor.extractType;
  * by the algorithm for the given objective function.
  *
  * @see EvaluationInputBuilder
- * @see Objective
+ * @see Metric
  */
 public final class EvaluationInput {
     private final List<? extends AbstractClass> classes;

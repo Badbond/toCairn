@@ -44,29 +44,6 @@ public class ClusteringContextProvider {
                 .showAll();
     }
 
-    public ProblemFactory createProblemProvider(Evaluation evaluation, EvaluationInput input) {
-        var objectives = evaluation.getObjectives().stream()
-                .flatMap(objectiveType -> getMetricsForObjective(objectiveType).stream())
-                .collect(Collectors.toUnmodifiableList());
-        var problem = new ClusteringProblem(List.copyOf(objectives), input, evaluation.getConfiguration(), variableDecoder);
-        var factory = new ProblemFactory();
-        factory.addProvider(new ProblemProvider() {
-            @Override
-            public Problem getProblem(String name) {
-                if ("MOEAC".equals(name)) {
-                    return problem;
-                }
-                return null;
-            }
-
-            @Override
-            public NondominatedPopulation getReferenceSet(String name) {
-                return null;
-            }
-        });
-        return factory;
-    }
-
     public Executor createExecutor(Problem problem, EvaluationConfiguration configuration) {
         return new Executor()
                 .distributeOnAllCores()
@@ -78,14 +55,14 @@ public class ClusteringContextProvider {
         //  connected nodes.
     }
 
-    public List<Objective> getMetricsForObjective(ObjectiveType objectiveType) {
+    public List<Metric> getMetricsForObjective(ObjectiveType objectiveType) {
         switch (objectiveType) {
             case ONE_PURPOSE:
                 // TODO: We probably want to have only one metric per objective such that we can have one number
                 //  indicate the quality of the solution based on that characteristic instead of having multiple.
                 //  Perhaps we can sum these objectives. However, they should have equal ranges otherwise 0-10 would
                 //  overtake 0-1 in almost all cases. Thus one_purpose=(cohesion+coupling)/2 should range from (0-1).
-                return List.of(new CohesionCarvalhoObjective(), new CouplingCarvalhoObjective());
+                return List.of(new CohesionCarvalhoMetric(), new CouplingCarvalhoMetric());
             case DATA_AUTONOMY:
                 return List.of(new TemporaryDataAutonomyMetric());
             case BOUNDED_CONTEXT:

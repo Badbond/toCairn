@@ -1,7 +1,7 @@
 package me.soels.thesis.clustering.objectives;
 
 /**
- * Functional interface to identify a metric as a {@link ObjectiveType#SHARED_DEVELOPMENT_LIFECYCLE} metric.
+ * Functional interface to identify a metric for the {@link ObjectiveType#SHARED_DEVELOPMENT_LIFECYCLE} objective.
  */
-public interface DevelopmentLifecycleMetric extends Objective {
+public interface DevelopmentLifecycleMetric extends Metric {
 }

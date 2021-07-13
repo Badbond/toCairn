@@ -1,7 +1,7 @@
 package me.soels.thesis.clustering.objectives;
 
 /**
- * Functional interface to identify a metric as a {@link ObjectiveType#BOUNDED_CONTEXT} metric.
+ * Functional interface to identify a metric for the {@link ObjectiveType#BOUNDED_CONTEXT} objective.
  */
-public interface BoundedContextMetric extends Objective {
+public interface BoundedContextMetric extends Metric {
 }

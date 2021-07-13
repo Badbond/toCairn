@@ -21,7 +21,7 @@ import java.util.List;
  * (pp. 569-580). IEEE.' and 'Chidamber, S. R., & Kemerer, C. F. (1994). A metrics suite for object oriented design.
  * <i>IEEE Transactions on software engineering, 20</i>(6), 476-493.'.
  */
-public class CouplingCarvalhoObjective implements OnePurposeMetric {
+public class CouplingCarvalhoMetric implements OnePurposeMetric {
     @Override
     public double calculate(Clustering clustering, EvaluationInput evaluationInput) {
         return clustering.getByCluster().values().stream()

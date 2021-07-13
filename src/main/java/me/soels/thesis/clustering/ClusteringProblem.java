@@ -2,7 +2,7 @@ package me.soels.thesis.clustering;
 
 import me.soels.thesis.clustering.encoding.EncodingType;
 import me.soels.thesis.clustering.encoding.VariableDecoder;
-import me.soels.thesis.clustering.objectives.Objective;
+import me.soels.thesis.clustering.objectives.Metric;
 import me.soels.thesis.model.EvaluationConfiguration;
 import me.soels.thesis.model.EvaluationInput;
 import org.moeaframework.Executor;
@@ -25,8 +25,7 @@ import java.util.List;
  * @see EncodingType
  */
 public class ClusteringProblem extends AbstractProblem {
-    public static final String PROBLEM_NAME = "MOEAC";
-    private final List<Objective> objectives;
+    private final List<Metric> metrics;
     private final EvaluationInput evaluationInput;
     private final EvaluationConfiguration configuration;
     private final VariableDecoder variableDecoder;
@@ -34,24 +33,24 @@ public class ClusteringProblem extends AbstractProblem {
     /**
      * Constructs a new instance of the clustering problem
      *
-     * @param objectives      the objective functions to evaluate
+     * @param metrics         the metrics to evaluate
      * @param analysisInput   the input to cluster
      * @param configuration   the configuration for the problem
      * @param variableDecoder the decoder service to decode the solution with
      */
-    public ClusteringProblem(List<Objective> objectives, EvaluationInput analysisInput, EvaluationConfiguration configuration, VariableDecoder variableDecoder) {
-        super(analysisInput.getOtherClasses().size(), objectives.size());
-        this.objectives = objectives;
+    public ClusteringProblem(List<Metric> metrics, EvaluationInput analysisInput, EvaluationConfiguration configuration, VariableDecoder variableDecoder) {
+        super(analysisInput.getOtherClasses().size(), metrics.size());
+        this.metrics = metrics;
         this.evaluationInput = analysisInput;
         this.configuration = configuration;
         this.variableDecoder = variableDecoder;
     }
 
     /**
-     * Evaluates a solution based on the configured objective functions.
+     * Evaluates a solution based on the configured metrics.
      * <p>
-     * Decodes the given solution to a structure understandable for the objective functions, evaluates the objective
-     * functions, and sets the objective values on the solution.
+     * Decodes the given solution to a structure understandable for the metrics, evaluates the metrics,
+     * and sets the objective values for these metrics on the solution.
      *
      * @param solution the solution to evaluate
      */
@@ -69,9 +68,9 @@ public class ClusteringProblem extends AbstractProblem {
             return;
         }
 
-        for (var i = 0; i < objectives.size(); i++) {
-            double objectiveValue = objectives.get(i).calculate(decodedClustering, evaluationInput);
-            solution.setObjective(i, objectiveValue);
+        for (var i = 0; i < metrics.size(); i++) {
+            double metricValue = metrics.get(i).calculate(decodedClustering, evaluationInput);
+            solution.setObjective(i, metricValue);
         }
     }
 

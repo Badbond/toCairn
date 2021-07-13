@@ -39,10 +39,6 @@ or `missing a property for the generated, internal ID (@Id @GeneratedValue Long 
 not compile correctly. Run `mvn clean compile` to recompile the project, and the problem should be gone. This happens
 when initializing the Spring context both during running the application and during tests.
 
-### NoClassDefFoundError during source analysis
-
-_Explanation coming soon_
-
 ## License
 
 This project is licensed under the [Apache 2.0 license](LICENSE.txt).

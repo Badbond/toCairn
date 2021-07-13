@@ -1,7 +1,7 @@
 package me.soels.thesis.clustering.objectives;
 
 /**
- * Functional interface to identify a metric as a {@link ObjectiveType#DATA_AUTONOMY} metric.
+ * Functional interface to identify a metric for the {@link ObjectiveType#DATA_AUTONOMY} objective.
  */
-public interface DataAutonomyMetric extends Objective {
+public interface DataAutonomyMetric extends Metric {
 }

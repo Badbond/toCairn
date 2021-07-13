@@ -14,8 +14,6 @@ import java.util.UUID;
 
 /**
  * Models the result of an evaluation run.
- * <p>
- * The objectives stored are for identification purposes to see which objectives were included in the run.
  */
 @Node
 @Getter
@@ -28,9 +26,10 @@ public class EvaluationResult {
     @Relationship("HAS_SOLUTIONS")
     private List<Solution> solutions = new ArrayList<>();
 
-    private ZonedDateTime startDate;
     private ZonedDateTime finishDate;
     private Double hyperVolume;
+    //    TODO: Or use @CompositeProperty(prefix = "metrics")
+    private ZonedDateTime startDate;
     private Double generationalDistance;
     private Double invertedGenerationalDistance;
     private Double additiveEpsilonIndicator;
@@ -40,7 +39,4 @@ public class EvaluationResult {
     private Double r1Indicator;
     private Double r2Indicator;
     private Double r3Indicator;
-
-
-    // TODO: Model metrics (performance metrics)
 }

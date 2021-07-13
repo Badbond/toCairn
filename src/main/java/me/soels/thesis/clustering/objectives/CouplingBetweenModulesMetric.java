@@ -18,7 +18,7 @@ import java.util.*;
  * See related work 'Lindvall, M., Tvedt, R. T., & Costa, P. (2003). An empirically-based process for software
  * architecture evaluation. <i>Empirical Software Engineering, 8</i>(1), 83-108.'.
  */
-public class CouplingBetweenModulesObjective implements OnePurposeMetric {
+public class CouplingBetweenModulesMetric implements OnePurposeMetric {
     @Override
     public double calculate(Clustering clustering, EvaluationInput evaluationInput) {
         // Construct a set of which cluster depends on which other cluster in both directions.

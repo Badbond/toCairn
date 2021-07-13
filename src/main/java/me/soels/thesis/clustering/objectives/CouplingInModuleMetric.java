@@ -18,7 +18,7 @@ import java.util.List;
  * See related work 'Lindvall, M., Tvedt, R. T., & Costa, P. (2003). An empirically-based process for software
  * architecture evaluation. <i>Empirical Software Engineering, 8</i>(1), 83-108.'.
  */
-public class CouplingInModuleObjective implements OnePurposeMetric {
+public class CouplingInModuleMetric implements OnePurposeMetric {
     @Override
     public double calculate(Clustering clustering, EvaluationInput evaluationInput) {
         var accumulatedCim = 0.0;

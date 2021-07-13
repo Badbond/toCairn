@@ -3,6 +3,7 @@ package me.soels.thesis.services;
 import me.soels.thesis.clustering.ClusteringContextProvider;
 import me.soels.thesis.clustering.encoding.VariableDecoder;
 import me.soels.thesis.model.*;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.moeaframework.Analyzer;
 import org.moeaframework.Analyzer.AnalyzerResults;
 import org.moeaframework.Executor;
@@ -13,6 +14,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -49,6 +51,7 @@ public class EvaluationRunner {
         }
 
         try {
+            var start = ZonedDateTime.now();
             LOGGER.info("Running evaluation '{}' ({})", evaluation.getName(), evaluation.getId());
             var input = new EvaluationInputBuilder(evaluation.getInputs()).build();
             var problem = clusteringContextProvider.createProblem(evaluation, input);
@@ -57,7 +60,7 @@ public class EvaluationRunner {
                     .ifPresent(result -> {
                         var analyzer = clusteringContextProvider.createAnalyzer(result, executor,
                                 evaluation.getConfiguration().getAlgorithm());
-                        storeResult(evaluation, input, result, analyzer.getAnalysis());
+                        storeResult(evaluation, input, result, analyzer.getAnalysis(), start);
                     });
         } finally {
             runnerRunning.set(false);
@@ -71,13 +74,16 @@ public class EvaluationRunner {
      * @param input           the input graph for decoding purposes
      * @param result          the MOEA population result
      * @param analysisResults the analyzer containing MOEA metrics
+     * @param startDate       the datetime at which the evaluation started
      */
     private void storeResult(Evaluation evaluation,
                              EvaluationInput input,
                              NondominatedPopulation result,
-                             AnalyzerResults analysisResults) {
+                             AnalyzerResults analysisResults,
+                             ZonedDateTime startDate) {
         var newResult = new EvaluationResult();
-        newResult.setCreatedDate(ZonedDateTime.now());
+        newResult.setStartDate(startDate);
+        newResult.setFinishDate(ZonedDateTime.now());
 
         analysisResults.getAlgorithms().stream()
                 .map(analysisResults::get)
@@ -86,16 +92,16 @@ public class EvaluationRunner {
                                 .map(algorithmResult::get))
                 .forEach(indicator -> setMetric(newResult, indicator));
 
-        // TODO: Set metric information (runtime etc.).
-
         var solutions = StreamSupport.stream(result.spliterator(), false)
                 .map(solution -> setupSolution(evaluation, input, solution))
                 .collect(Collectors.toList());
         newResult.getSolutions().addAll(solutions);
         evaluation.getResults().add(newResult);
         evaluationService.save(evaluation);
-        LOGGER.info("Evaluation run complete. Result id: {}, Solutions: {}, Clusters: {}", newResult.getId(),
-                solutions.size(), solutions.stream().mapToInt(sol -> sol.getClusters().size()).sum());
+        var duration = DurationFormatUtils.formatDurationHMS(ChronoUnit.MILLIS.between(newResult.getFinishDate(), startDate));
+        LOGGER.info("Evaluation run complete. Took {} (H:m:s.millis)", duration);
+        LOGGER.info("Result id: {}, Solutions: {}, Clusters: {}", newResult.getId(), solutions.size(),
+                solutions.stream().mapToInt(sol -> sol.getClusters().size()).sum());
     }
 
     private void setMetric(EvaluationResult newResult, Analyzer.IndicatorResult indicator) {

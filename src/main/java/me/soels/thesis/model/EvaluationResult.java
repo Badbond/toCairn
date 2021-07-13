@@ -28,7 +28,8 @@ public class EvaluationResult {
     @Relationship("HAS_SOLUTIONS")
     private List<Solution> solutions = new ArrayList<>();
 
-    private ZonedDateTime createdDate;
+    private ZonedDateTime startDate;
+    private ZonedDateTime finishDate;
     private Double hyperVolume;
     private Double generationalDistance;
     private Double invertedGenerationalDistance;

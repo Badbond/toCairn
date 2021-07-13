@@ -18,7 +18,8 @@ import java.util.stream.Collectors;
 public class EvaluationResultDto {
     private final UUID id;
     private final List<UUID> solutionIds;
-    private final ZonedDateTime createdDate;
+    private final ZonedDateTime startDate;
+    private final ZonedDateTime finishDate;
     private final Double hyperVolume;
     private final Double generationalDistance;
     private final Double invertedGenerationalDistance;
@@ -33,7 +34,8 @@ public class EvaluationResultDto {
     public EvaluationResultDto(EvaluationResult result) {
         this.id = result.getId();
         this.solutionIds = result.getSolutions().stream().map(Solution::getId).collect(Collectors.toList());
-        this.createdDate = result.getCreatedDate();
+        this.startDate = result.getStartDate();
+        this.finishDate = result.getFinishDate();
         this.hyperVolume = result.getHyperVolume();
         this.generationalDistance = result.getGenerationalDistance();
         this.invertedGenerationalDistance = result.getInvertedGenerationalDistance();

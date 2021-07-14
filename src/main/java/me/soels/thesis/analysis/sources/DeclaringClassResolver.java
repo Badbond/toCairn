@@ -5,6 +5,7 @@ import com.github.javaparser.resolution.Resolvable;
 import com.github.javaparser.resolution.SymbolResolver;
 import com.github.javaparser.resolution.UnsolvedSymbolException;
 import com.github.javaparser.resolution.declarations.ResolvedMethodLikeDeclaration;
+import com.github.javaparser.resolution.declarations.ResolvedValueDeclaration;
 import me.soels.thesis.model.AbstractClass;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -117,10 +118,32 @@ public class DeclaringClassResolver {
     public Optional<Pair<AbstractClass, FieldAccessExpr>> resolveFieldAccess(SourceAnalysisContext context,
                                                                              FieldAccessExpr node,
                                                                              List<AbstractClass> allClasses) {
-        var foundCallee = tryGetUsingCompleteResolution(node)
+        var foundCallee = tryCompleteResolutionFieldNode(node)
                 // We can also try to resolve the parent of the FieldAccessExpr (the variable or class)
-                // TODO: Check if children of this node only contains one NameExpr which is the class/type invoked
                 .or(() -> tryGetUsingChildExpressionResolution(node, NameExpr.class));
+
+        if (foundCallee.isEmpty()) {
+            context.getCounters().unresolvedNodes++;
+        }
+
+        return foundCallee.flatMap(callee -> findByAbstractClass(allClasses, callee))
+                .map(callee -> Pair.of(callee, node));
+    }
+
+    /**
+     * Returns an optional result of the {@link AbstractClass} called as part of the given {@link FieldAccessExpr}.
+     * <p>
+     * For convenience, we return a {@link Pair} of the found class and the AST node that we analyzed.
+     *
+     * @param context    the analysis context to retrieve or update context information with
+     * @param node       the node to analyze
+     * @param allClasses all the identified classes in the application
+     * @return an optional result of the called class as part of the given field access expression
+     */
+    public Optional<Pair<AbstractClass, NameExpr>> resolveNameExpr(SourceAnalysisContext context,
+                                                                          NameExpr node,
+                                                                          List<AbstractClass> allClasses) {
+        var foundCallee = tryCompleteResolutionFieldNode(node);
 
         if (foundCallee.isEmpty()) {
             context.getCounters().unresolvedNodes++;
@@ -166,7 +189,7 @@ public class DeclaringClassResolver {
     }
 
     /**
-     * Try resolving a {@link FieldAccessExpr} and its surround context entirely.
+     * Try resolving a {@link ResolvedValueDeclaration} and its surround context entirely.
      * <p>
      * Performing this action will also resolve the node's parents such that the type of the node used can be
      * determined. This decreases performance of the analysis drastically but is an important step to fully cover
@@ -182,9 +205,9 @@ public class DeclaringClassResolver {
      * this approach is more error prone as there are more places where symbol resolution could fail.
      *
      * @param node the expression to fully resolve
-     * @return an optional string with the FQN of the declaring class for the given field
+     * @return an optional string with the FQN of the declaring class for the given node
      */
-    private Optional<String> tryGetUsingCompleteResolution(FieldAccessExpr node) {
+    private Optional<String> tryCompleteResolutionFieldNode(Resolvable<? extends ResolvedValueDeclaration> node) {
         try {
             var declaringType = node.resolve().asField().declaringType();
             return Optional.of(declaringType.getPackageName() + "." + declaringType.getClassName());

@@ -35,7 +35,7 @@ public class SourceClassAnalysis {
         LOGGER.info("Extracting classes");
         var start = System.currentTimeMillis();
         var config = new ParserConfiguration().setLanguageLevel(context.getInput().getLanguageLevel());
-
+        
         var typesAndClasses = new SymbolSolverCollectionStrategy(config)
                 .collect(context.getProjectLocation()).getSourceRoots().stream()
                 // Don't include test directories (ideally, they were already filtered out by the user)

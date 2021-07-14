@@ -79,6 +79,8 @@ public class SourceRelationshipAnalysis {
         relevantNodes.putAll(getRelevantMethodReferences(context, visitorResult, allMethodNames, allClasses));
         relevantNodes.putAll(getRelevantConstructorCalls(context, visitorResult, allClasses, classNameSet));
         relevantNodes.putAll(getRelevantFieldAccess(context, visitorResult, allClasses));
+        relevantNodes.putAll(getRelevantStaticImportUsage(context, visitorResult, allClasses));
+        // TODO: For each import statement where we did not yet have a relationship, add one dependency relationship and set frequency to 1.
 
         relevantNodes.forEach((key, value) -> storeRelationship(visitorResult.getCaller(), key, value, context));
     }
@@ -148,6 +150,19 @@ public class SourceRelationshipAnalysis {
                 .filter(calleePair -> !calleePair.getKey().getIdentifier().equals(visitorResult.getCaller().getIdentifier()))
                 .map(calleePair -> executeSideEffect(() -> context.getCounters().relevantFieldAccesses++, calleePair))
                 // Group by callee class based on FQN with value the AST nodes relevant
+                .collect(groupingBy(Pair::getKey, Collectors.mapping(pair -> (Expression) pair.getValue(), Collectors.toList())));
+    }
+
+    private Map<AbstractClass, List<Expression>> getRelevantStaticImportUsage(SourceAnalysisContext context,
+                                                                              VisitorResult visitorResult,
+                                                                              List<AbstractClass> allClasses) {
+        // The CustomClassOrInterfaceVisitor already filtered out NameExpr that are not based on static imports
+        return visitorResult.getStaticNameExpressions().stream()
+                // Try to resolve the name creation expression to get the pair of callee and its static field accessed.
+                .flatMap(node -> declaringClassResolver.resolveNameExpr(context, node, allClasses).stream())
+                // Filter out self invocation (e.g. when having a static method to instantiate self)
+                .filter(calleePair -> !calleePair.getKey().getIdentifier().equals(visitorResult.getCaller().getIdentifier()))
+                .map(calleePair -> executeSideEffect(() -> context.getCounters().relevantStaticExpressions++, calleePair))
                 .collect(groupingBy(Pair::getKey, Collectors.mapping(pair -> (Expression) pair.getValue(), Collectors.toList())));
     }
 
@@ -292,6 +307,8 @@ public class SourceRelationshipAnalysis {
                         "\n\tRelevant method calls:             {}" +
                         "\n\tTotal field accesses:              {}" +
                         "\n\tRelevant field accesses:           {}" +
+                        "\n\tTotal static field accesses:       {}" +
+                        "\n\tRelevant static field accesses:    {}" +
                         "\n\tTotal dependence relationships:    {}" +
                         "\n\tOf which data relationships:       {}",
                 visitorResults.stream().mapToInt(res -> res.getObjectCreationExpressions().size()).sum(),
@@ -306,6 +323,8 @@ public class SourceRelationshipAnalysis {
                 counters.relevantMethodCalls,
                 visitorResults.stream().mapToInt(res -> res.getFieldAccesses().size()).sum(),
                 counters.relevantFieldAccesses,
+                visitorResults.stream().mapToInt(res -> res.getStaticNameExpressions().size()).sum(),
+                counters.relevantStaticExpressions,
                 context.getResultBuilder().getClasses().stream()
                         .mapToLong(clazz -> clazz.getDependenceRelationships().size())
                         .sum(),

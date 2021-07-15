@@ -80,9 +80,11 @@ public class SourceRelationshipAnalysis {
         relevantNodes.putAll(getRelevantConstructorCalls(context, visitorResult, allClasses, classNameSet));
         relevantNodes.putAll(getRelevantFieldAccess(context, visitorResult, allClasses));
         relevantNodes.putAll(getRelevantStaticImportUsage(context, visitorResult, allClasses));
-        // TODO: For each import statement where we did not yet have a relationship, add one dependency relationship and set frequency to 1.
-
         relevantNodes.forEach((key, value) -> storeRelationship(visitorResult.getCaller(), key, value, context));
+
+        getRelevantRemainingImportDecl(context, visitorResult, relevantNodes, allClasses)
+                .forEach(callee -> context.getResultBuilder().addDependency(visitorResult.getCaller(), callee, 1, 0));
+
     }
 
     private Map<AbstractClass, List<Expression>> getRelevantConstructorCalls(SourceAnalysisContext context,
@@ -164,6 +166,28 @@ public class SourceRelationshipAnalysis {
                 .filter(calleePair -> !calleePair.getKey().getIdentifier().equals(visitorResult.getCaller().getIdentifier()))
                 .map(calleePair -> executeSideEffect(() -> context.getCounters().relevantStaticExpressions++, calleePair))
                 .collect(groupingBy(Pair::getKey, Collectors.mapping(pair -> (Expression) pair.getValue(), Collectors.toList())));
+    }
+
+    private List<AbstractClass> getRelevantRemainingImportDecl(SourceAnalysisContext context,
+                                                               VisitorResult visitorResult,
+                                                               HashMap<AbstractClass, List<Expression>> relevantNodes,
+                                                               List<AbstractClass> allClasses) {
+        // The CustomClassOrInterfaceVisitor already filtered out NameExpr that are not based on static imports
+        return visitorResult.getRegularImports().stream()
+                // Include only import statements to classes in analysis.
+                .filter(importDecl -> allClasses.stream().anyMatch(clazz -> clazz.getIdentifier().equals(importDecl.getNameAsString())))
+                .map(importDecl -> executeSideEffect(() -> context.getCounters().matchingImportStatements++, importDecl))
+                // Filter out only import statements for classes which we have no relationship yet
+                .filter(importDecl -> relevantNodes.keySet().stream()
+                        .map(AbstractClass::getIdentifier)
+                        .noneMatch(fqn -> importDecl.getNameAsString().equals(fqn)))
+                // Map the import statement to the class
+                .flatMap(importDecl -> allClasses.stream()
+                        .filter(clazz -> clazz.getIdentifier().equals(importDecl.getNameAsString())))
+                .distinct()
+                // Try to resolve the name creation expression to get the pair of callee and its static field accessed.
+                .map(callee -> executeSideEffect(() -> context.getCounters().relevantImportStatements++, callee))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -309,6 +333,9 @@ public class SourceRelationshipAnalysis {
                         "\n\tRelevant field accesses:           {}" +
                         "\n\tTotal static field accesses:       {}" +
                         "\n\tRelevant static field accesses:    {}" +
+                        "\n\tTotal import statements:           {}" +
+                        "\n\tMatching import statements:        {}" +
+                        "\n\tRelevant import statements:        {}" +
                         "\n\tTotal dependence relationships:    {}" +
                         "\n\tOf which data relationships:       {}",
                 visitorResults.stream().mapToInt(res -> res.getObjectCreationExpressions().size()).sum(),
@@ -325,6 +352,9 @@ public class SourceRelationshipAnalysis {
                 counters.relevantFieldAccesses,
                 visitorResults.stream().mapToInt(res -> res.getStaticNameExpressions().size()).sum(),
                 counters.relevantStaticExpressions,
+                visitorResults.stream().mapToInt(res -> res.getRegularImports().size()).sum(),
+                counters.matchingImportStatements,
+                counters.relevantImportStatements,
                 context.getResultBuilder().getClasses().stream()
                         .mapToLong(clazz -> clazz.getDependenceRelationships().size())
                         .sum(),

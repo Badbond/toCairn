@@ -141,8 +141,8 @@ public class DeclaringClassResolver {
      * @return an optional result of the called class as part of the given field access expression
      */
     public Optional<Pair<AbstractClass, NameExpr>> resolveNameExpr(SourceAnalysisContext context,
-                                                                          NameExpr node,
-                                                                          List<AbstractClass> allClasses) {
+                                                                   NameExpr node,
+                                                                   List<AbstractClass> allClasses) {
         var foundCallee = tryCompleteResolutionFieldNode(node);
 
         if (foundCallee.isEmpty()) {

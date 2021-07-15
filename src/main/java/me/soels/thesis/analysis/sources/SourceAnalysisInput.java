@@ -14,6 +14,7 @@ public final class SourceAnalysisInput {
     private final Path pathToJacocoXml;
     private final ParserConfiguration.LanguageLevel languageLevel;
     private final String customDataAnnotation;
+    // TODO: Add regex class filter -- we don't want MainApplication classes as that identifies one application without logic and will be split
 
     /**
      * Creates the input required to perform source analysis.

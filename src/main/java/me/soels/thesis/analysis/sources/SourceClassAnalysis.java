@@ -10,6 +10,7 @@ import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy;
 import com.github.javaparser.utils.SourceRoot;
 import me.soels.thesis.model.AbstractClass;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -34,8 +35,9 @@ public class SourceClassAnalysis {
     public void analyze(SourceAnalysisContext context) {
         LOGGER.info("Extracting classes");
         var start = System.currentTimeMillis();
+        var filterCount = new MutableInt(0);
         var config = new ParserConfiguration().setLanguageLevel(context.getInput().getLanguageLevel());
-        
+
         var typesAndClasses = new SymbolSolverCollectionStrategy(config)
                 .collect(context.getProjectLocation()).getSourceRoots().stream()
                 // Don't include test directories (ideally, they were already filtered out by the user)
@@ -53,6 +55,8 @@ public class SourceClassAnalysis {
                 .map(this::printEmptyQualifiers)
                 .filter(Objects::nonNull)
                 .filter(clazz -> clazz.getFullyQualifiedName().isPresent())
+                // Exclude classes based on input regexes matching FQN
+                .filter(clazz -> filterClassBasedOnRegex(clazz, context.getInput().getFnqExcludeRegexes(), filterCount))
                 // Create a pair of the type of class and its AST
                 .map(clazz -> Pair.of(clazz, storeClass(clazz, context.getInput(), context)))
                 .filter(pair -> pair.getValue() != null)
@@ -61,13 +65,23 @@ public class SourceClassAnalysis {
 
         LOGGER.info("Graph nodes results:" +
                         "\n\tTotal classes:       {}" +
+                        "\n\tFiltered out:        {}" +
                         "\n\tData classes:        {}" +
                         "\n\tOther classes:       {}",
                 context.getResultBuilder().getClasses().size(),
+                filterCount.getValue(),
                 context.getResultBuilder().getDataClasses().size(),
                 context.getResultBuilder().getOtherClasses().size());
         var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);
         LOGGER.info("Source class analysis took {} (H:m:s.millis)", duration);
+    }
+
+    private boolean filterClassBasedOnRegex(ClassOrInterfaceDeclaration clazz, List<String> excludeRegexes, MutableInt count) {
+        if (excludeRegexes.stream().anyMatch(regex -> clazz.getFullyQualifiedName().get().matches(regex))) {
+            count.increment();
+            return false;
+        }
+        return true;
     }
 
     private AbstractClass storeClass(ClassOrInterfaceDeclaration clazz, SourceAnalysisInput input, SourceAnalysisContext context) {
@@ -90,7 +104,6 @@ public class SourceClassAnalysis {
     }
 
     private boolean isDataClass(ClassOrInterfaceDeclaration clazz, SourceAnalysisInput input) {
-        // TODO: Order summary is not marked as a data class.. :-( Perhaps we still need some heuristic..
         return classNameIndicatesDataStructure(clazz) ||
                 classContainsDataAnnotation(clazz, input);
     }

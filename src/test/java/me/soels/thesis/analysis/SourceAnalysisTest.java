@@ -14,6 +14,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 import static com.github.javaparser.ParserConfiguration.LanguageLevel.JAVA_11;
@@ -33,7 +34,7 @@ class SourceAnalysisTest {
     private void runAnalysis(URL resource) throws URISyntaxException, IOException {
         var project = Path.of(Objects.requireNonNull(resource).toURI());
         var jacoco = getJaCoCoXML();
-        var input = new SourceAnalysisInput(project, jacoco, JAVA_11, null);
+        var input = new SourceAnalysisInput(project, jacoco, JAVA_11, null, List.of(".*MainApplication"));
         // thesis-project-master.zip (28 classes, 64 unique method names):
         //      117 total, 17 unresolved, 68 relevant (excl. self-ref), 29 relationships on 3.18.0 -- 2s
         //      117 total, 38 unresolved, 57 relevant (excl. self-ref), 25 relationships on 3.22.1 -- 1s
@@ -51,7 +52,7 @@ class SourceAnalysisTest {
     }
 
     private Path getJaCoCoXML() throws URISyntaxException {
-        var url =  this.getClass().getClassLoader().getResource("./jacoco.xml");
+        var url = this.getClass().getClassLoader().getResource("./jacoco.xml");
         return url == null ? null : Path.of(url.toURI());
     }
 }

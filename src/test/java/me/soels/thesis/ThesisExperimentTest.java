@@ -64,7 +64,7 @@ class ThesisExperimentTest {
         var project = tryGetResource(ZIP_FILE)
                 .orElseThrow(() -> new IllegalStateException("Could not find required file " + ZIP_FILE));
         var jacocoXML = tryGetResource(JACOCO_REPORT_FILE).orElse(null);
-        var analysisInput = new SourceAnalysisInput(project, jacocoXML, JAVA_11, null);
+        var analysisInput = new SourceAnalysisInput(project, jacocoXML, JAVA_11, null, List.of(".*MainApplication"));
         var modelBuilder = new EvaluationInputBuilder(Collections.emptyList());
         var context = sourceAnalysis.prepareContext(modelBuilder, analysisInput);
         sourceAnalysis.analyzeEdges(context);

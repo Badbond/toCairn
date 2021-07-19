@@ -1,16 +1,14 @@
 # Allow to call this script with the project already provided
 projectLocation="$1"
 
-# If it was not provided, ask for it
-if [ -z "${projectLocation}" ]; then
-  echo "Where is the project located?"
-  read -r projectLocation
+SCRIPT="$(basename "${0}")"
+if [ "${#}" -lt 1 ]; then
+  echo "Script to compile and clean the given project (in a temporary directory) as preparation for source code analysis"
+  echo "Usage: ./${SCRIPT} <project location>"
+  echo "Requirements:"
+  echo " - Project is a compilable Maven project."
+  exit 1
 fi
-
-echo "We are about to process project ${projectLocation}. Please make sure that this project is compiled such that
- generated classes are present in the project directory as well. We will copy the project to a temporary directory,
- and within this temporary directory remove (generated) test classes, remove .git directories, and optionally remove
- .jars. Then we will zip the project and store it in a git ignored test location within this application."
 
 # Check whether the provided location exists
 if [ ! -d "$projectLocation" ]; then
@@ -18,21 +16,24 @@ if [ ! -d "$projectLocation" ]; then
   exit 1
 fi
 
-tmpProject="/tmp/$(uuidgen)"
-
-# Remove existing temporary project
-if [ ! -d tmpProject ]; then
-  rm -rf tmpProject
+if [[ ${projectLocation} != */ ]]; then
+  projectLocation="${projectLocation}/"
 fi
 
+tmpProject="$(mktemp -d)"
+trap 'rm -rf -- "${tmpProject=}"' ERR EXIT HUP INT TERM
+echo "Storing project in temporary location ${tmpProject}"
+
 # Copy the project to the temporary project
-mkdir "$tmpProject"
-cp -r "$projectLocation" "$tmpProject"
+cp -r "${projectLocation}." "${tmpProject}"
+
+mvn -f "$tmpProject/pom.xml" clean compile -DskipTests
 
 # Clean the jar if requested. It is better to include them to resolve more AST nodes and therefore potentially increase
 # coverage, but it will slow down analysis as more classes need to be checked when resolving an AST node.
 while true; do
-  read -r -p "Do you wish to clean .jars as well? [Yn]" yn
+  echo "Do you wish to clean the .jars as well? Doing so would drastically fasten the static analysis but would result in that less relationships can be resolved due to library usage where library jars are missing."
+  read -r -p "Do you wish to clean .jars? [Yn]" yn
   case $yn in
       [Yy]* ) find "$tmpProject" -type f -name '*.jar' -print0 | xargs -0 rm; break;;
       [Nn]* ) break;;
@@ -49,9 +50,8 @@ find "$tmpProject" -type d -name generated-test-sources -print0 | xargs -0 rm -r
 find "$tmpProject" -type d -name '.git' -print0 | xargs -0 rm -rf
 
 # Zip the cleaned project and place it in the designated location
-targetLocation=$(realpath ./src/test/resources/big-project-cleaned.zip)
-rm "$targetLocation"
+targetLocation=$(realpath ../src/test/resources/project-cleaned.zip)
 cd "$tmpProject" && zip -r "$targetLocation" ./*
+echo "Stored resulting ZIP in ${targetLocation}"
 
-# Remove the temporary project
-rm -rf "$tmpProject"
+read -n 1 -r -p "Stored resulting ZIP in ${targetLocation}. Press any key to wipe the temporary directory."

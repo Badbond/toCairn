@@ -243,8 +243,8 @@ public class SourceRelationshipAnalysis {
             // We do not have dynamic data present for this caller.
             if (!context.getSourceExecutions().isEmpty()) {
                 // TODO:
-                //  Test whether big-project works as expected and we retrieved all the results from dynamic analysis
-                //  especially for inner classes and generated (inner) classes.
+                //  Test whether project-cleaned.zip works as expected and we retrieved all the results from dynamic
+                //  analysis especially for inner classes and generated (inner) classes.
                 // We did do some dynamic analysis, so we should better warn our users
                 LOGGER.warn("Could not find source file for {} in JaCoCo report", caller.getIdentifier());
             }

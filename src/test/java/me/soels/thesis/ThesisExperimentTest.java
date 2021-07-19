@@ -36,7 +36,7 @@ import static com.github.javaparser.ParserConfiguration.LanguageLevel.JAVA_11;
 class ThesisExperimentTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ThesisExperimentTest.class);
     private static final String MOCK_GRAPH_NAME = "simple-graph-2";
-    private static final String ZIP_FILE = "big-project-cleaned.zip";
+    private static final String ZIP_FILE = "project-cleaned.zip";
     private static final String JACOCO_REPORT_FILE = "jacoco.xml";
 
     @Autowired

@@ -36,7 +36,7 @@ import static com.github.javaparser.ParserConfiguration.LanguageLevel.JAVA_11;
 class ThesisExperimentTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ThesisExperimentTest.class);
     private static final String MOCK_GRAPH_NAME = "simple-graph-2";
-    private static final String ZIP_FILE = "thesis-project-master.zip";
+    private static final String ZIP_FILE = "big-project-cleaned.zip";
     private static final String JACOCO_REPORT_FILE = "jacoco.xml";
 
     @Autowired
@@ -67,7 +67,7 @@ class ThesisExperimentTest {
         var analysisInput = new SourceAnalysisInput(project, jacocoXML, JAVA_11, null, List.of(".*MainApplication"));
         var modelBuilder = new EvaluationInputBuilder(Collections.emptyList());
         var context = sourceAnalysis.prepareContext(modelBuilder, analysisInput);
-        sourceAnalysis.analyzeEdges(context);
+        sourceAnalysis.analyzeNodes(context);
         sourceAnalysis.analyzeEdges(context);
         return modelBuilder.build();
     }

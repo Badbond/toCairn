@@ -20,8 +20,8 @@ public class JacocoReportExtractor {
         var report = xmlMapper.readValue(Files.newInputStream(jacocoReport), JacocoReport.class);
         for (var sourcePackage : report.getPackages()) {
             for (var sourceFile : sourcePackage.getSourceFiles()) {
-                // TODO: See how we handle inner classes (they are encapsulated in the same source file. Perhaps we can do a startsWith() implementation).
-                var fqn = sourcePackage.getName() + "/" + sourceFile.getName().substring(0, sourceFile.getName().length() - 5);
+                var fqn = sourcePackage.getName().replace('/', '.') + "." +
+                        sourceFile.getName().substring(0, sourceFile.getName().length() - 5);
                 sourceExecutions.put(fqn, sourceFile.getLines().stream()
                         .collect(Collectors.toMap(
                                 line -> Integer.valueOf(line.getNr()),

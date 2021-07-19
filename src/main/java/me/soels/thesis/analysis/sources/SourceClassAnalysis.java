@@ -64,12 +64,12 @@ public class SourceClassAnalysis {
         context.setTypesAndClasses(typesAndClasses);
 
         LOGGER.info("Graph nodes results:" +
-                        "\n\tTotal classes:       {}" +
-                        "\n\tFiltered out:        {}" +
-                        "\n\tData classes:        {}" +
-                        "\n\tOther classes:       {}",
-                context.getResultBuilder().getClasses().size(),
+                        "\n\tClasses filtered out:      {}" +
+                        "\n\tTotal classes:             {}" +
+                        "\n\tData classes:              {}" +
+                        "\n\tOther classes:             {}",
                 filterCount.getValue(),
+                context.getResultBuilder().getClasses().size(),
                 context.getResultBuilder().getDataClasses().size(),
                 context.getResultBuilder().getOtherClasses().size());
         var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);

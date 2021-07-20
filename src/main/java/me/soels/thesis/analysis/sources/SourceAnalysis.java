@@ -4,8 +4,6 @@ import com.github.javaparser.JavaParser;
 import me.soels.thesis.analysis.sources.jacoco.JacocoReportExtractor;
 import me.soels.thesis.model.EvaluationInputBuilder;
 import me.soels.thesis.util.ZipExtractor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -33,7 +31,6 @@ import java.nio.file.Files;
  */
 @Service
 public class SourceAnalysis {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SourceAnalysis.class);
     private final SourceClassAnalysis classAnalysis;
     private final SourceRelationshipAnalysis dependencyAnalysis;
     private final ZipExtractor zipExtractor;
@@ -50,8 +47,6 @@ public class SourceAnalysis {
     }
 
     public SourceAnalysisContext prepareContext(EvaluationInputBuilder builder, SourceAnalysisInput input) throws IOException {
-        LOGGER.info("Starting source analysis on {}", input.getPathToZip());
-
         var inputZip = input.getPathToZip();
         if (!inputZip.getFileName().toString().toLowerCase().endsWith(".zip")) {
             throw new IllegalArgumentException("The path does not refer to a .zip file, for path " + inputZip);

@@ -22,6 +22,8 @@ import java.util.Optional;
 @Getter
 @Setter
 public class DependenceRelationship extends Relationship {
+    // TODO: Check whether all information is present to execute metrics proposed by Selmadji as they are based on
+    //  the interaction between methods of a pair of classes.
     @NotNull
     private int staticFrequency;
     private Integer dynamicFrequency;

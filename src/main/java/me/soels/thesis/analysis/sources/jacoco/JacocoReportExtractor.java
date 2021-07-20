@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class JacocoReportExtractor {
-    XmlMapper xmlMapper = (XmlMapper) new XmlMapper()
+    private final XmlMapper xmlMapper = (XmlMapper) new XmlMapper()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             .findAndRegisterModules();
 

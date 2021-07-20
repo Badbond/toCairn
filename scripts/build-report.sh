@@ -5,7 +5,7 @@
 
 SCRIPT="$(basename "${0}")"
 if [ "${#}" -lt 3 ]; then
-  ehco "Script to do performance testing of a custom JaCoCo version on the given project."
+  echo "Script to do performance testing of a custom JaCoCo version on the given project."
   echo "Usage: ./${SCRIPT} <builds to run> <project location> <JaCoCo CLI .jar location>"
   echo "Requirements:"
   echo " - Project is a Maven project with JaCoCo maven plugin configured to the custom version."
@@ -78,7 +78,7 @@ echo "That is an AVERAGE of $(date -d@"$AVERAGE" -u +%M:%S:%N) (M:S:ns)"
 echo "Combining coverage and generating report of last build"
 output=$(find . -name jacoco.exec -print0 | xargs -0)
 java -jar jacococli.jar merge \
-  --destfile jacoco.exec "$output" >/dev/null
+  --destfile jacoco.exec $output >/dev/null
 java -jar jacococli.jar report jacoco.exec \
   --html html-report --xml jacoco.xml \
   $(find . -path "*/target/classes" | sed 's/^/--classfiles /') \

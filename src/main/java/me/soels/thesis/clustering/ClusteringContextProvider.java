@@ -10,8 +10,6 @@ import org.moeaframework.Analyzer;
 import org.moeaframework.Executor;
 import org.moeaframework.core.NondominatedPopulation;
 import org.moeaframework.core.Problem;
-import org.moeaframework.core.spi.ProblemFactory;
-import org.moeaframework.core.spi.ProblemProvider;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

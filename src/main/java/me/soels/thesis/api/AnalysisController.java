@@ -13,7 +13,8 @@ import javax.validation.Valid;
 import java.io.IOException;
 import java.util.UUID;
 
-import static me.soels.thesis.model.AnalysisType.*;
+import static me.soels.thesis.model.AnalysisType.EVOLUTIONARY;
+import static me.soels.thesis.model.AnalysisType.SOURCE;
 
 /**
  * Controller containing endpoints to perform analysis which enhance the {@link EvaluationInput} for an

@@ -5,7 +5,6 @@ import me.soels.thesis.analysis.evolutionary.EvolutionaryAnalysisInput;
 import me.soels.thesis.analysis.sources.SourceAnalysis;
 import me.soels.thesis.analysis.sources.SourceAnalysisContext;
 import me.soels.thesis.analysis.sources.SourceAnalysisInput;
-import me.soels.thesis.api.ResourceNotFoundException;
 import me.soels.thesis.model.AbstractClass;
 import me.soels.thesis.model.Evaluation;
 import me.soels.thesis.model.EvaluationInput;
@@ -20,8 +19,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static me.soels.thesis.model.AnalysisType.EVOLUTIONARY;
@@ -82,6 +79,7 @@ public class EvaluationInputService {
 
         try {
             var start = System.currentTimeMillis();
+            LOGGER.info("Starting source analysis on {}", analysisInput.getPathToZip());
             var builder = getPopulatedInputBuilder(evaluation);
             var context = sourceAnalysis.prepareContext(builder, analysisInput);
             // We split the extraction and persistence of nodes and edges as we can then more efficiently create the

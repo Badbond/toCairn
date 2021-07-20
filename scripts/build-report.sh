@@ -23,15 +23,15 @@ if [ "${TIMES}" -le 0 ]; then
   exit 1
 fi
 
+PROJECT_LOCATION=$(realpath "${PROJECT_LOCATION}")
+[[ "${PROJECT_LOCATION}" != */ ]] && PROJECT_LOCATION="${PROJECT_LOCATION}/"
 if [ ! -d "${PROJECT_LOCATION}" ]; then
   echo "Could not find given project location: ${PROJECT_LOCATION}"
   exit 1
 fi
 
-if [[ ${PROJECT_LOCATION} != */ ]]; then
-  PROJECT_LOCATION="${PROJECT_LOCATION}/"
-fi
 
+CLI_LOCATION=$(realpath "${CLI_LOCATION}")
 if [ ! -f "${CLI_LOCATION}" ]; then
   echo "Could not find given project location: ${CLI_LOCATION}"
   exit 1
@@ -39,7 +39,7 @@ fi
 
 # Create temporary directory for this performance test
 TMP_DIR="$(mktemp -d)"
-trap 'rm -rf -- "${TMP_DIR=}"' ERR EXIT HUP INT TERM
+trap 'rm -rf -- "${TMP_DIR=}"' EXIT HUP INT TERM
 echo "Copying resources to temporary directory ${TMP_DIR}"
 cd "${TMP_DIR}" || exit 1
 cp -r "${PROJECT_LOCATION}." "${TMP_DIR}"
@@ -52,7 +52,7 @@ mvn -T 1.0C clean install -DskipTests >/dev/null
 echo "Setting up dependencies"
 # TODO: Parameterize services to boot
 docker-compose --log-level ERROR -f docker-compose.yml up -d mongodb rabbitmq
-trap 'docker-compose --log-level ERROR -f docker-compose.yml down && rm -rf -- "${TMP_DIR=}"' ERR EXIT HUP INT TERM
+trap 'docker-compose --log-level ERROR -f docker-compose.yml down && rm -rf -- "${TMP_DIR=}"' EXIT HUP INT TERM
 
 echo "Running build(s) ${TIMES} times"
 TOTAL_START=$(date +%s.%N)

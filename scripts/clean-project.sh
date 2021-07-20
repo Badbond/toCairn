@@ -1,10 +1,11 @@
 # Allow to call this script with the project already provided
 projectLocation="$1"
+targetLocation="$2"
 
 SCRIPT="$(basename "${0}")"
 if [ "${#}" -lt 1 ]; then
   echo "Script to compile and clean the given project (in a temporary directory) as preparation for source code analysis"
-  echo "Usage: ./${SCRIPT} <project location>"
+  echo "Usage: ./${SCRIPT} <project location> <target directory for ZIP>"
   echo "Requirements:"
   echo " - Project is a compilable Maven project."
   exit 1
@@ -15,19 +16,27 @@ if [ ! -d "$projectLocation" ]; then
   echo "Project directory ${projectLocation} was not found"
   exit 1
 fi
-
-if [[ ${projectLocation} != */ ]]; then
-  projectLocation="${projectLocation}/"
+if [ ! -d "$targetLocation" ]; then
+  echo "Target directory ${targetLocation} was not found"
+  exit 1
 fi
 
+# Transform paths into absolute paths
+projectLocation=$(realpath "${projectLocation}")
+targetLocation="$(realpath "${targetLocation}")/project-cleaned.zip"
+
+# Add trailing slash if not given
+[[ "${projectLocation}" != */ ]] && projectLocation="${projectLocation}/"
+
 tmpProject="$(mktemp -d)"
-trap 'rm -rf -- "${tmpProject=}"' ERR EXIT HUP INT TERM
+trap 'rm -rf -- "${tmpProject=}"' EXIT HUP INT TERM
 echo "Storing project in temporary location ${tmpProject}"
 
 # Copy the project to the temporary project
 cp -r "${projectLocation}." "${tmpProject}"
 
-mvn -f "$tmpProject/pom.xml" clean compile -DskipTests
+echo "Compiling project"
+mvn -T 1.0C -f "$tmpProject/pom.xml" clean compile -DskipTests >/dev/null
 
 # Clean the jar if requested. It is better to include them to resolve more AST nodes and therefore potentially increase
 # coverage, but it will slow down analysis as more classes need to be checked when resolving an AST node.
@@ -50,8 +59,6 @@ find "$tmpProject" -type d -name generated-test-sources -print0 | xargs -0 rm -r
 find "$tmpProject" -type d -name '.git' -print0 | xargs -0 rm -rf
 
 # Zip the cleaned project and place it in the designated location
-targetLocation=$(realpath ../src/test/resources/project-cleaned.zip)
 cd "$tmpProject" && zip -r "$targetLocation" ./*
-echo "Stored resulting ZIP in ${targetLocation}"
 
 read -n 1 -r -p "Stored resulting ZIP in ${targetLocation}. Press any key to wipe the temporary directory."

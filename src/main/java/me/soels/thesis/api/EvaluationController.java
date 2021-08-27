@@ -2,7 +2,7 @@ package me.soels.thesis.api;
 
 import me.soels.thesis.api.dtos.EvaluationDto;
 import me.soels.thesis.model.Evaluation;
-import me.soels.thesis.model.EvaluationConfiguration;
+import me.soels.thesis.model.SolverConfiguration;
 import me.soels.thesis.services.EvaluationRunner;
 import me.soels.thesis.services.EvaluationService;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +16,7 @@ import static org.springframework.http.HttpStatus.CREATED;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 
 /**
- * Controller for managing the {@link Evaluation} and its {@link EvaluationConfiguration}.
+ * Controller for managing the {@link Evaluation} and its {@link SolverConfiguration}.
  * <p>
  * This controller furthermore allows to run an evaluation.
  */

@@ -2,16 +2,13 @@ package me.soels.thesis.model;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.soels.thesis.clustering.encoding.EncodingType;
-import org.springframework.data.neo4j.core.schema.GeneratedValue;
-import org.springframework.data.neo4j.core.schema.Id;
+import me.soels.thesis.solver.moea.encoding.EncodingType;
 import org.springframework.data.neo4j.core.schema.Node;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Models the configuration of an evaluation.
@@ -22,11 +19,7 @@ import java.util.UUID;
 @Node
 @Getter
 @Setter
-public class EvaluationConfiguration {
-    @Id
-    @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)
-    private UUID id;
-
+public class MOEAConfiguration extends SolverConfiguration {
     @NotNull
     private EvolutionaryAlgorithm algorithm;
 
@@ -46,8 +39,6 @@ public class EvaluationConfiguration {
     @Nullable
     @Size(min = 1)
     private Integer clusterCountUpperBound;
-
-    // TODO: Model operators to use (enum-wise)
 
     public Optional<Long> getMaxTime() {
         return Optional.ofNullable(maxTime);

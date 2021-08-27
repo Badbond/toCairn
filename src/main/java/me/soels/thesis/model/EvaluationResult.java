@@ -25,6 +25,8 @@ public class EvaluationResult {
     private ZonedDateTime startDate;
     private ZonedDateTime finishDate;
 
+    // TODO: Make hierarchy for solvers.
+
     @CompositeProperty(prefix = "populationMetrics")
     private Map<String, Double> populationMetrics = new HashMap<>();
 }

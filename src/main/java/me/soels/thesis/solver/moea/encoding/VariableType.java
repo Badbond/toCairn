@@ -1,4 +1,4 @@
-package me.soels.thesis.clustering.encoding;
+package me.soels.thesis.solver.moea.encoding;
 
 /**
  * The variable type to use with the evolutionary algorithms.

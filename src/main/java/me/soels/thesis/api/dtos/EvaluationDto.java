@@ -2,7 +2,7 @@ package me.soels.thesis.api.dtos;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.Getter;
-import me.soels.thesis.clustering.objectives.ObjectiveType;
+import me.soels.thesis.solver.objectives.ObjectiveType;
 import me.soels.thesis.model.AnalysisType;
 import me.soels.thesis.model.Evaluation;
 import me.soels.thesis.model.EvaluationResult;

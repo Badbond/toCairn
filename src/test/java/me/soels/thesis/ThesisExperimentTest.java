@@ -2,12 +2,12 @@ package me.soels.thesis;
 
 import me.soels.thesis.analysis.sources.SourceAnalysis;
 import me.soels.thesis.analysis.sources.SourceAnalysisInput;
-import me.soels.thesis.clustering.ClusteringProblem;
-import me.soels.thesis.clustering.encoding.EncodingType;
-import me.soels.thesis.clustering.encoding.VariableDecoder;
-import me.soels.thesis.clustering.objectives.CohesionCarvalhoMetric;
-import me.soels.thesis.clustering.objectives.CouplingBetweenModuleClassesMetric;
-import me.soels.thesis.clustering.objectives.Metric;
+import me.soels.thesis.solver.moea.ClusteringProblem;
+import me.soels.thesis.solver.moea.encoding.EncodingType;
+import me.soels.thesis.solver.moea.encoding.VariableDecoder;
+import me.soels.thesis.solver.objectives.CohesionCarvalhoMetric;
+import me.soels.thesis.solver.objectives.CouplingBetweenModuleClassesMetric;
+import me.soels.thesis.solver.objectives.Metric;
 import me.soels.thesis.model.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -46,7 +46,7 @@ class ThesisExperimentTest {
 
     @Test
     void runExperimentTestWithMockData() {
-        var problemConfig = new EvaluationConfiguration();
+        var problemConfig = new MOEAConfiguration();
         problemConfig.setEncodingType(EncodingType.CLUSTER_LABEL);
         var input = prepareMockInput();
         runExperiment(problemConfig, input);
@@ -54,7 +54,7 @@ class ThesisExperimentTest {
 
     @Test
     void runExperimentWithSourceCode() throws URISyntaxException, IOException {
-        var problemConfig = new EvaluationConfiguration();
+        var problemConfig = new MOEAConfiguration();
         problemConfig.setEncodingType(EncodingType.CLUSTER_LABEL);
         var input = getZipInput();
         runExperiment(problemConfig, input);
@@ -72,7 +72,7 @@ class ThesisExperimentTest {
         return modelBuilder.build();
     }
 
-    private void runExperiment(EvaluationConfiguration config, EvaluationInput input) {
+    private void runExperiment(MOEAConfiguration config, EvaluationInput input) {
         List<Metric> metrics = List.of(new CouplingBetweenModuleClassesMetric(), new CohesionCarvalhoMetric());
         var start = System.currentTimeMillis();
 
@@ -139,7 +139,7 @@ class ThesisExperimentTest {
         }
     }
 
-    private void printSolutionsData(NondominatedPopulation result, List<Metric> metrics, EvaluationInput input, EvaluationConfiguration config) {
+    private void printSolutionsData(NondominatedPopulation result, List<Metric> metrics, EvaluationInput input, MOEAConfiguration config) {
         var metricNames = metrics.stream()
                 .map(metric -> metric.getClass().getSimpleName())
                 .collect(Collectors.toList());

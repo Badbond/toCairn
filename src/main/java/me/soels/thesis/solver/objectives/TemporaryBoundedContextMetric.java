@@ -1,6 +1,6 @@
-package me.soels.thesis.clustering.objectives;
+package me.soels.thesis.solver.objectives;
 
-import me.soels.thesis.clustering.encoding.Clustering;
+import me.soels.thesis.solver.moea.encoding.Clustering;
 import me.soels.thesis.model.EvaluationInput;
 
 public class TemporaryBoundedContextMetric implements DataAutonomyMetric {

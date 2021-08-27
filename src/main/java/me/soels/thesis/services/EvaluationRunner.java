@@ -1,12 +1,10 @@
 package me.soels.thesis.services;
 
-import me.soels.thesis.clustering.ClusteringContextProvider;
-import me.soels.thesis.clustering.encoding.VariableDecoder;
-import me.soels.thesis.model.*;
+import me.soels.thesis.model.Evaluation;
+import me.soels.thesis.model.EvaluationInputBuilder;
+import me.soels.thesis.model.EvaluationStatus;
+import me.soels.thesis.solver.SolverFactory;
 import org.apache.commons.lang3.time.DurationFormatUtils;
-import org.moeaframework.Analyzer.AnalyzerResults;
-import org.moeaframework.Executor;
-import org.moeaframework.core.NondominatedPopulation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
@@ -14,14 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
-import static me.soels.thesis.model.EvaluationStatus.DONE;
-import static me.soels.thesis.model.EvaluationStatus.ERRORED;
 
 /**
  * Service responsible for performing a run for a configured evaluation and storing the result.
@@ -29,17 +20,13 @@ import static me.soels.thesis.model.EvaluationStatus.ERRORED;
 @Service
 public class EvaluationRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(EvaluationRunner.class);
-    private final ClusteringContextProvider clusteringContextProvider;
-    private final VariableDecoder decoder;
     private final EvaluationService evaluationService;
+    private final SolverFactory solverFactory;
     private final AtomicBoolean runnerRunning = new AtomicBoolean(false);
 
-    public EvaluationRunner(ClusteringContextProvider clusteringContextProvider,
-                            VariableDecoder decoder,
-                            EvaluationService evaluationService) {
-        this.clusteringContextProvider = clusteringContextProvider;
-        this.decoder = decoder;
+    public EvaluationRunner(EvaluationService evaluationService, SolverFactory solverFactory) {
         this.evaluationService = evaluationService;
+        this.solverFactory = solverFactory;
     }
 
     @Async
@@ -50,102 +37,28 @@ public class EvaluationRunner {
         }
 
         try {
+            var input = new EvaluationInputBuilder(evaluation.getInputs()).build();
+            var solver = solverFactory.createSolver(evaluation, input);
+
             var start = ZonedDateTime.now();
             LOGGER.info("Running evaluation '{}' ({})", evaluation.getName(), evaluation.getId());
-            var input = new EvaluationInputBuilder(evaluation.getInputs()).build();
-            var problem = clusteringContextProvider.createProblem(evaluation, input);
-            var executor = clusteringContextProvider.createExecutor(problem, evaluation.getConfiguration());
-            runWithExecutor(executor, evaluation)
-                    .ifPresent(result -> {
-                        var analyzer = clusteringContextProvider.createAnalyzer(result, executor,
-                                evaluation.getConfiguration().getAlgorithm());
-                        storeResult(evaluation, input, result, analyzer.getAnalysis(), start);
-                    });
-        } finally {
-            runnerRunning.set(false);
-        }
-    }
+            var result = solver.run(input);
+            evaluation.setStatus(EvaluationStatus.DONE);
 
-    /**
-     * Stores the MOEA algorithm result with its solutions, objective values and clusters for the given evaluation.
-     *
-     * @param evaluation      the evaluation to store the result in
-     * @param input           the input graph for decoding purposes
-     * @param result          the MOEA population result
-     * @param analysisResults the analyzer containing MOEA metrics
-     * @param startDate       the datetime at which the evaluation started
-     */
-    private void storeResult(Evaluation evaluation,
-                             EvaluationInput input,
-                             NondominatedPopulation result,
-                             AnalyzerResults analysisResults,
-                             ZonedDateTime startDate) {
-        var newResult = new EvaluationResult();
-        newResult.setStartDate(startDate);
-        newResult.setFinishDate(ZonedDateTime.now());
+            result.setStartDate(start);
+            result.setFinishDate(ZonedDateTime.now());
+            evaluation.getResults().add(result);
+            evaluationService.save(evaluation);
 
-        analysisResults.getAlgorithms().stream()
-                .map(analysisResults::get)
-                .flatMap(algorithmResult ->
-                        algorithmResult.getIndicators().stream()
-                                .map(algorithmResult::get))
-                .forEach(indicator -> newResult.getPopulationMetrics().put(
-                        indicator.getIndicator(),
-                        indicator.getValues()[0])
-                );
-
-        var solutions = StreamSupport.stream(result.spliterator(), false)
-                .map(solution -> setupSolution(evaluation, input, solution))
-                .collect(Collectors.toList());
-        newResult.getSolutions().addAll(solutions);
-        evaluation.getResults().add(newResult);
-        evaluationService.save(evaluation);
-        var duration = DurationFormatUtils.formatDurationHMS(ChronoUnit.MILLIS.between(startDate, newResult.getFinishDate()));
-        LOGGER.info("Evaluation run complete. Took {} (H:m:s.millis)", duration);
-        LOGGER.info("Result id: {}, Solutions: {}, Clusters: {}", newResult.getId(), solutions.size(),
-                solutions.stream().mapToInt(sol -> sol.getClusters().size()).sum());
-    }
-
-    /**
-     * Sets up a single solution and its clusters.
-     *
-     * @param evaluation the evaluation
-     * @param input      the input to use in decoding the variables in the given solution
-     * @param solution   the MOEA solution to convert
-     * @return the yet unpersisted solution
-     */
-    private Solution setupSolution(Evaluation evaluation,
-                                   EvaluationInput input,
-                                   org.moeaframework.core.Solution solution) {
-        var newSolution = new Solution();
-        var i = 0;
-        // Retrieve metric information
-        for (var objective : evaluation.getObjectives()) {
-            var metrics = clusteringContextProvider.getMetricsForObjective(objective);
-            var values = Arrays.copyOfRange(solution.getObjectives(), i, i + metrics.size());
-            newSolution.getObjectiveValues().put(objective, values);
-            i += metrics.size();
-        }
-
-        // Set up clusters
-        var clustering = decoder.decode(solution, input, evaluation.getConfiguration());
-        clustering.getByCluster().entrySet().stream()
-                .map(entry -> new Cluster(entry.getKey(), entry.getValue()))
-                .forEach(cluster -> newSolution.getClusters().add(cluster));
-        return newSolution;
-    }
-
-    private Optional<NondominatedPopulation> runWithExecutor(Executor executor, Evaluation evaluation) {
-        try {
-            // TODO: There is also a runWithSeeds to perform multiple runs.. should I include that maybe?
-            var result = executor.run();
-            LOGGER.info("The evaluation with ID {} succeeded.", evaluation.getId());
-            evaluationService.updateStatus(evaluation, DONE);
-            return Optional.of(result);
+            var duration = DurationFormatUtils.formatDurationHMS(ChronoUnit.MILLIS.between(start, result.getFinishDate()));
+            LOGGER.info("Evaluation run complete. Took {} (H:m:s.millis)", duration);
+            LOGGER.info("Result id: {}, Solutions: {}, Clusters: {}", result.getId(), result.getSolutions().size(),
+                    result.getSolutions().stream().mapToInt(sol -> sol.getClusters().size()).sum());
         } catch (Exception e) {
             LOGGER.error("The evaluation with ID " + evaluation.getId() + " failed.", e);
-            evaluationService.updateStatus(evaluation, ERRORED);
-            return Optional.empty();
+            evaluationService.updateStatus(evaluation, EvaluationStatus.ERRORED);
+        } finally {
+            runnerRunning.set(false);
         }
     }
 }

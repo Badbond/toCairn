@@ -1,10 +1,10 @@
-package me.soels.thesis.clustering;
+package me.soels.thesis.solver.moea;
 
-import me.soels.thesis.clustering.encoding.EncodingType;
-import me.soels.thesis.clustering.encoding.VariableDecoder;
-import me.soels.thesis.clustering.objectives.Metric;
-import me.soels.thesis.model.EvaluationConfiguration;
 import me.soels.thesis.model.EvaluationInput;
+import me.soels.thesis.model.MOEAConfiguration;
+import me.soels.thesis.solver.moea.encoding.EncodingType;
+import me.soels.thesis.solver.moea.encoding.VariableDecoder;
+import me.soels.thesis.solver.objectives.Metric;
 import org.moeaframework.Executor;
 import org.moeaframework.core.Solution;
 import org.moeaframework.core.variable.EncodingUtils;
@@ -25,9 +25,10 @@ import java.util.List;
  * @see EncodingType
  */
 public class ClusteringProblem extends AbstractProblem {
+    // TODO: Create multiple solvers architecture. One hierarchical and this MEOA clustering. Ideally, metrics are agnostic of it.
     private final List<Metric> metrics;
     private final EvaluationInput evaluationInput;
-    private final EvaluationConfiguration configuration;
+    private final MOEAConfiguration configuration;
     private final VariableDecoder variableDecoder;
 
     /**
@@ -38,7 +39,7 @@ public class ClusteringProblem extends AbstractProblem {
      * @param configuration   the configuration for the problem
      * @param variableDecoder the decoder service to decode the solution with
      */
-    public ClusteringProblem(List<Metric> metrics, EvaluationInput analysisInput, EvaluationConfiguration configuration, VariableDecoder variableDecoder) {
+    public ClusteringProblem(List<Metric> metrics, EvaluationInput analysisInput, MOEAConfiguration configuration, VariableDecoder variableDecoder) {
         super(analysisInput.getOtherClasses().size(), metrics.size());
         this.metrics = metrics;
         this.evaluationInput = analysisInput;

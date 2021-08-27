@@ -2,7 +2,7 @@ package me.soels.thesis.model;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.soels.thesis.clustering.objectives.ObjectiveType;
+import me.soels.thesis.solver.objectives.ObjectiveType;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
@@ -38,7 +38,7 @@ public class Evaluation {
 
     @NotNull
     @Relationship(value = "CONFIGURED_WITH")
-    private EvaluationConfiguration configuration;
+    private SolverConfiguration configuration;
 
     @Relationship(value = "HAS_RESULTS")
     private List<EvaluationResult> results = new ArrayList<>();

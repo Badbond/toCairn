@@ -15,6 +15,7 @@ import java.util.UUID;
 @Node
 @Getter
 @Setter
+// TODO: Rename to microservice?
 public class Cluster {
     private final int clusterNumber;
     @Relationship("HAS_NODES")

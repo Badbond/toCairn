@@ -1,4 +1,4 @@
-package me.soels.thesis.clustering.encoding;
+package me.soels.thesis.solver.moea.encoding;
 
 import me.soels.thesis.model.AbstractClass;
 import me.soels.thesis.model.OtherClass;

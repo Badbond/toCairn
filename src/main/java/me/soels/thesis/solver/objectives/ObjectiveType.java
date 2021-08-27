@@ -1,4 +1,4 @@
-package me.soels.thesis.clustering.objectives;
+package me.soels.thesis.solver.objectives;
 
 public enum ObjectiveType {
     /**

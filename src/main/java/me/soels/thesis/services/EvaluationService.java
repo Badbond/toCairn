@@ -2,10 +2,10 @@ package me.soels.thesis.services;
 
 import me.soels.thesis.api.ResourceNotFoundException;
 import me.soels.thesis.api.dtos.EvaluationDto;
-import me.soels.thesis.clustering.objectives.ObjectiveType;
 import me.soels.thesis.model.*;
 import me.soels.thesis.repositories.EvaluationConfigurationRepository;
 import me.soels.thesis.repositories.EvaluationRepository;
+import me.soels.thesis.solver.objectives.ObjectiveType;
 import org.springframework.stereotype.Service;
 
 import javax.validation.Valid;
@@ -13,11 +13,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static me.soels.thesis.clustering.objectives.ObjectiveType.SHARED_DEVELOPMENT_LIFECYCLE;
 import static me.soels.thesis.model.AnalysisType.EVOLUTIONARY;
 import static me.soels.thesis.model.AnalysisType.SOURCE;
 import static me.soels.thesis.model.EvaluationStatus.INCOMPLETE;
 import static me.soels.thesis.model.EvaluationStatus.RUNNING;
+import static me.soels.thesis.solver.objectives.ObjectiveType.SHARED_DEVELOPMENT_LIFECYCLE;
 
 /**
  * Service responsible for managing evaluations and their configuration including preparation steps for running
@@ -72,7 +72,7 @@ public class EvaluationService {
     }
 
     /**
-     * Creates a new evaluation and its {@link EvaluationConfiguration}.
+     * Creates a new evaluation and its {@link SolverConfiguration}.
      *
      * @param dto the DTO to construct the evaluation from
      * @return the newly created evaluation and its configuration
@@ -220,12 +220,15 @@ public class EvaluationService {
      * @param configuration the configuration to validate
      * @return the validated configuration
      */
-    private EvaluationConfiguration validateConfiguration(@Valid EvaluationConfiguration configuration) {
-        var boundViolation = configuration.getClusterCountLowerBound()
-                .flatMap(lower -> configuration.getClusterCountUpperBound())
-                .filter(upper -> upper < configuration.getClusterCountLowerBound().get());
-        if (boundViolation.isPresent()) {
-            throw new IllegalArgumentException("Cluster count upper bound needs to be greater than its lower bound");
+    private SolverConfiguration validateConfiguration(@Valid SolverConfiguration configuration) {
+        if (configuration instanceof MOEAConfiguration) {
+            var moeaConfiguration = (MOEAConfiguration) configuration;
+            var boundViolation = moeaConfiguration.getClusterCountLowerBound()
+                    .flatMap(lower -> moeaConfiguration.getClusterCountUpperBound())
+                    .filter(upper -> upper < moeaConfiguration.getClusterCountLowerBound().get());
+            if (boundViolation.isPresent()) {
+                throw new IllegalArgumentException("Cluster count upper bound needs to be greater than its lower bound");
+            }
         }
         return configuration;
     }

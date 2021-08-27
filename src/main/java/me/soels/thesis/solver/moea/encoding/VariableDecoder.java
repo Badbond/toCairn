@@ -1,7 +1,7 @@
-package me.soels.thesis.clustering.encoding;
+package me.soels.thesis.solver.moea.encoding;
 
-import me.soels.thesis.model.EvaluationConfiguration;
 import me.soels.thesis.model.EvaluationInput;
+import me.soels.thesis.model.MOEAConfiguration;
 import org.moeaframework.core.Solution;
 import org.moeaframework.core.variable.EncodingUtils;
 import org.springframework.stereotype.Service;
@@ -22,7 +22,7 @@ public class VariableDecoder {
      * @param configuration the configuration for the evaluation containing encoding configuration
      * @return the decoded clustering
      */
-    public Clustering decode(Solution solution, EvaluationInput input, EvaluationConfiguration configuration) {
+    public Clustering decode(Solution solution, EvaluationInput input, MOEAConfiguration configuration) {
         var variables = EncodingUtils.getInt(solution);
 
         switch (configuration.getEncodingType()) {

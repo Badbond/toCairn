@@ -1,7 +1,7 @@
 package me.soels.thesis.api.dtos;
 
 import lombok.Getter;
-import me.soels.thesis.clustering.objectives.ObjectiveType;
+import me.soels.thesis.solver.objectives.ObjectiveType;
 import me.soels.thesis.model.AbstractClass;
 import me.soels.thesis.model.Cluster;
 import me.soels.thesis.model.Solution;

@@ -3,20 +3,18 @@ package me.soels.thesis.api.dtos;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import me.soels.thesis.solver.moea.encoding.EncodingType;
-import me.soels.thesis.model.SolverConfiguration;
 import me.soels.thesis.model.EvolutionaryAlgorithm;
+import me.soels.thesis.model.MOEAConfiguration;
+import me.soels.thesis.model.SolverConfiguration;
+import me.soels.thesis.solver.moea.encoding.EncodingType;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.Optional;
 
-/**
- * Models the configuration of an evaluation.
- */
 @Getter
 @AllArgsConstructor(onConstructor_ = @JsonCreator)
-public class EvaluationConfigurationDto {
+public class MOEAConfigurationDto extends SolverConfigurationDto {
     @NotNull
     private final EvolutionaryAlgorithm algorithm;
 
@@ -36,7 +34,7 @@ public class EvaluationConfigurationDto {
     @Size(min = 1)
     private final Integer clusterCountUpperBound;
 
-    public EvaluationConfigurationDto(SolverConfiguration dao) {
+    public MOEAConfigurationDto(MOEAConfiguration dao) {
         this.algorithm = dao.getAlgorithm();
         this.encodingType = dao.getEncodingType();
         this.maxEvaluations = dao.getMaxEvaluations();
@@ -45,8 +43,9 @@ public class EvaluationConfigurationDto {
         this.clusterCountUpperBound = dao.getClusterCountUpperBound().orElse(null);
     }
 
+    @Override
     public SolverConfiguration toDao() {
-        var dao = new SolverConfiguration();
+        var dao = new MOEAConfiguration();
         dao.setAlgorithm(algorithm);
         dao.setEncodingType(encodingType);
         dao.setMaxEvaluations(maxEvaluations);

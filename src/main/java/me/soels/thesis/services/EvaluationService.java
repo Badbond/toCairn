@@ -104,7 +104,7 @@ public class EvaluationService {
         }
 
         var configuration = evaluation.getConfiguration();
-        var newConfiguration = dto.getConfiguration().toDao();
+        var newConfiguration = dto.getSolverConfiguration().toDao();
         validateConfiguration(newConfiguration);
         newConfiguration.setId(configuration.getId());
         configurationRepository.save(newConfiguration);

@@ -2,11 +2,8 @@ package me.soels.thesis.api.dtos;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.Getter;
+import me.soels.thesis.model.*;
 import me.soels.thesis.solver.objectives.ObjectiveType;
-import me.soels.thesis.model.AnalysisType;
-import me.soels.thesis.model.Evaluation;
-import me.soels.thesis.model.EvaluationResult;
-import me.soels.thesis.model.EvaluationStatus;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -36,15 +33,15 @@ public class EvaluationDto {
     @Size(min = 1)
     private final Set<ObjectiveType> objectives;
     @NotNull
-    private final EvaluationConfigurationDto configuration;
+    private final SolverConfigurationDto solverConfiguration;
     private final EvaluationStatus status;
     private final Set<AnalysisType> executedAnalysis;
     private final List<UUID> results;
 
     @JsonCreator
-    public EvaluationDto(String name, Set<ObjectiveType> objectives, EvaluationConfigurationDto configuration) {
+    public EvaluationDto(String name, Set<ObjectiveType> objectives, SolverConfigurationDto solverConfiguration) {
         this.name = name;
-        this.configuration = configuration;
+        this.solverConfiguration = solverConfiguration;
         this.objectives = objectives;
 
         // Non-settable properties by user
@@ -58,7 +55,7 @@ public class EvaluationDto {
         this.id = dao.getId();
         this.name = dao.getName();
         this.objectives = dao.getObjectives();
-        this.configuration = new EvaluationConfigurationDto(dao.getConfiguration());
+        this.solverConfiguration = convertConfiguration(dao.getConfiguration());
         this.status = dao.getStatus();
         this.executedAnalysis = dao.getExecutedAnalysis();
         this.results = dao.getResults().stream()
@@ -66,10 +63,20 @@ public class EvaluationDto {
                 .collect(Collectors.toList());
     }
 
+    private static SolverConfigurationDto convertConfiguration(SolverConfiguration configuration) {
+        if (configuration instanceof MOEAConfiguration) {
+            return new MOEAConfigurationDto((MOEAConfiguration) configuration);
+        } else if (configuration instanceof HierarchicalConfiguration) {
+            return new HierarchicalConfigurationDto((HierarchicalConfiguration) configuration);
+        } else {
+            throw new IllegalStateException("Unknown type of configuration found " + configuration.getClass().getSimpleName());
+        }
+    }
+
     public Evaluation toDao() {
         var dao = new Evaluation();
         dao.setName(name);
-        dao.setConfiguration(configuration.toDao());
+        dao.setConfiguration(solverConfiguration.toDao());
         // We don't set objectives here as only on create we should include them.
         return dao;
     }

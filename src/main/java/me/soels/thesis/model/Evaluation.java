@@ -2,7 +2,7 @@ package me.soels.thesis.model;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.soels.thesis.solver.objectives.ObjectiveType;
+import me.soels.thesis.solver.metric.MetricType;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
@@ -49,7 +49,7 @@ public class Evaluation {
 
     @NotNull
     @Size(min = 2)
-    private Set<ObjectiveType> objectives = new LinkedHashSet<>();
+    private Set<MetricType> objectives = new LinkedHashSet<>();
 
     @NotNull
     private Set<AnalysisType> executedAnalysis = new LinkedHashSet<>();

@@ -1,8 +1,8 @@
-package me.soels.thesis.solver.objectives;
+package me.soels.thesis.solver.metric;
 
-import me.soels.thesis.solver.Clustering;
 import me.soels.thesis.model.AbstractClass;
 import me.soels.thesis.model.EvaluationInput;
+import me.soels.thesis.solver.Clustering;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -10,11 +10,17 @@ import java.util.List;
 /**
  * Cohesion as measured by Carvalho et al. (2020) based off of metrics in the work of Chidamber and Kemerer (1994).
  * <p>
- * This metric should be maximized but, as the framework only allows for minimization objectives, we negate the value.
+ * This metric should be maximized but, as the MOEA framework only allows for minimization objectives, we negate the
+ * value.
  * <p>
  * The only addition we have made is to give clusters of 1 node a value of 0.25 as they, like a cluster with 2 nodes
  * and a joining edge, are the most cohesive form. This counters the 'cluster everything together' effect of coupling
  * metrics. Otherwise, we would have a division by 0 returning in NaN.
+ * <p>
+ * They calculate the cohesion of a microservice based on summarizing the method-to-method calls. We map this to our
+ * own data set which is based on class-to-class dependencies. We summarize the amount of connections one class
+ * has to other classes in the same microservice for every class in the microservice. The total cohesion is based on
+ * summarization of all microservices as Carvalho et al. define it.
  * <p>
  * See related work 'Carvalho, L., Garcia, A., Colanzi, T. E., Assunção, W. K., Pereira, J. A., Fonseca, B., ... &
  * Lucena, C. (2020, September). On the Performance and Adoption of Search-Based Microservice Identification with
@@ -22,7 +28,7 @@ import java.util.List;
  * (pp. 569-580). IEEE.' and 'Chidamber, S. R., & Kemerer, C. F. (1994). A metrics suite for object oriented design.
  * <i>IEEE Transactions on software engineering, 20</i>(6), 476-493.'.
  */
-public class CohesionCarvalhoMetric implements OnePurposeMetric {
+public class CarvalhoCohesion implements Metric {
     @Override
     public double calculate(Clustering clustering, EvaluationInput evaluationInput) {
         var clusteringByCluster = clustering.getByCluster();

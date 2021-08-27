@@ -4,6 +4,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.Node;
 
+import java.util.LinkedList;
+import java.util.List;
+
 /**
  * Models the configuration of an evaluation.
  * <p>
@@ -14,6 +17,6 @@ import org.springframework.data.neo4j.core.schema.Node;
 @Getter
 @Setter
 public class HierarchicalConfiguration extends SolverConfiguration {
-
+    private final List<Integer> weights = new LinkedList<>();
 }
 

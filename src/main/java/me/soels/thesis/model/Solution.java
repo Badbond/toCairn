@@ -2,7 +2,7 @@ package me.soels.thesis.model;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.soels.thesis.solver.objectives.ObjectiveType;
+import me.soels.thesis.solver.metric.MetricType;
 import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.data.neo4j.core.schema.*;
 
@@ -20,5 +20,5 @@ public class Solution {
     private List<Microservice> microservices = new ArrayList<>();
     // TODO: Rename relationships based on edges in thesis.
     @CompositeProperty(prefix = "objectives")
-    private Map<ObjectiveType, double[]> objectiveValues = new EnumMap<>(ObjectiveType.class);
+    private Map<MetricType, double[]> objectiveValues = new EnumMap<>(MetricType.class);
 }

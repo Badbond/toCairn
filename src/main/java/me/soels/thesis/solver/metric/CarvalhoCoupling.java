@@ -1,4 +1,4 @@
-package me.soels.thesis.solver.objectives;
+package me.soels.thesis.solver.metric;
 
 import me.soels.thesis.solver.Clustering;
 import me.soels.thesis.model.AbstractClass;
@@ -21,7 +21,7 @@ import java.util.List;
  * (pp. 569-580). IEEE.' and 'Chidamber, S. R., & Kemerer, C. F. (1994). A metrics suite for object oriented design.
  * <i>IEEE Transactions on software engineering, 20</i>(6), 476-493.'.
  */
-public class CouplingCarvalhoMetric implements OnePurposeMetric {
+public class CarvalhoCoupling implements Metric {
     @Override
     public double calculate(Clustering clustering, EvaluationInput evaluationInput) {
         return clustering.getByCluster().values().stream()

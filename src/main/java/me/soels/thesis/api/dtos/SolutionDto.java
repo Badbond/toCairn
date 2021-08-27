@@ -4,7 +4,7 @@ import lombok.Getter;
 import me.soels.thesis.model.AbstractClass;
 import me.soels.thesis.model.Microservice;
 import me.soels.thesis.model.Solution;
-import me.soels.thesis.solver.objectives.ObjectiveType;
+import me.soels.thesis.solver.metric.MetricType;
 
 import java.util.List;
 import java.util.Map;
@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 @Getter
 public class SolutionDto {
-    private final Map<ObjectiveType, double[]> objectiveValues;
+    private final Map<MetricType, double[]> objectiveValues;
     private final List<MicroserviceDto> microserviceDtos;
 
     public SolutionDto(Solution solution) {

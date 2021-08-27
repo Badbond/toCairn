@@ -5,7 +5,7 @@ import me.soels.thesis.api.dtos.EvaluationDto;
 import me.soels.thesis.model.*;
 import me.soels.thesis.repositories.EvaluationConfigurationRepository;
 import me.soels.thesis.repositories.EvaluationRepository;
-import me.soels.thesis.solver.objectives.ObjectiveType;
+import me.soels.thesis.solver.metric.MetricType;
 import org.springframework.stereotype.Service;
 
 import javax.validation.Valid;
@@ -17,7 +17,7 @@ import static me.soels.thesis.model.AnalysisType.EVOLUTIONARY;
 import static me.soels.thesis.model.AnalysisType.SOURCE;
 import static me.soels.thesis.model.EvaluationStatus.INCOMPLETE;
 import static me.soels.thesis.model.EvaluationStatus.RUNNING;
-import static me.soels.thesis.solver.objectives.ObjectiveType.SHARED_DEVELOPMENT_LIFECYCLE;
+import static me.soels.thesis.solver.metric.MetricType.SHARED_DEVELOPMENT_LIFECYCLE;
 
 /**
  * Service responsible for managing evaluations and their configuration including preparation steps for running
@@ -200,14 +200,14 @@ public class EvaluationService {
      * Checks whether all the input is present for the given objectives.
      * <p>
      * Note that {@link AnalysisType#SOURCE} analysis is always required as this generates a complete graph of classes
-     * to cluster. As {@link ObjectiveType#ONE_PURPOSE} and {@link ObjectiveType#BOUNDED_CONTEXT} only rely on the
+     * to cluster. As {@link MetricType#ONE_PURPOSE} and {@link MetricType#BOUNDED_CONTEXT} only rely on the
      * result from source analysis, we do not check them explicitly.
      *
      * @param evaluation the evaluation to check whether all input has been provided
      * @param objectives the objectives to meet input for
      * @return whether all input has been provided given the objectives
      */
-    public boolean hasAllRequiredInput(Evaluation evaluation, Set<ObjectiveType> objectives) {
+    public boolean hasAllRequiredInput(Evaluation evaluation, Set<MetricType> objectives) {
         var executed = evaluation.getExecutedAnalysis();
         return executed.contains(SOURCE) &&
                 (!objectives.contains(SHARED_DEVELOPMENT_LIFECYCLE) || executed.contains(EVOLUTIONARY));

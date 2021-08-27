@@ -8,7 +8,6 @@ import me.soels.thesis.solver.hierarchical.HierarchicalSolver;
 import me.soels.thesis.solver.moea.ClusteringProblem;
 import me.soels.thesis.solver.moea.MOEASolver;
 import me.soels.thesis.solver.moea.VariableDecoder;
-import me.soels.thesis.solver.objectives.ObjectiveMapper;
 import org.moeaframework.Executor;
 import org.moeaframework.core.Problem;
 import org.springframework.stereotype.Service;

@@ -1,4 +1,4 @@
-package me.soels.thesis.solver.objectives;
+package me.soels.thesis.solver.metric;
 
 import me.soels.thesis.model.DataRelationship;
 import me.soels.thesis.model.OtherClass;
@@ -12,19 +12,19 @@ import static java.lang.Math.sqrt;
 import static me.soels.thesis.model.DataRelationshipType.WRITE;
 
 /**
- * Functional interface to identify a metric for the {@link ObjectiveType#DATA_AUTONOMY} objective.
+ * Functional interface to identify a metric for the {@link MetricType#DATA_AUTONOMY} objective.
  * <p>
  * Based on the metric and its definition as proposed by Selmadji et al. (2020). This class also contains metrics shared
- * between both {@link FInter} and {@link FIntra}.
+ * between both {@link SelmadjiFInter} and {@link SelmadjiFIntra}.
  * <p>
  * See related work 'Selmadji, A., Seriai, A. D., Bouziane, H. L., Mahamane, R. O., Zaragoza, P., & Dony, C. (2020,
  * March). From monolithic architecture style to microservice one based on a semi-automatic approach. In 2020 IEEE
  * International Conference on Software Architecture (ICSA) (pp. 157-168). IEEE.'.
  *
- * @see FIntra
- * @see FInter
+ * @see SelmadjiFIntra
+ * @see SelmadjiFInter
  */
-public abstract class DataAutonomyMetric implements Metric {
+public abstract class SelmadjiDataAutonomy implements Metric {
     /**
      * Performs the DataDepends metric as described in the thesis. Note that as we are using already existing
      * relationships, we omit the {@code 0} case.

@@ -3,11 +3,13 @@ package me.soels.thesis.model;
 import lombok.Getter;
 import lombok.Setter;
 import me.soels.thesis.solver.Solver;
+import me.soels.thesis.solver.metric.MetricType;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 
-import javax.validation.constraints.NotNull;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -20,4 +22,6 @@ public class SolverConfiguration {
     @Id
     @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)
     private UUID id;
+
+    private final Set<MetricType> metrics = new LinkedHashSet<>();
 }

@@ -1,6 +1,6 @@
 package me.soels.thesis.model;
 
-import me.soels.thesis.solver.objectives.Metric;
+import me.soels.thesis.solver.metric.Metric;
 
 import java.util.Collections;
 import java.util.Comparator;

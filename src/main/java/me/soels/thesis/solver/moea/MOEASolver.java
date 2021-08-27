@@ -2,8 +2,7 @@ package me.soels.thesis.solver.moea;
 
 import me.soels.thesis.model.*;
 import me.soels.thesis.solver.Solver;
-import me.soels.thesis.solver.objectives.ObjectiveMapper;
-import me.soels.thesis.solver.objectives.ObjectiveType;
+import me.soels.thesis.solver.metric.MetricType;
 import org.moeaframework.Analyzer;
 import org.moeaframework.Executor;
 import org.moeaframework.core.NondominatedPopulation;
@@ -16,13 +15,13 @@ import java.util.stream.StreamSupport;
 public class MOEASolver implements Solver {
     private final EvaluationInput input;
     private final MOEAConfiguration configuration;
-    private final Set<ObjectiveType> objectives;
+    private final Set<MetricType> objectives;
     private final Executor executor;
     private final VariableDecoder decoder;
 
     public MOEASolver(EvaluationInput input,
                       MOEAConfiguration configuration,
-                      Set<ObjectiveType> objectives, Executor executor,
+                      Set<MetricType> objectives, Executor executor,
                       VariableDecoder decoder) {
         this.input = input;
         this.configuration = configuration;

@@ -1,4 +1,4 @@
-package me.soels.thesis.solver.objectives;
+package me.soels.thesis.solver.metric;
 
 import me.soels.thesis.model.EvaluationInput;
 import me.soels.thesis.model.OtherClass;
@@ -9,32 +9,34 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * FInter metric as proposed by Selmadji et al. (2020).
+ * FIntra metric as proposed by Selmadji et al. (2020).
+ * <p>
+ * This metric should be maximized but, as the MOEA framework only allows for minimization objectives, we negate the
+ * value.
  * <p>
  * See related work 'Selmadji, A., Seriai, A. D., Bouziane, H. L., Mahamane, R. O., Zaragoza, P., & Dony, C. (2020,
  * March). From monolithic architecture style to microservice one based on a semi-automatic approach. In 2020 IEEE
  * International Conference on Software Architecture (ICSA) (pp. 157-168). IEEE.'.
  */
-public class FInter extends DataAutonomyMetric {
+public class SelmadjiFIntra extends SelmadjiDataAutonomy {
     @Override
     public double calculate(Clustering clustering, EvaluationInput evaluationInput) {
-        return clustering.getByCluster().values().stream()
-                .mapToDouble(microservice -> finter(microservice, clustering))
+        return -1 * clustering.getByCluster().values().stream()
+                .mapToDouble(this::fintra)
                 .sum();
     }
 
-    private double finter(List<OtherClass> classes, Clustering clustering) {
+    private double fintra(List<OtherClass> classes) {
         // Get the cardinality of the set of data classes manipulated by classes in this microservice
         var nbDataManipulatedInMicro = nbDataManipulatedInMicro(classes);
-        // Get all the classes that do not belong to this microservice.
-        var externalClasses = clustering.getByClass().keySet().stream()
-                .filter(clazz -> !classes.contains(clazz))
-                .collect(Collectors.toList());
-        // Get all the pairs of classes in this microservice with those of external classes.
+
+        // Get all the pairs of classes in this microservice excluding self-pairs.
         var pairs = classes.stream()
-                .flatMap(i -> externalClasses.stream()
+                .flatMap(i -> classes.stream()
+                        .filter(j -> !i.equals(j))
                         .map(j -> Pair.of(i, j)))
                 .collect(Collectors.toList());
+
         // Calculate the metric
         return pairs.stream()
                 .mapToDouble(pair -> data(pair.getKey(), pair.getValue(), nbDataManipulatedInMicro))

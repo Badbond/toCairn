@@ -3,7 +3,7 @@ package me.soels.thesis.api.dtos;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.Getter;
 import me.soels.thesis.model.*;
-import me.soels.thesis.solver.objectives.ObjectiveType;
+import me.soels.thesis.solver.metric.MetricType;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -31,7 +31,7 @@ public class EvaluationDto {
     private final String name;
     @NotNull
     @Size(min = 1)
-    private final Set<ObjectiveType> objectives;
+    private final Set<MetricType> objectives;
     @NotNull
     private final SolverConfigurationDto solverConfiguration;
     private final EvaluationStatus status;
@@ -39,7 +39,7 @@ public class EvaluationDto {
     private final List<UUID> results;
 
     @JsonCreator
-    public EvaluationDto(String name, Set<ObjectiveType> objectives, SolverConfigurationDto solverConfiguration) {
+    public EvaluationDto(String name, Set<MetricType> objectives, SolverConfigurationDto solverConfiguration) {
         this.name = name;
         this.solverConfiguration = solverConfiguration;
         this.objectives = objectives;

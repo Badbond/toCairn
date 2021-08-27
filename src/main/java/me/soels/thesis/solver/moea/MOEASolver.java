@@ -40,7 +40,7 @@ public class MOEASolver implements Solver {
     }
 
     private EvaluationResult createResult(NondominatedPopulation population, Analyzer.AlgorithmResult analysisResults) {
-        var result = new EvaluationResult();
+        var result = new MOEAEvaluationResult();
 
         analysisResults.getIndicators().stream()
                 .map(analysisResults::get)

@@ -2,11 +2,15 @@ package me.soels.thesis.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
-import org.springframework.data.neo4j.core.schema.*;
 
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Models the result of an evaluation run.
@@ -14,7 +18,7 @@ import java.util.*;
 @Node
 @Getter
 @Setter
-public class EvaluationResult {
+public abstract class EvaluationResult {
     @Id
     @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)
     private UUID id;
@@ -24,9 +28,4 @@ public class EvaluationResult {
 
     private ZonedDateTime startDate;
     private ZonedDateTime finishDate;
-
-    // TODO: Make hierarchy for solvers.
-
-    @CompositeProperty(prefix = "populationMetrics")
-    private Map<String, Double> populationMetrics = new HashMap<>();
 }

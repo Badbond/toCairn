@@ -15,17 +15,16 @@ import java.util.UUID;
 @Node
 @Getter
 @Setter
-// TODO: Rename to microservice?
-public class Cluster {
-    private final int clusterNumber;
-    @Relationship("HAS_NODES")
-    private final List<AbstractClass> nodes = new ArrayList<>();
+public class Microservice {
+    private final int microserviceNumber;
+    @Relationship("HasClasses")
+    private final List<OtherClass> classes = new ArrayList<>();
     @Id
     @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)
     private UUID id;
 
-    public Cluster(int clusterNumber, List<? extends AbstractClass> nodes) {
-        this.clusterNumber = clusterNumber;
-        this.nodes.addAll(nodes);
+    public Microservice(int microserviceNumber, List<OtherClass> classes) {
+        this.microserviceNumber = microserviceNumber;
+        this.classes.addAll(classes);
     }
 }

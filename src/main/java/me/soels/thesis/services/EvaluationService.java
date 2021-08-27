@@ -161,7 +161,8 @@ public class EvaluationService {
      * @param evaluation the evaluation to update
      * @param status     the status to persist
      */
-    public void updateStatus(Evaluation evaluation, EvaluationStatus status) {
+    public void updateStatus(UUID evaluationId, EvaluationStatus status) {
+        var evaluation = getEvaluation(evaluationId);
         evaluation.setStatus(status);
         evaluationRepository.save(evaluation);
     }

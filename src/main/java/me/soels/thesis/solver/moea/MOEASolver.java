@@ -85,8 +85,8 @@ public class MOEASolver implements Solver {
         // Set up clusters
         var clustering = decoder.decode(solution, input, configuration);
         clustering.getByCluster().entrySet().stream()
-                .map(entry -> new Cluster(entry.getKey(), entry.getValue()))
-                .forEach(cluster -> newSolution.getClusters().add(cluster));
+                .map(entry -> new Microservice(entry.getKey(), entry.getValue()))
+                .forEach(microservice -> newSolution.getMicroservices().add(microservice));
         return newSolution;
     }
 }

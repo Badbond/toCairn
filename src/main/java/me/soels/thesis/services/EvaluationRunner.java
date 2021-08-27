@@ -48,15 +48,15 @@ public class EvaluationRunner {
             result.setStartDate(start);
             result.setFinishDate(ZonedDateTime.now());
             evaluation.getResults().add(result);
-            evaluationService.save(evaluation);
+            evaluation = evaluationService.save(evaluation);
 
             var duration = DurationFormatUtils.formatDurationHMS(ChronoUnit.MILLIS.between(start, result.getFinishDate()));
             LOGGER.info("Evaluation run complete. Took {} (H:m:s.millis)", duration);
             LOGGER.info("Result id: {}, Solutions: {}, Clusters: {}", result.getId(), result.getSolutions().size(),
-                    result.getSolutions().stream().mapToInt(sol -> sol.getClusters().size()).sum());
+                    result.getSolutions().stream().mapToInt(sol -> sol.getMicroservices().size()).sum());
         } catch (Exception e) {
             LOGGER.error("The evaluation with ID " + evaluation.getId() + " failed.", e);
-            evaluationService.updateStatus(evaluation, EvaluationStatus.ERRORED);
+            evaluationService.updateStatus(evaluation.getId(), EvaluationStatus.ERRORED);
         } finally {
             runnerRunning.set(false);
         }

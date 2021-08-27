@@ -16,8 +16,8 @@ public class Solution {
     @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)
     private UUID id;
 
-    @Relationship("HAS_CLUSTERS")
-    private List<Cluster> clusters = new ArrayList<>();
+    @Relationship("HasMicroservice")
+    private List<Microservice> microservices = new ArrayList<>();
     // TODO: Rename relationships based on edges in thesis.
     @CompositeProperty(prefix = "objectives")
     private Map<ObjectiveType, double[]> objectiveValues = new EnumMap<>(ObjectiveType.class);

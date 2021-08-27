@@ -39,7 +39,7 @@ public class EvaluationResultService {
         var maybeResult = resultRepository.getByIdShallow(id);
         // Delete the clusters associated with all the solutions in this result
         maybeResult.ifPresent(result -> result.getSolutions().stream()
-                .flatMap(solution -> solution.getClusters().stream())
+                .flatMap(solution -> solution.getMicroservices().stream())
                 .forEach(clusterRepository::delete));
         // Delete all the solutions
         maybeResult.ifPresent(result -> result.getSolutions()

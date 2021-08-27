@@ -1,10 +1,10 @@
 package me.soels.thesis.api.dtos;
 
 import lombok.Getter;
-import me.soels.thesis.solver.objectives.ObjectiveType;
 import me.soels.thesis.model.AbstractClass;
-import me.soels.thesis.model.Cluster;
+import me.soels.thesis.model.Microservice;
 import me.soels.thesis.model.Solution;
+import me.soels.thesis.solver.objectives.ObjectiveType;
 
 import java.util.List;
 import java.util.Map;
@@ -13,21 +13,21 @@ import java.util.stream.Collectors;
 @Getter
 public class SolutionDto {
     private final Map<ObjectiveType, double[]> objectiveValues;
-    private final List<ClusterDto> clusterDtos;
+    private final List<MicroserviceDto> microserviceDtos;
 
     public SolutionDto(Solution solution) {
-        this.clusterDtos = solution.getClusters().stream().map(ClusterDto::new).collect(Collectors.toList());
+        this.microserviceDtos = solution.getMicroservices().stream().map(MicroserviceDto::new).collect(Collectors.toList());
         this.objectiveValues = solution.getObjectiveValues();
     }
 
     @Getter
-    public static class ClusterDto {
+    public static class MicroserviceDto {
         private final List<String> fqns;
         private final int number;
 
-        public ClusterDto(Cluster cluster) {
-            this.fqns = cluster.getNodes().stream().map(AbstractClass::getIdentifier).collect(Collectors.toList());
-            this.number = cluster.getClusterNumber();
+        public MicroserviceDto(Microservice microservice) {
+            this.fqns = microservice.getClasses().stream().map(AbstractClass::getIdentifier).collect(Collectors.toList());
+            this.number = microservice.getMicroserviceNumber();
         }
     }
 }

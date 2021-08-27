@@ -19,7 +19,7 @@ public abstract class AbstractClass {
     @Id
     @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)
     protected UUID id;
-    @Relationship("DEPENDS_ON")
+    @Relationship("InteractsWith")
     private List<DependenceRelationship> dependenceRelationships = new ArrayList<>();
 
     protected AbstractClass(String identifier, String humanReadableName) {

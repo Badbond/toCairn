@@ -12,7 +12,7 @@ public class ObjectiveMapper {
                 //  overtake 0-1 in almost all cases. Thus one_purpose=(cohesion+coupling)/2 should range from (0-1).
                 return List.of(new CohesionCarvalhoMetric(), new CouplingCarvalhoMetric());
             case DATA_AUTONOMY:
-                return List.of(new SelmadjiDataAutonomyMetric());
+                return List.of(new FIntra(), new FInter());
             case BOUNDED_CONTEXT:
                 return List.of(new TemporaryBoundedContextMetric());
             case SHARED_DEVELOPMENT_LIFECYCLE:

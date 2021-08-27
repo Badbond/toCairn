@@ -37,14 +37,14 @@ public class Evaluation {
     private EvaluationStatus status;
 
     @NotNull
-    @Relationship(value = "CONFIGURED_WITH")
+    @Relationship(value = "ConfiguredWith")
     private SolverConfiguration configuration;
 
-    @Relationship(value = "HAS_RESULTS")
+    @Relationship(value = "HasResult")
     private List<EvaluationResult> results = new ArrayList<>();
 
     @NotNull
-    @Relationship(value = "HAS_INPUTS")
+    @Relationship(value = "HasInput")
     private List<? extends AbstractClass> inputs = new ArrayList<>();
 
     @NotNull

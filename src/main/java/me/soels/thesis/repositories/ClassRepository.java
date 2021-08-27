@@ -31,7 +31,7 @@ public interface ClassRepository<T extends AbstractClass> extends Neo4jRepositor
             "MATCH (b:AbstractClass) " +
             "WITH a, b " +
             "WHERE a.id = $0 AND b.id = $1 " +
-            "CREATE (a)-[r:DEPENDS_ON]->(b) " +
+            "CREATE (a)-[r:InteractsWith]->(b) " +
             "SET r = $2.__properties__")
     void addDependencyRelationship(UUID callerId, UUID calleeId, DependenceRelationship relationship);
 }

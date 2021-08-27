@@ -19,7 +19,7 @@ public class EvaluationResult {
     @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)
     private UUID id;
 
-    @Relationship("HAS_SOLUTIONS")
+    @Relationship("HasSolution")
     private List<Solution> solutions = new ArrayList<>();
 
     private ZonedDateTime startDate;

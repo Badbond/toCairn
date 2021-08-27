@@ -5,25 +5,25 @@ targetLocation="$2"
 SCRIPT="$(basename "${0}")"
 if [ "${#}" -lt 1 ]; then
   echo "Script to compile and clean the given project (in a temporary directory) as preparation for source code analysis"
-  echo "Usage: ./${SCRIPT} <project location> <target directory for ZIP>"
+  echo "Usage: ./${SCRIPT} <project location> <target ZIP to create>"
   echo "Requirements:"
   echo " - Project is a compilable Maven project."
   exit 1
 fi
+
+# Transform paths into absolute paths
+projectLocation=$(realpath "${projectLocation}")
+targetLocation="$(realpath "${targetLocation}")"
 
 # Check whether the provided location exists
 if [ ! -d "$projectLocation" ]; then
   echo "Project directory ${projectLocation} was not found"
   exit 1
 fi
-if [ ! -d "$targetLocation" ]; then
-  echo "Target directory ${targetLocation} was not found"
+if [ ! -d "$(dirname $targetLocation)" ]; then
+  echo "Parent directory for target ${targetLocation} was not found"
   exit 1
 fi
-
-# Transform paths into absolute paths
-projectLocation=$(realpath "${projectLocation}")
-targetLocation="$(realpath "${targetLocation}")/project-cleaned.zip"
 
 # Add trailing slash if not given
 [[ "${projectLocation}" != */ ]] && projectLocation="${projectLocation}/"

@@ -22,13 +22,6 @@
     </description>
     <url>https://github.com/Badbond/thesis-project</url>
 
-    <repositories>
-        <repository>
-            <id>central</id>
-            <url>https://soels.jfrog.io/artifactory/default-maven-local</url>
-        </repository>
-    </repositories>
-
     <properties>
         <java.version>11</java.version>
         <moeaframework.version>2.13</moeaframework.version>
@@ -60,7 +53,7 @@
             <artifactId>jackson-dataformat-xml</artifactId>
         </dependency>
         <dependency>
-            <groupId>me.soels</groupId>
+            <groupId>org.moeaframework</groupId>
             <artifactId>moeaframework</artifactId>
             <version>${moeaframework.version}</version>
         </dependency>

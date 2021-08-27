@@ -2,7 +2,7 @@ package me.soels.thesis.model;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.soels.thesis.solver.moea.encoding.EncodingType;
+import me.soels.thesis.solver.moea.EncodingType;
 import org.springframework.data.neo4j.core.schema.Node;
 
 import javax.annotation.Nullable;

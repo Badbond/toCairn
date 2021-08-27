@@ -1,4 +1,4 @@
-package me.soels.thesis.solver.moea.encoding;
+package me.soels.thesis.solver.moea;
 
 /**
  * The encoding type used in the problem model for clustering.

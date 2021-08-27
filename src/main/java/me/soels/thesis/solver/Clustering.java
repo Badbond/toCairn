@@ -1,7 +1,8 @@
-package me.soels.thesis.solver.moea.encoding;
+package me.soels.thesis.solver;
 
 import me.soels.thesis.model.AbstractClass;
 import me.soels.thesis.model.OtherClass;
+import me.soels.thesis.solver.moea.EncodingType;
 import org.apache.commons.lang3.tuple.Pair;
 import org.moeaframework.core.Solution;
 

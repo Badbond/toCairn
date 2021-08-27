@@ -2,7 +2,7 @@ package me.soels.thesis.solver.objectives;
 
 import me.soels.thesis.model.EvaluationInput;
 import me.soels.thesis.model.OtherClass;
-import me.soels.thesis.solver.moea.encoding.Clustering;
+import me.soels.thesis.solver.Clustering;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;

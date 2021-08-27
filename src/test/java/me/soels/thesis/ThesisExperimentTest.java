@@ -2,13 +2,13 @@ package me.soels.thesis;
 
 import me.soels.thesis.analysis.sources.SourceAnalysis;
 import me.soels.thesis.analysis.sources.SourceAnalysisInput;
+import me.soels.thesis.model.*;
 import me.soels.thesis.solver.moea.ClusteringProblem;
-import me.soels.thesis.solver.moea.encoding.EncodingType;
-import me.soels.thesis.solver.moea.encoding.VariableDecoder;
+import me.soels.thesis.solver.moea.EncodingType;
+import me.soels.thesis.solver.moea.VariableDecoder;
 import me.soels.thesis.solver.objectives.CohesionCarvalhoMetric;
 import me.soels.thesis.solver.objectives.CouplingBetweenModuleClassesMetric;
 import me.soels.thesis.solver.objectives.Metric;
-import me.soels.thesis.model.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -69,7 +69,11 @@ class ThesisExperimentTest {
         var context = sourceAnalysis.prepareContext(modelBuilder, analysisInput);
         sourceAnalysis.analyzeNodes(context);
         sourceAnalysis.analyzeEdges(context);
-        return modelBuilder.build();
+        var input = modelBuilder.build();
+        input.getClasses().stream()
+                .filter(clazz -> clazz.getId() == null)
+                .forEach(clazz -> clazz.setId(UUID.randomUUID()));
+        return input;
     }
 
     private void runExperiment(MOEAConfiguration config, EvaluationInput input) {
@@ -121,7 +125,9 @@ class ThesisExperimentTest {
                     .map(StringUtils::trim)
                     .collect(Collectors.toList());
             var classA = classMapping.computeIfAbsent(split.get(0), key -> new OtherClass("Class" + classMapping.size(), split.get(0)));
+            classA.setId(UUID.randomUUID());
             var classB = classMapping.computeIfAbsent(split.get(1), key -> new OtherClass("Class" + classMapping.size(), split.get(1)));
+            classB.setId(UUID.randomUUID());
             classA.getDependenceRelationships().add(new DependenceRelationship(classB, 1, 1));
         }
         return new ArrayList<>(classMapping.values());

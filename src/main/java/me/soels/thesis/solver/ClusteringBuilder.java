@@ -1,4 +1,4 @@
-package me.soels.thesis.solver.moea.encoding;
+package me.soels.thesis.solver;
 
 import me.soels.thesis.model.OtherClass;
 

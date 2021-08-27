@@ -2,7 +2,6 @@ package me.soels.thesis.solver.moea;
 
 import me.soels.thesis.model.*;
 import me.soels.thesis.solver.Solver;
-import me.soels.thesis.solver.moea.encoding.VariableDecoder;
 import me.soels.thesis.solver.objectives.ObjectiveMapper;
 import me.soels.thesis.solver.objectives.ObjectiveType;
 import org.moeaframework.Analyzer;

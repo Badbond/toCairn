@@ -6,7 +6,7 @@ import lombok.Getter;
 import me.soels.thesis.model.EvolutionaryAlgorithm;
 import me.soels.thesis.model.MOEAConfiguration;
 import me.soels.thesis.model.SolverConfiguration;
-import me.soels.thesis.solver.moea.encoding.EncodingType;
+import me.soels.thesis.solver.moea.EncodingType;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;

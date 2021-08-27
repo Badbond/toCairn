@@ -1,7 +1,9 @@
-package me.soels.thesis.solver.moea.encoding;
+package me.soels.thesis.solver.moea;
 
 import me.soels.thesis.model.EvaluationInput;
 import me.soels.thesis.model.MOEAConfiguration;
+import me.soels.thesis.solver.Clustering;
+import me.soels.thesis.solver.ClusteringBuilder;
 import org.moeaframework.core.Solution;
 import org.moeaframework.core.variable.EncodingUtils;
 import org.springframework.stereotype.Service;

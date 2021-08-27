@@ -2,8 +2,6 @@ package me.soels.thesis.solver.moea;
 
 import me.soels.thesis.model.EvaluationInput;
 import me.soels.thesis.model.MOEAConfiguration;
-import me.soels.thesis.solver.moea.encoding.EncodingType;
-import me.soels.thesis.solver.moea.encoding.VariableDecoder;
 import me.soels.thesis.solver.objectives.Metric;
 import org.moeaframework.Executor;
 import org.moeaframework.core.Solution;

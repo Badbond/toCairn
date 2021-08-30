@@ -27,7 +27,7 @@ import java.util.Optional;
 public class DependenceRelationship extends Relationship {
     // Map showing how often one method FQN of method in callee has been called dynamically
     @CompositeProperty(prefix = "methodsCalled")
-    private final Map<String, Long> methodCalls = new HashMap<>();
+    private Map<String, Long> methodCalls = new HashMap<>();
 
     @NotNull
     private int staticFrequency;

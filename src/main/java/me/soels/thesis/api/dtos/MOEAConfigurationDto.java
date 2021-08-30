@@ -1,11 +1,9 @@
 package me.soels.thesis.api.dtos;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import me.soels.thesis.model.EvolutionaryAlgorithm;
 import me.soels.thesis.model.MOEAConfiguration;
-import me.soels.thesis.model.SolverConfiguration;
 import me.soels.thesis.solver.metric.MetricType;
 import me.soels.thesis.solver.moea.EncodingType;
 
@@ -63,7 +61,7 @@ public class MOEAConfigurationDto extends SolverConfigurationDto {
         dao.setEncodingType(encodingType);
         dao.setMaxEvaluations(maxEvaluations);
         dao.setMaxTime(maxTime);
-        dao.getMetrics().addAll(getMetrics());
+        dao.setMetrics(getMetrics());
         dao.setClusterCountLowerBound(clusterCountLowerBound);
         dao.setClusterCountUpperBound(clusterCountUpperBound);
         return dao;

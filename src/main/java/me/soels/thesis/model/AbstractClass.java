@@ -15,12 +15,13 @@ public abstract class AbstractClass {
     private final String humanReadableName;
 
     @CompositeProperty(prefix = "methodsDefined")
-    private final Map<String, List<String>> methods = new HashMap<>(); // Method FQN -> parameter FQNs
+    private Map<String, List<String>> methods = new HashMap<>(); // Method FQN -> parameter FQNs
 
     @Id
     @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)
     protected UUID id;
     private Integer size;
+
     @Relationship("InteractsWith")
     private List<DependenceRelationship> dependenceRelationships = new ArrayList<>();
 

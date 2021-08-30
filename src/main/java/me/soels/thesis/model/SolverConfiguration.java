@@ -18,10 +18,10 @@ import java.util.UUID;
 @Node
 @Getter
 @Setter
-public class SolverConfiguration {
+public abstract class SolverConfiguration {
     @Id
     @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)
     private UUID id;
 
-    private final Set<MetricType> metrics = new LinkedHashSet<>();
+    private Set<MetricType> metrics = new LinkedHashSet<>();
 }

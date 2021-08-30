@@ -28,8 +28,8 @@ public class HierarchicalConfigurationDto extends SolverConfigurationDto {
     @Override
     public HierarchicalConfiguration toDao() {
         var dao = new HierarchicalConfiguration();
-        dao.getMetrics().addAll(getMetrics());
-        dao.getWeights().addAll(weights);
+        dao.setMetrics(getMetrics());
+        dao.setWeights(weights);
         return dao;
     }
 }

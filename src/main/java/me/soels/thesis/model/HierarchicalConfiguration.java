@@ -18,6 +18,6 @@ import java.util.List;
 @Getter
 @Setter
 public class HierarchicalConfiguration extends SolverConfiguration {
-    private final List<Double> weights = new LinkedList<>();
+    private List<Double> weights = new LinkedList<>();
 }
 

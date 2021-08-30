@@ -5,10 +5,7 @@ import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.data.neo4j.core.schema.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Node
 @Getter
@@ -18,7 +15,7 @@ public abstract class AbstractClass {
     private final String humanReadableName;
 
     @CompositeProperty(prefix = "methodsDefined")
-    private final List<String> methods = new ArrayList<>(); // FQNs
+    private final Map<String, List<String>> methods = new HashMap<>(); // Method FQN -> parameter FQNs
 
     @Id
     @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)

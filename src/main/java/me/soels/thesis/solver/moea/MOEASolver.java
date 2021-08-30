@@ -15,17 +15,17 @@ import java.util.stream.StreamSupport;
 public class MOEASolver implements Solver {
     private final EvaluationInput input;
     private final MOEAConfiguration configuration;
-    private final Set<MetricType> objectives;
+    private final Set<MetricType> metricTypes;
     private final Executor executor;
     private final VariableDecoder decoder;
 
     public MOEASolver(EvaluationInput input,
                       MOEAConfiguration configuration,
-                      Set<MetricType> objectives, Executor executor,
+                      Set<MetricType> metricTypes, Executor executor,
                       VariableDecoder decoder) {
         this.input = input;
         this.configuration = configuration;
-        this.objectives = objectives;
+        this.metricTypes = metricTypes;
         this.executor = executor;
         this.decoder = decoder;
     }
@@ -73,10 +73,10 @@ public class MOEASolver implements Solver {
         var newSolution = new Solution();
         var i = 0;
         // Retrieve metric information
-        for (var objective : objectives) {
-            var metrics = ObjectiveMapper.getMetricsForObjective(objective);
+        for (var metricType : metricTypes) {
+            var metrics = metricType.getMetrics();
             var values = Arrays.copyOfRange(solution.getObjectives(), i, i + metrics.size());
-            newSolution.getObjectiveValues().put(objective, values);
+            newSolution.getObjectiveValues().put(metricType, values);
             i += metrics.size();
         }
 

@@ -12,7 +12,6 @@ import org.moeaframework.Executor;
 import org.moeaframework.core.Problem;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -47,10 +46,10 @@ public class SolverFactory {
     }
 
     private Problem createProblem(Evaluation evaluation, EvaluationInput input, MOEAConfiguration configuration) {
-        var objectives = evaluation.getObjectives().stream()
-                .flatMap(objectiveType -> ObjectiveMapper.getMetricsForObjective(objectiveType).stream())
+        var metrics = evaluation.getObjectives().stream()
+                .flatMap(metricType -> metricType.getMetrics().stream())
                 .collect(Collectors.toUnmodifiableList());
-        return new ClusteringProblem(List.copyOf(objectives), input, configuration, variableDecoder);
+        return new ClusteringProblem(metrics, input, configuration, variableDecoder);
     }
 
     private Executor createExecutor(Problem problem, MOEAConfiguration configuration) {

@@ -88,6 +88,7 @@ public class SourceClassAnalysis {
         var fqn = clazz.getFullyQualifiedName()
                 .orElseThrow(() -> new IllegalStateException("Could not retrieve FQN from already filtered class"));
 
+        // TODO: Populate declared and inherited method FQN.
         if (isDataClass(clazz, input)) {
             // Use line count as initial size of the data class, to be overridden by dynamic analysis with more accurate
             // size calculations.

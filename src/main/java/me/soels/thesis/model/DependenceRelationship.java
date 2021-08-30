@@ -2,8 +2,11 @@ package me.soels.thesis.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.neo4j.core.schema.CompositeProperty;
 
 import javax.validation.constraints.NotNull;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -22,11 +25,14 @@ import java.util.Optional;
 @Getter
 @Setter
 public class DependenceRelationship extends Relationship {
-    // TODO: Check whether all information is present to execute metrics proposed by Selmadji as they are based on
-    //  the interaction between methods of a pair of classes.
+    // Map showing how often one method FQN of method in callee has been called dynamically
+    @CompositeProperty(prefix = "methodsCalled")
+    private final Map<String, Long> methodCalls = new HashMap<>();
+
     @NotNull
     private int staticFrequency;
     private Integer dynamicFrequency;
+    private long size;
 
     public DependenceRelationship(AbstractClass callee, int staticFrequency, Integer dynamicFrequency) {
         super(callee);

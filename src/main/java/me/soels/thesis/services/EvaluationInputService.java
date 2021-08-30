@@ -94,6 +94,8 @@ public class EvaluationInputService {
         }
     }
 
+    // TODO: Perform dynamic JFR analysis for class size to measure Overhead.
+
     private void extractNodes(Evaluation evaluation, SourceAnalysisContext context) {
         sourceAnalysis.analyzeNodes(context);
 

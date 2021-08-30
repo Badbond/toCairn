@@ -6,23 +6,36 @@ import me.soels.thesis.model.HierarchicalConfiguration;
 import me.soels.thesis.solver.metric.MetricType;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 
 @Getter
 public class HierarchicalConfigurationDto extends SolverConfigurationDto {
     private final List<Double> weights;
-    // TODO: Add configuration fields for Hierarchical clustering algorithm.
+    private final Integer nrClusters;
 
     public HierarchicalConfigurationDto(HierarchicalConfiguration dao) {
         super(dao.getMetrics());
         this.weights = dao.getWeights();
+        this.nrClusters = dao.getNrClusters().orElse(null);
     }
 
     @JsonCreator
-    public HierarchicalConfigurationDto(Set<MetricType> metrics, List<Double> weights) {
+    public HierarchicalConfigurationDto(Set<MetricType> metrics, List<Double> weights, Integer nrClusters) {
         super(metrics);
         this.weights = weights;
+        this.nrClusters = nrClusters;
+
+        var underlyingMetrics = metrics.stream()
+                .flatMap(metricType -> metricType.getMetrics().stream())
+                .map(metric -> metric.getClass().getSimpleName())
+                .collect(Collectors.toList());
+        if (weights.size() != metrics.size()) {
+            throw new IllegalArgumentException("We need " + underlyingMetrics.size() + " weights. That is one for every metric used. " +
+                    "This is for metrics [" + String.join(",", underlyingMetrics) + "]");
+        }
     }
 
     @Override
@@ -30,6 +43,11 @@ public class HierarchicalConfigurationDto extends SolverConfigurationDto {
         var dao = new HierarchicalConfiguration();
         dao.setMetrics(getMetrics());
         dao.setWeights(weights);
+        dao.setNrClusters(nrClusters);
         return dao;
+    }
+
+    public Optional<Integer> getNrClusters() {
+        return Optional.ofNullable(nrClusters);
     }
 }

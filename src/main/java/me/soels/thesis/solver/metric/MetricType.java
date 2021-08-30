@@ -3,6 +3,7 @@ package me.soels.thesis.solver.metric;
 import me.soels.thesis.model.SolverConfiguration;
 import me.soels.thesis.solver.Solver;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -21,24 +22,24 @@ public enum MetricType {
     LIMITED_COMMUNICATION_OVERHEAD,
     LIMITED_COMMUNICATION;
 
-    public Set<Metric> getMetrics() {
+    public List<Metric> getMetrics() {
         switch (this) {
             case DATA_AUTONOMY:
-                return Set.of(new SelmadjiFIntra(), new SelmadjiFInter());
+                return List.of(new SelmadjiFIntra(), new SelmadjiFInter());
             case FOCUSED_ON_ONE:
-                return Set.of(new SelmadjiFOne());
+                return List.of(new SelmadjiFOne());
             case BEHAVIORAL_AUTONOMY:
-                return Set.of(new SelmadjiFAutonomy());
+                return List.of(new SelmadjiFAutonomy());
             case SHARED_DEVELOPMENT_LIFECYCLE:
-                return Set.of(new LohnertzEvolutionaryCouplingModularity());
+                return List.of(new LohnertzEvolutionaryCouplingModularity());
             case DECOUPLED_COHESIVE:
-                return Set.of(new CarvalhoCohesion(), new CarvalhoCoupling());
+                return List.of(new CarvalhoCohesion(), new CarvalhoCoupling());
             case REUSABLE:
-                return Set.of(new CarvalhoReusable());
+                return List.of(new CarvalhoReusable());
             case LIMITED_COMMUNICATION_OVERHEAD:
-                return Set.of(new CarvalhoOverhead());
+                return List.of(new CarvalhoOverhead());
             case LIMITED_COMMUNICATION:
-                return Set.of(new LohnertzDynamicCoupling());
+                return List.of(new LohnertzDynamicCoupling());
             default:
                 throw new IllegalStateException("Unknown metric type " + this);
         }

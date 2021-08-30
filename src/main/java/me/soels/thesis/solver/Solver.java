@@ -2,6 +2,9 @@ package me.soels.thesis.solver;
 
 import me.soels.thesis.model.EvaluationInput;
 import me.soels.thesis.model.EvaluationResult;
+import me.soels.thesis.model.Solution;
+
+import java.util.List;
 
 /**
  * Represents an algorithm to solve the microservice identification problem.

@@ -17,7 +17,7 @@ public class SolutionDto {
 
     public SolutionDto(Solution solution) {
         this.microserviceDtos = solution.getMicroservices().stream().map(MicroserviceDto::new).collect(Collectors.toList());
-        this.objectiveValues = solution.getObjectiveValues();
+        this.objectiveValues = solution.getMetricValues();
     }
 
     @Getter

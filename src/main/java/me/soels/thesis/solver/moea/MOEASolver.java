@@ -8,20 +8,21 @@ import org.moeaframework.Executor;
 import org.moeaframework.core.NondominatedPopulation;
 
 import java.util.Arrays;
-import java.util.Set;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 public class MOEASolver implements Solver {
     private final EvaluationInput input;
     private final MOEAConfiguration configuration;
-    private final Set<MetricType> metricTypes;
+    private final List<MetricType> metricTypes;
     private final Executor executor;
     private final VariableDecoder decoder;
 
     public MOEASolver(EvaluationInput input,
                       MOEAConfiguration configuration,
-                      Set<MetricType> metricTypes, Executor executor,
+                      List<MetricType> metricTypes,
+                      Executor executor,
                       VariableDecoder decoder) {
         this.input = input;
         this.configuration = configuration;
@@ -31,23 +32,25 @@ public class MOEASolver implements Solver {
     }
 
     @Override
-    public EvaluationResult run(EvaluationInput input) {
+    public MOEAEvaluationResult run(EvaluationInput input) {
         var population = executor.run();
         var analysis = performAnalysis(population, executor, configuration.getAlgorithm());
         return createResult(population, analysis);
     }
 
-    private EvaluationResult createResult(NondominatedPopulation population, Analyzer.AlgorithmResult analysisResults) {
+    private MOEAEvaluationResult createResult(NondominatedPopulation population, Analyzer.AlgorithmResult analysisResults) {
         var result = new MOEAEvaluationResult();
 
-        analysisResults.getIndicators().stream()
-                .map(analysisResults::get)
-                .forEach(indicator -> result.getPopulationMetrics().put(indicator.getIndicator(), indicator.getValues()[0]));
-
+        // Add solutions
         var solutions = StreamSupport.stream(population.spliterator(), false)
                 .map(solution -> setupSolution(input, solution))
                 .collect(Collectors.toList());
         result.getSolutions().addAll(solutions);
+
+        // Add population metrics
+        analysisResults.getIndicators().stream()
+                .map(analysisResults::get)
+                .forEach(indicator -> result.getPopulationMetrics().put(indicator.getIndicator(), indicator.getValues()[0]));
         return result;
     }
 
@@ -76,7 +79,7 @@ public class MOEASolver implements Solver {
         for (var metricType : metricTypes) {
             var metrics = metricType.getMetrics();
             var values = Arrays.copyOfRange(solution.getObjectives(), i, i + metrics.size());
-            newSolution.getObjectiveValues().put(metricType, values);
+            newSolution.getMetricValues().put(metricType, values);
             i += metrics.size();
         }
 

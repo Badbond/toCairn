@@ -14,6 +14,23 @@ public final class ClusteringBuilder {
     private final Map<Integer, List<OtherClass>> clustering = new HashMap<>();
 
     /**
+     * Creates a new {@link Clustering} builder without any data.
+     */
+    public ClusteringBuilder() {
+    }
+
+    /**
+     * Creates a new {@link Clustering} builder based on a previous clustering.
+     * <p>
+     * This will copy the clustering data s.t. it will not be altered.
+     *
+     * @param clustering the clustering
+     */
+    public ClusteringBuilder(Clustering clustering) {
+        clustering.getByCluster().forEach((key, value) -> this.clustering.put(key, new ArrayList<>(value)));
+    }
+
+    /**
      * Builds the normalized clustering.
      *
      * @return the normalized clustering

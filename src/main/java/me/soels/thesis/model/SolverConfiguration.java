@@ -8,8 +8,8 @@ import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -23,5 +23,5 @@ public abstract class SolverConfiguration {
     @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)
     private UUID id;
 
-    private Set<MetricType> metrics = new LinkedHashSet<>();
+    private List<MetricType> metrics = new ArrayList<>();
 }

@@ -2,11 +2,11 @@ package me.soels.thesis.model;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.data.neo4j.core.schema.CompositeProperty;
 import org.springframework.data.neo4j.core.schema.Node;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Models the configuration of an evaluation.
@@ -19,5 +19,10 @@ import java.util.List;
 @Setter
 public class HierarchicalConfiguration extends SolverConfiguration {
     private List<Double> weights = new LinkedList<>();
+    private Integer nrClusters;
+
+    public Optional<Integer> getNrClusters() {
+        return Optional.ofNullable(nrClusters);
+    }
 }
 

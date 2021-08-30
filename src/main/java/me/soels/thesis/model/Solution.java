@@ -18,7 +18,7 @@ public class Solution {
 
     @Relationship("HasMicroservice")
     private List<Microservice> microservices = new ArrayList<>();
-    // TODO: Rename relationships based on edges in thesis.
-    @CompositeProperty(prefix = "objectives")
-    private Map<MetricType, double[]> objectiveValues = new EnumMap<>(MetricType.class);
+
+    @CompositeProperty(prefix = "metricValues")
+    private Map<MetricType, double[]> metricValues = new EnumMap<>(MetricType.class);
 }

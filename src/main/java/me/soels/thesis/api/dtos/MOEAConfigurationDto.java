@@ -6,14 +6,15 @@ import lombok.Getter;
 import me.soels.thesis.model.EvolutionaryAlgorithm;
 import me.soels.thesis.model.MOEAConfiguration;
 import me.soels.thesis.model.SolverConfiguration;
+import me.soels.thesis.solver.metric.MetricType;
 import me.soels.thesis.solver.moea.EncodingType;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.Optional;
+import java.util.Set;
 
 @Getter
-@AllArgsConstructor(onConstructor_ = @JsonCreator)
 public class MOEAConfigurationDto extends SolverConfigurationDto {
     @NotNull
     private final EvolutionaryAlgorithm algorithm;
@@ -35,6 +36,7 @@ public class MOEAConfigurationDto extends SolverConfigurationDto {
     private final Integer clusterCountUpperBound;
 
     public MOEAConfigurationDto(MOEAConfiguration dao) {
+        super(dao.getMetrics());
         this.algorithm = dao.getAlgorithm();
         this.encodingType = dao.getEncodingType();
         this.maxEvaluations = dao.getMaxEvaluations();
@@ -43,13 +45,25 @@ public class MOEAConfigurationDto extends SolverConfigurationDto {
         this.clusterCountUpperBound = dao.getClusterCountUpperBound().orElse(null);
     }
 
+    @JsonCreator
+    public MOEAConfigurationDto(Set<MetricType> metrics, EvolutionaryAlgorithm algorithm, EncodingType encodingType, int maxEvaluations, Long maxTime, Integer clusterCountLowerBound, Integer clusterCountUpperBound) {
+        super(metrics);
+        this.algorithm = algorithm;
+        this.encodingType = encodingType;
+        this.maxEvaluations = maxEvaluations;
+        this.maxTime = maxTime;
+        this.clusterCountLowerBound = clusterCountLowerBound;
+        this.clusterCountUpperBound = clusterCountUpperBound;
+    }
+
     @Override
-    public SolverConfiguration toDao() {
+    public MOEAConfiguration toDao() {
         var dao = new MOEAConfiguration();
         dao.setAlgorithm(algorithm);
         dao.setEncodingType(encodingType);
         dao.setMaxEvaluations(maxEvaluations);
         dao.setMaxTime(maxTime);
+        dao.getMetrics().addAll(getMetrics());
         dao.setClusterCountLowerBound(clusterCountLowerBound);
         dao.setClusterCountUpperBound(clusterCountUpperBound);
         return dao;

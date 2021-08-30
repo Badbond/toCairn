@@ -30,19 +30,15 @@ public class EvaluationDto {
     @NotBlank
     private final String name;
     @NotNull
-    @Size(min = 1)
-    private final Set<MetricType> objectives;
-    @NotNull
     private final SolverConfigurationDto solverConfiguration;
     private final EvaluationStatus status;
     private final Set<AnalysisType> executedAnalysis;
     private final List<UUID> results;
 
     @JsonCreator
-    public EvaluationDto(String name, Set<MetricType> objectives, SolverConfigurationDto solverConfiguration) {
+    public EvaluationDto(String name, SolverConfigurationDto solverConfiguration) {
         this.name = name;
         this.solverConfiguration = solverConfiguration;
-        this.objectives = objectives;
 
         // Non-settable properties by user
         this.id = null;
@@ -54,7 +50,6 @@ public class EvaluationDto {
     public EvaluationDto(Evaluation dao) {
         this.id = dao.getId();
         this.name = dao.getName();
-        this.objectives = dao.getObjectives();
         this.solverConfiguration = convertConfiguration(dao.getConfiguration());
         this.status = dao.getStatus();
         this.executedAnalysis = dao.getExecutedAnalysis();

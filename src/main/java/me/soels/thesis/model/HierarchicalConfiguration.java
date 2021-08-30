@@ -2,6 +2,7 @@ package me.soels.thesis.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.neo4j.core.schema.CompositeProperty;
 import org.springframework.data.neo4j.core.schema.Node;
 
 import java.util.LinkedList;
@@ -17,6 +18,6 @@ import java.util.List;
 @Getter
 @Setter
 public class HierarchicalConfiguration extends SolverConfiguration {
-    private final List<Integer> weights = new LinkedList<>();
+    private final List<Double> weights = new LinkedList<>();
 }
 

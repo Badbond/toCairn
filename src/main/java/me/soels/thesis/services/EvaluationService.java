@@ -79,7 +79,6 @@ public class EvaluationService {
      */
     public Evaluation createEvaluation(EvaluationDto dto) {
         var newEvaluation = dto.toDao();
-        newEvaluation.setObjectives(dto.getObjectives());
         newEvaluation.setStatus(INCOMPLETE);
 
         var configuration = validateConfiguration(newEvaluation.getConfiguration());
@@ -158,8 +157,8 @@ public class EvaluationService {
     /**
      * Updates and persists the status of the given evaluation based on the given {@code status}.
      *
-     * @param evaluation the evaluation to update
-     * @param status     the status to persist
+     * @param evaluationId the evaluation to update
+     * @param status       the status to persist
      */
     public void updateStatus(UUID evaluationId, EvaluationStatus status) {
         var evaluation = getEvaluation(evaluationId);
@@ -190,7 +189,7 @@ public class EvaluationService {
      * @param evaluation the evaluation to check inputs and update the status for
      */
     public void checkRanAnalysesAndUpdateStatus(Evaluation evaluation) {
-        var newStatus = hasAllRequiredInput(evaluation, evaluation.getObjectives()) ?
+        var newStatus = hasAllRequiredInput(evaluation, evaluation.getConfiguration().getMetrics()) ?
                 EvaluationStatus.PENDING :
                 INCOMPLETE;
         evaluation.setStatus(newStatus);
@@ -200,8 +199,7 @@ public class EvaluationService {
      * Checks whether all the input is present for the given objectives.
      * <p>
      * Note that {@link AnalysisType#SOURCE} analysis is always required as this generates a complete graph of classes
-     * to cluster. As {@link MetricType#ONE_PURPOSE} and {@link MetricType#BOUNDED_CONTEXT} only rely on the
-     * result from source analysis, we do not check them explicitly.
+     * to cluster.
      *
      * @param evaluation the evaluation to check whether all input has been provided
      * @param objectives the objectives to meet input for

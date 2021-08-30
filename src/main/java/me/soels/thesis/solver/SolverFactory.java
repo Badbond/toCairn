@@ -42,11 +42,11 @@ public class SolverFactory {
     private MOEASolver createMOEASolver(Evaluation evaluation, EvaluationInput input, MOEAConfiguration configuration) {
         var problem = createProblem(evaluation, input, configuration);
         var executor = createExecutor(problem, configuration);
-        return new MOEASolver(input, configuration, evaluation.getObjectives(), executor, variableDecoder);
+        return new MOEASolver(input, configuration, evaluation.getConfiguration().getMetrics(), executor, variableDecoder);
     }
 
     private Problem createProblem(Evaluation evaluation, EvaluationInput input, MOEAConfiguration configuration) {
-        var metrics = evaluation.getObjectives().stream()
+        var metrics = evaluation.getConfiguration().getMetrics().stream()
                 .flatMap(metricType -> metricType.getMetrics().stream())
                 .collect(Collectors.toUnmodifiableList());
         return new ClusteringProblem(metrics, input, configuration, variableDecoder);

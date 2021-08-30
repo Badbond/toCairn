@@ -48,9 +48,5 @@ public class Evaluation {
     private List<? extends AbstractClass> inputs = new ArrayList<>();
 
     @NotNull
-    @Size(min = 2)
-    private Set<MetricType> objectives = new LinkedHashSet<>();
-
-    @NotNull
     private Set<AnalysisType> executedAnalysis = new LinkedHashSet<>();
 }

@@ -8,10 +8,7 @@ import me.soels.thesis.model.DataClass;
  */
 @Getter
 public class DataClassDto extends AbstractClassDto {
-    private final int loc;
-
     public DataClassDto(DataClass clazz) {
         super(clazz);
-        this.loc = clazz.getLoc();
     }
 }

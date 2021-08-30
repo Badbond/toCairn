@@ -1,24 +1,25 @@
 package me.soels.thesis.model;
 
 import lombok.Getter;
-import org.springframework.data.neo4j.core.schema.GeneratedValue;
-import org.springframework.data.neo4j.core.schema.Id;
-import org.springframework.data.neo4j.core.schema.Node;
+import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.Relationship;
+import org.springframework.data.neo4j.core.schema.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Node
 @Getter
+@Setter
 public abstract class AbstractClass {
     private final String identifier;
     private final String humanReadableName;
+    @CompositeProperty(prefix = "method")
+    // Method FQN -> Argument classes FQNs
+    private final Map<String, List<String>> methodsDefined = new HashMap<>();
     @Id
     @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)
     protected UUID id;
+    private Integer size;
     @Relationship("InteractsWith")
     private List<DependenceRelationship> dependenceRelationships = new ArrayList<>();
 

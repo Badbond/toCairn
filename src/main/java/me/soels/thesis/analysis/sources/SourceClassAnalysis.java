@@ -91,13 +91,7 @@ public class SourceClassAnalysis {
         if (isDataClass(clazz, input)) {
             // Use line count as initial size of the data class, to be overridden by dynamic analysis with more accurate
             // size calculations.
-            return clazz.getRange()
-                    .map(Range::getLineCount)
-                    .map(size -> context.getResultBuilder().addDataClass(fqn, clazz.getNameAsString(), size))
-                    .orElseGet(() -> {
-                        LOGGER.error("Could not extract Lines of Code from class {}. Ignoring class", fqn);
-                        return null;
-                    });
+            return context.getResultBuilder().addDataClass(fqn, clazz.getNameAsString());
         } else {
             return context.getResultBuilder().addOtherClass(fqn, clazz.getNameAsString());
         }

@@ -28,11 +28,10 @@ public class EvaluationInputBuilder {
      *
      * @param fqn               the fully qualified name of the class
      * @param humanReadableName the human readable name of the class
-     * @param loc               the lines of code in the data class
      * @return this builder
      */
-    public DataClass addDataClass(String fqn, String humanReadableName, int loc) {
-        var dataClass = new DataClass(fqn, humanReadableName, loc);
+    public DataClass addDataClass(String fqn, String humanReadableName) {
+        var dataClass = new DataClass(fqn, humanReadableName);
         classes.add(dataClass);
         return dataClass;
     }

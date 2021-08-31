@@ -30,7 +30,7 @@ public class SelmadjiFAutonomy extends SelmadjiStructuralBehavior {
      *
      * @param microservice the microservice to perform the measurement for
      * @param clustering   the clustering to retrieve external pairs from
-     * @param totalNbCalls   the total amount of method calls made within the application
+     * @param totalNbCalls the total amount of method calls made within the application
      * @return the exterCoup value for this microservice
      */
     private double exterCoup(List<OtherClass> microservice, Clustering clustering, long totalNbCalls) {
@@ -46,10 +46,17 @@ public class SelmadjiFAutonomy extends SelmadjiStructuralBehavior {
                 .map(pair -> coup(pair.getKey(), pair.getValue(), totalNbCalls))
                 .collect(Collectors.toList());
 
+        if (coupValues.stream().allMatch(Objects::isNull)) {
+            // This microservice is not coupled with any other microservice.
+            // Return 0. We do not set 0 values in coup() as that would skew the deviation in case we do have at
+            // least one coupling pair.
+            return 0.0;
+        }
+
         // Calculate the standard deviation of these coup values
         double sigma = getSigma(coupValues);
 
         // Perform the exterCoup measurement
-        return (coupValues.stream().filter(Objects::nonNull).mapToDouble(value -> value).sum() - sigma) - coupValues.size();
+        return (coupValues.stream().filter(Objects::nonNull).mapToDouble(value -> value).sum() - sigma) / coupValues.size();
     }
 }

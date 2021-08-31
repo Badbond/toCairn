@@ -106,14 +106,17 @@ public class EvaluationService {
         var newConfiguration = dto.getSolverConfiguration().toDao();
         validateConfiguration(newConfiguration);
         newConfiguration.setId(configuration.getId());
+        newConfiguration = configurationRepository.save(newConfiguration);
         evaluation.setConfiguration(newConfiguration);
-
         evaluation.setName(dto.getName());
+
         checkRanAnalysesAndUpdateStatus(evaluation);
-        return evaluationRepository.save(evaluation);
+        return evaluationRepository.saveShallow(evaluation);
     }
 
     public Evaluation save(Evaluation evaluation) {
+        // TODO: NOOOOOO.... :-(
+        //  Store the results manually.... :-|
         return evaluationRepository.save(evaluation);
     }
 
@@ -151,7 +154,8 @@ public class EvaluationService {
         }
 
         evaluation.setStatus(RUNNING);
-        return evaluationRepository.save(evaluation);
+        evaluationRepository.saveShallow(evaluation);
+        return evaluation;
     }
 
     /**
@@ -163,7 +167,7 @@ public class EvaluationService {
     public void updateStatus(UUID evaluationId, EvaluationStatus status) {
         var evaluation = getEvaluation(evaluationId);
         evaluation.setStatus(status);
-        evaluationRepository.save(evaluation);
+        evaluationRepository.saveShallow(evaluation);
     }
 
     /**
@@ -177,7 +181,7 @@ public class EvaluationService {
     public void updateAnalysisRan(Evaluation evaluation, AnalysisType analysis) {
         evaluation.getExecutedAnalysis().add(analysis);
         checkRanAnalysesAndUpdateStatus(evaluation);
-        evaluationRepository.save(evaluation);
+        evaluationRepository.saveShallow(evaluation);
     }
 
     /**

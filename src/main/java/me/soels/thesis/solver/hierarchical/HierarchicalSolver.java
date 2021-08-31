@@ -7,14 +7,18 @@ import me.soels.thesis.solver.Clustering;
 import me.soels.thesis.solver.ClusteringBuilder;
 import me.soels.thesis.solver.Solver;
 import me.soels.thesis.solver.metric.MetricType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
  * Solver implementation using the agglomorative hierarchical clustering algorithm.
  */
 public class HierarchicalSolver implements Solver {
+    private static final Logger LOGGER = LoggerFactory.getLogger(HierarchicalSolver.class);
     private final HierarchicalConfiguration configuration;
 
     public HierarchicalSolver(HierarchicalConfiguration configuration) {
@@ -23,9 +27,9 @@ public class HierarchicalSolver implements Solver {
 
     @Override
     public HierarchicalEvaluationResult run(EvaluationInput input) {
+        LOGGER.info("Running hierarchical solver");
         var initialClustering = createInitialSolution(input);
         var allSolutions = new ArrayList<Solution>();
-        allSolutions.add(initialClustering.getSolution());
 
         var singleSolution = performAlgorithm(initialClustering, allSolutions, input);
         var solutions = singleSolution
@@ -34,6 +38,7 @@ public class HierarchicalSolver implements Solver {
 
         var result = new HierarchicalEvaluationResult();
         result.setSolutions(solutions);
+        LOGGER.info("Hierarchical solver produced {} solutions", solutions.size());
         return result;
     }
 
@@ -52,6 +57,7 @@ public class HierarchicalSolver implements Solver {
      */
     private Optional<Solution> performAlgorithm(HierarchicalClustering initialClustering, ArrayList<Solution> allSolutions, EvaluationInput input) {
         var currentClustering = initialClustering;
+        int counter = 0;
         while (true) {
             allSolutions.add(currentClustering.solution);
 
@@ -67,6 +73,9 @@ public class HierarchicalSolver implements Solver {
 
             var possibleClusterings = getPossibleMergers(currentClustering.clustering);
             currentClustering = getBestMerger(possibleClusterings, input);
+            if (++counter % 10 == 0) {
+                LOGGER.info("Performed {} steps in the clustering algorithm", counter);
+            }
         }
     }
 
@@ -79,40 +88,53 @@ public class HierarchicalSolver implements Solver {
      * @return the best clustering
      */
     private HierarchicalClustering getBestMerger(List<Clustering> possibleClusterings, EvaluationInput input) {
-        Double bestQuality = null;
-        HierarchicalClustering bestClustering = null;
+        AtomicReference<Double> bestQuality = new AtomicReference<>();
+        AtomicReference<HierarchicalClustering> bestClustering = new AtomicReference<>();
 
-        // TODO: Parallelize
-        for (var clustering : possibleClusterings) {
-            var metrics = performMetrics(clustering, input);
-            var metricsArray = metrics.values().stream()
-                    .flatMapToDouble(Arrays::stream)
-                    .toArray();
-            var quality = 0.0;
-            for (int i = 0; i < configuration.getWeights().size(); i++) {
-                var weight = configuration.getWeights().get(i);
-                var metric = metricsArray[i];
-                quality += metric * weight;
-            }
-            quality = 1 / (double) metricsArray.length * quality;
+        possibleClusterings.parallelStream()
+                .forEach(clustering -> processClusteringParallel(clustering, input, bestQuality, bestClustering));
 
-            if (bestQuality == null || quality > bestQuality) {
-                var solution = new Solution();
-                solution.setMetricValues(metrics);
-                solution.setMicroservices(clustering.getByCluster().entrySet().stream()
-                        .map(cluster -> new Microservice(cluster.getKey(), cluster.getValue()))
-                        .collect(Collectors.toList()));
-                bestClustering = new HierarchicalClustering(clustering, solution);
-                bestQuality = quality;
-            }
-        }
-
-        if (bestClustering == null) {
+        if (bestClustering.get() == null) {
             // This should not happen as we always have at least one clustering which we set it to
             throw new IllegalStateException("Could not deduce the best clustering");
         }
 
-        return bestClustering;
+        return bestClustering.get();
+    }
+
+    private void processClusteringParallel(Clustering clustering,
+                                           EvaluationInput input,
+                                           AtomicReference<Double> bestQuality,
+                                           AtomicReference<HierarchicalClustering> bestClustering) {
+
+        var metrics = performMetrics(clustering, input);
+        var metricsArray = metrics.values().stream()
+                .flatMapToDouble(Arrays::stream)
+                .toArray();
+        var quality = 0.0;
+        for (int i = 0; i < configuration.getWeights().size(); i++) {
+            var weight = configuration.getWeights().get(i);
+            var metric = metricsArray[i];
+            quality += metric * weight;
+        }
+        quality = 1 / (double) metricsArray.length * quality;
+        checkAndSetBestQuality(clustering, bestClustering, bestQuality, metrics, quality);
+    }
+
+    private synchronized void checkAndSetBestQuality(Clustering clustering,
+                                                     AtomicReference<HierarchicalClustering> bestClustering,
+                                                     AtomicReference<Double> bestQuality,
+                                                     Map<MetricType, double[]> metrics,
+                                                     double quality) {
+        if (bestQuality.get() == null || quality > bestQuality.get()) {
+            var solution = new Solution();
+            solution.setMetricValues(metrics);
+            solution.setMicroservices(clustering.getByCluster().entrySet().stream()
+                    .map(cluster -> new Microservice(cluster.getKey(), cluster.getValue()))
+                    .collect(Collectors.toList()));
+            bestClustering.set(new HierarchicalClustering(clustering, solution));
+            bestQuality.set(quality);
+        }
     }
 
     /**

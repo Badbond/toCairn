@@ -37,6 +37,12 @@ public class SelmadjiFIntra extends SelmadjiDataAutonomy {
                         .map(j -> Pair.of(i, j)))
                 .collect(Collectors.toList());
 
+        if (pairs.isEmpty()) {
+            // We do not have any pairs in this microservice to calculate this metric with.
+            // We set the value to 0.0 to favour microservices with at least two classes.
+            return 0.0;
+        }
+
         // Calculate the metric
         return pairs.stream()
                 .mapToDouble(pair -> data(pair.getKey(), pair.getValue(), nbDataManipulatedInMicro))

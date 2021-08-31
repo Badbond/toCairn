@@ -60,6 +60,11 @@ public abstract class SelmadjiDataAutonomy implements Metric {
                     .ifPresent(shared -> sharedDataRelationshipPairs.add(Pair.of(dataRelI, shared)));
         }
 
+        if (sharedDataRelationshipPairs.isEmpty()) {
+            // These two classes do not share a data object, returning 0. Corresponding to the sum of k in Data of Selmadji.
+            return 0.0;
+        }
+
         return sharedDataRelationshipPairs.stream()
                 .mapToDouble(pair -> dataDepends(pair.getKey(), pair.getValue()) * freq(pair.getKey(), pair.getValue()))
                 .sum() / nbDataManipulatedInMicro;

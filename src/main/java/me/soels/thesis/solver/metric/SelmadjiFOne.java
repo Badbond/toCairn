@@ -45,11 +45,17 @@ public class SelmadjiFOne extends SelmadjiStructuralBehavior {
                 .map(pair -> coup(pair.getKey(), pair.getValue(), totalNbCalls))
                 .collect(Collectors.toList());
 
+        if (coupValues.stream().allMatch(Objects::isNull)) {
+            // We do not have any pairs in this microservice to calculate this metric with.
+            // We set the value to 0.0 to favour microservices with at least two classes.
+            coupValues.add(0.0);
+        }
+
         // Calculate the standard deviation of these coup values
         double sigma = getSigma(coupValues);
 
         // Perform the interCoup measurement
-        return (coupValues.stream().filter(Objects::nonNull).mapToDouble(value -> value).sum() - sigma) - coupValues.size();
+        return (coupValues.stream().filter(Objects::nonNull).mapToDouble(value -> value).sum() - sigma) / coupValues.size();
     }
 
     /**
@@ -60,8 +66,8 @@ public class SelmadjiFOne extends SelmadjiStructuralBehavior {
      */
     private double interCoh(List<OtherClass> microservice) {
         // TODO: Extract method information and use here.
-        var nbDirectConnections = 0;
-        var nbPossibleConnections = 0;
+        var nbDirectConnections = 1;
+        var nbPossibleConnections = 1;
         return nbDirectConnections / nbPossibleConnections;
     }
 }

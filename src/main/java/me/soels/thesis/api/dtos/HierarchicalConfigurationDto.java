@@ -7,7 +7,6 @@ import me.soels.thesis.solver.metric.MetricType;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -23,7 +22,7 @@ public class HierarchicalConfigurationDto extends SolverConfigurationDto {
     }
 
     @JsonCreator
-    public HierarchicalConfigurationDto(Set<MetricType> metrics, List<Double> weights, Integer nrClusters) {
+    public HierarchicalConfigurationDto(List<MetricType> metrics, List<Double> weights, Integer nrClusters) {
         super(metrics);
         this.weights = weights;
         this.nrClusters = nrClusters;
@@ -32,7 +31,7 @@ public class HierarchicalConfigurationDto extends SolverConfigurationDto {
                 .flatMap(metricType -> metricType.getMetrics().stream())
                 .map(metric -> metric.getClass().getSimpleName())
                 .collect(Collectors.toList());
-        if (weights.size() != metrics.size()) {
+        if (weights.size() != underlyingMetrics.size()) {
             throw new IllegalArgumentException("We need " + underlyingMetrics.size() + " weights. That is one for every metric used. " +
                     "This is for metrics [" + String.join(",", underlyingMetrics) + "]");
         }

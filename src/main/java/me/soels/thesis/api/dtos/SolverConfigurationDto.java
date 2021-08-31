@@ -8,7 +8,7 @@ import me.soels.thesis.solver.metric.MetricType;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.util.Set;
+import java.util.List;
 
 /**
  * Models the configuration of an evaluation.
@@ -24,9 +24,9 @@ import java.util.Set;
 public abstract class SolverConfigurationDto {
     @NotNull
     @Size(min = 1)
-    private final Set<MetricType> metrics;
+    private final List<MetricType> metrics;
 
-    protected SolverConfigurationDto(Set<MetricType> metrics) {
+    protected SolverConfigurationDto(List<MetricType> metrics) {
         this.metrics = metrics;
     }
 

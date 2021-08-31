@@ -2,14 +2,12 @@ package me.soels.thesis.model;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.soels.thesis.solver.metric.MetricType;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import java.util.*;
 
 

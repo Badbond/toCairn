@@ -9,8 +9,8 @@ import me.soels.thesis.solver.moea.EncodingType;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Getter
 public class MOEAConfigurationDto extends SolverConfigurationDto {
@@ -44,7 +44,7 @@ public class MOEAConfigurationDto extends SolverConfigurationDto {
     }
 
     @JsonCreator
-    public MOEAConfigurationDto(Set<MetricType> metrics, EvolutionaryAlgorithm algorithm, EncodingType encodingType, int maxEvaluations, Long maxTime, Integer clusterCountLowerBound, Integer clusterCountUpperBound) {
+    public MOEAConfigurationDto(List<MetricType> metrics, EvolutionaryAlgorithm algorithm, EncodingType encodingType, int maxEvaluations, Long maxTime, Integer clusterCountLowerBound, Integer clusterCountUpperBound) {
         super(metrics);
         this.algorithm = algorithm;
         this.encodingType = encodingType;

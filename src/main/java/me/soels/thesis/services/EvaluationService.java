@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import static me.soels.thesis.model.AnalysisType.EVOLUTIONARY;
@@ -205,7 +204,7 @@ public class EvaluationService {
      * @param objectives the objectives to meet input for
      * @return whether all input has been provided given the objectives
      */
-    public boolean hasAllRequiredInput(Evaluation evaluation, Set<MetricType> objectives) {
+    public boolean hasAllRequiredInput(Evaluation evaluation, List<MetricType> objectives) {
         var executed = evaluation.getExecutedAnalysis();
         return executed.contains(SOURCE) &&
                 (!objectives.contains(SHARED_DEVELOPMENT_LIFECYCLE) || executed.contains(EVOLUTIONARY));

@@ -3,12 +3,12 @@ package me.soels.thesis;
 import me.soels.thesis.analysis.sources.SourceAnalysis;
 import me.soels.thesis.analysis.sources.SourceAnalysisInput;
 import me.soels.thesis.model.*;
+import me.soels.thesis.solver.metric.CarvalhoCohesion;
 import me.soels.thesis.solver.metric.CarvalhoCoupling;
+import me.soels.thesis.solver.metric.Metric;
 import me.soels.thesis.solver.moea.ClusteringProblem;
 import me.soels.thesis.solver.moea.EncodingType;
 import me.soels.thesis.solver.moea.VariableDecoder;
-import me.soels.thesis.solver.metric.CarvalhoCohesion;
-import me.soels.thesis.solver.metric.Metric;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -124,9 +124,11 @@ class ThesisExperimentTest {
             var split = Arrays.stream(line.split(","))
                     .map(StringUtils::trim)
                     .collect(Collectors.toList());
-            var classA = classMapping.computeIfAbsent(split.get(0), key -> new OtherClass("Class" + classMapping.size(), split.get(0)));
+            var classA = classMapping.computeIfAbsent(split.get(0), key ->
+                    new OtherClass("Class" + classMapping.size(), split.get(0), null));
             classA.setId(UUID.randomUUID());
-            var classB = classMapping.computeIfAbsent(split.get(1), key -> new OtherClass("Class" + classMapping.size(), split.get(1)));
+            var classB = classMapping.computeIfAbsent(split.get(1), key ->
+                    new OtherClass("Class" + classMapping.size(), split.get(1), null));
             classB.setId(UUID.randomUUID());
             classA.getDependenceRelationships().add(new DependenceRelationship(classB, 1, 1));
         }

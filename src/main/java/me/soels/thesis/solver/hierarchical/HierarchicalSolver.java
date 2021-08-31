@@ -82,6 +82,7 @@ public class HierarchicalSolver implements Solver {
         Double bestQuality = null;
         HierarchicalClustering bestClustering = null;
 
+        // TODO: Parallelize
         for (var clustering : possibleClusterings) {
             var metrics = performMetrics(clustering, input);
             var metricsArray = metrics.values().stream()

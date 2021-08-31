@@ -13,6 +13,7 @@ import java.util.*;
 public abstract class AbstractClass {
     private final String identifier;
     private final String humanReadableName;
+    private final String location;
 
     @CompositeProperty(prefix = "methodsDefined")
     private Map<String, List<String>> methods = new HashMap<>(); // Method FQN -> parameter FQNs
@@ -25,9 +26,10 @@ public abstract class AbstractClass {
     @Relationship("InteractsWith")
     private List<DependenceRelationship> dependenceRelationships = new ArrayList<>();
 
-    protected AbstractClass(String identifier, String humanReadableName) {
+    protected AbstractClass(String identifier, String humanReadableName, String location) {
         this.identifier = identifier;
         this.humanReadableName = humanReadableName;
+        this.location = location;
     }
 
     /**

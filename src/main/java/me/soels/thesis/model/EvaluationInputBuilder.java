@@ -28,10 +28,11 @@ public class EvaluationInputBuilder {
      *
      * @param fqn               the fully qualified name of the class
      * @param humanReadableName the human readable name of the class
+     * @param location          the location of the source file for this class
      * @return this builder
      */
-    public DataClass addDataClass(String fqn, String humanReadableName) {
-        var dataClass = new DataClass(fqn, humanReadableName);
+    public DataClass addDataClass(String fqn, String humanReadableName, String location) {
+        var dataClass = new DataClass(fqn, humanReadableName, location);
         classes.add(dataClass);
         return dataClass;
     }
@@ -41,10 +42,11 @@ public class EvaluationInputBuilder {
      *
      * @param fqn               the fully qualified name of the class
      * @param humanReadableName the human readable name of the class
+     * @param location          the location of the source file for this class
      * @return this builder
      */
-    public OtherClass addOtherClass(String fqn, String humanReadableName) {
-        var otherClass = new OtherClass(fqn, humanReadableName);
+    public OtherClass addOtherClass(String fqn, String humanReadableName, String location) {
+        var otherClass = new OtherClass(fqn, humanReadableName, location);
         classes.add(otherClass);
         return otherClass;
     }

@@ -14,8 +14,8 @@ public final class OtherClass extends AbstractClass {
     @Relationship("DataDepends")
     private List<DataRelationship> dataRelationships = new ArrayList<>();
 
-    public OtherClass(String identifier, String humanReadableName) {
-        super(identifier, humanReadableName);
+    public OtherClass(String identifier, String humanReadableName, String location) {
+        super(identifier, humanReadableName, location);
     }
 
     /**

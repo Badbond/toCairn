@@ -24,6 +24,7 @@ import static me.soels.thesis.solver.metric.MetricType.SHARED_DEVELOPMENT_LIFECY
  */
 @Service
 public class EvaluationService {
+    // TODO: Saving evaluations left and right really messes up the graph... :X Fix it.
     private final EvaluationRepository evaluationRepository;
     private final EvaluationConfigurationRepository configurationRepository;
     private final EvaluationInputService inputService;
@@ -105,7 +106,7 @@ public class EvaluationService {
         var newConfiguration = dto.getSolverConfiguration().toDao();
         validateConfiguration(newConfiguration);
         newConfiguration.setId(configuration.getId());
-        configurationRepository.save(newConfiguration);
+        evaluation.setConfiguration(newConfiguration);
 
         evaluation.setName(dto.getName());
         checkRanAnalysesAndUpdateStatus(evaluation);

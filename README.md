@@ -39,6 +39,35 @@ or `missing a property for the generated, internal ID (@Id @GeneratedValue Long 
 not compile correctly. Run `mvn clean compile` to recompile the project, and the problem should be gone. This happens
 when initializing the Spring context both during running the application and during tests.
 
+### Persistence queries seem to take very long
+
+Due to how Spring Data Neo4J (SDN) is implemented it could be that, when persisting certain resources, a lot of queries
+need to be executed. SDN tries to make sure that the graph database exactly matches the Java model. As most of our
+resources are linked, this means that it will try to verify the whole graph every time you persist a resource. We tried
+to mitigate this as much as possible with custom queries for persisting relationships as well as using projections for
+storing and retrieving data.
+
+However, it could be the case on a different model that it keeps getting stuck when persisting entities. To debug such
+case for yourself, run the application with the `-Dlogging.level.org.springframework.data.neo4j=DEBUG` environment
+variable set. This will log all the queries made to Neo4J in the console.
+
+### Missing expected relationships
+
+As the relationships between classes is determined using static code analysis, there are various reasons why certain
+expected relationships are not present in the constructed graph. Most understandably at first, relationships based on
+reflection that are only present during runtime are not possible (at least to a certain point) using static analysis.
+The same goes for polymorphism. We can hardly deduce from static analysis whether a class is a certain subtype and
+therefore we do not see such relationships.
+
+Lastly, from static code analysis, we often only know the name of a class. However, to accurately match that class, we
+need its fully qualified name. For that, we use JavaParser's symbol solver. From traffic on discussion fora, it seems
+that this is still the most used AST parser and way to deduce this in meta-programming. However, this symbol solver is
+(at the time of writing) unmaintained. Therefore, some AST could not be resolved due to, for example, new Java
+constructs that the solver does not yet support (such as Java 10's `var`). Lastly, not providing dependency `.jar` files
+greatly lowers the ability to solve class FQNs as often a type must be deduced from library usage (e.g. deserialization)
+. To see such problems, you can enable debug logging through the environment property `logging=debug` which will print
+them to the console.
+
 ## License
 
 This project is licensed under the [Apache 2.0 license](LICENSE.txt).

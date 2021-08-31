@@ -2,7 +2,6 @@ package me.soels.thesis.analysis.sources;
 
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ParserConfiguration;
-import com.github.javaparser.Range;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.nodeTypes.NodeWithName;
@@ -48,7 +47,8 @@ public class SourceClassAnalysis {
                 .map(this::printProblems)
                 .filter(Objects::nonNull)
                 .filter(parseResult -> parseResult.getResult().isPresent())
-                .flatMap(parseResult -> parseResult.getResult().get().getTypes().stream())
+                .map(parseResult -> parseResult.getResult().get())
+                .flatMap(cu -> cu.getTypes().stream())
                 // Also include the inner types, note we do not include annotations and enums
                 .flatMap(type -> type.findAll(ClassOrInterfaceDeclaration.class).stream())
                 // Print problems where FQN could not be determined and filter those cases out
@@ -58,7 +58,7 @@ public class SourceClassAnalysis {
                 // Exclude classes based on input regexes matching FQN
                 .filter(clazz -> filterClassBasedOnRegex(clazz, context.getInput().getFnqExcludeRegexes(), filterCount))
                 // Create a pair of the type of class and its AST
-                .map(clazz -> Pair.of(clazz, storeClass(clazz, context.getInput(), context)))
+                .map(clazz -> Pair.of(clazz, storeClass(clazz, context.getInput(), context, getStorageLocation(clazz))))
                 .filter(pair -> pair.getValue() != null)
                 .collect(Collectors.toList());
         context.setTypesAndClasses(typesAndClasses);
@@ -84,7 +84,15 @@ public class SourceClassAnalysis {
         return true;
     }
 
-    private AbstractClass storeClass(ClassOrInterfaceDeclaration clazz, SourceAnalysisInput input, SourceAnalysisContext context) {
+    private String getStorageLocation(ClassOrInterfaceDeclaration clazz) {
+        return clazz.findCompilationUnit()
+                .flatMap(CompilationUnit::getStorage)
+                .map(storage -> storage.getPath().toString())
+                .orElse(null);
+    }
+
+    private AbstractClass storeClass(ClassOrInterfaceDeclaration clazz, SourceAnalysisInput input, SourceAnalysisContext context,
+                                     String location) {
         var fqn = clazz.getFullyQualifiedName()
                 .orElseThrow(() -> new IllegalStateException("Could not retrieve FQN from already filtered class"));
 
@@ -92,9 +100,9 @@ public class SourceClassAnalysis {
         if (isDataClass(clazz, input)) {
             // Use line count as initial size of the data class, to be overridden by dynamic analysis with more accurate
             // size calculations.
-            return context.getResultBuilder().addDataClass(fqn, clazz.getNameAsString());
+            return context.getResultBuilder().addDataClass(fqn, clazz.getNameAsString(), location);
         } else {
-            return context.getResultBuilder().addOtherClass(fqn, clazz.getNameAsString());
+            return context.getResultBuilder().addOtherClass(fqn, clazz.getNameAsString(), location);
         }
     }
 

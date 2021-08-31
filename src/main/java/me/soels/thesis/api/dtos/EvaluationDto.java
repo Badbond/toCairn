@@ -3,11 +3,9 @@ package me.soels.thesis.api.dtos;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import lombok.Getter;
 import me.soels.thesis.model.*;
-import me.soels.thesis.solver.metric.MetricType;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;

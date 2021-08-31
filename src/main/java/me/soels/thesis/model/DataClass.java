@@ -13,8 +13,9 @@ public final class DataClass extends AbstractClass {
      *
      * @param identifier        the identifier for this data class (FQN)
      * @param humanReadableName the human readable name for this data class
+     * @param location          the location of the source file for this class
      */
-    public DataClass(String identifier, String humanReadableName) {
-        super(identifier, humanReadableName);
+    public DataClass(String identifier, String humanReadableName, String location) {
+        super(identifier, humanReadableName, location);
     }
 }

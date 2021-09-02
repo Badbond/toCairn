@@ -1,7 +1,7 @@
 package me.soels.thesis.solver.metric;
 
-import me.soels.thesis.solver.Clustering;
 import me.soels.thesis.model.EvaluationInput;
+import me.soels.thesis.solver.Clustering;
 
 
 /**

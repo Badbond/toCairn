@@ -4,7 +4,6 @@ import me.soels.thesis.model.SolverConfiguration;
 import me.soels.thesis.solver.Solver;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * Enum used to identify and configure metrics used in a {@link Solver} through its {@link SolverConfiguration}.

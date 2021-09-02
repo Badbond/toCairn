@@ -48,4 +48,25 @@ public interface EvaluationRepository extends Neo4jRepository<Evaluation, UUID> 
             "OPTIONAL MATCH (eval: Evaluation)-[r]-(result :EvaluationResult) " +
             "RETURN eval, collect(c), collect(config), collect(r), collect(result)")
     Evaluation saveShallow(Evaluation evaluation);
+
+    /**
+     * Adds a relationship between the evaluation and one result.
+     * <p>
+     * Note that we use {@code MATCH} together with {@code WITH} to force index lookups instead of having
+     * a cartesian production comparison. See <a href="https://stackoverflow.com/a/33354771">SO comment</a>.
+     * <p>
+     * This method is partially derived from
+     * <a href="https://community.neo4j.com/t/super-frustrated-sdn-deleting-existing-relationships/35245/18">
+     * a Neo4J community post</a> about storing relationships.
+     *
+     * @param evaluationId the id of the evaluation
+     * @param resultId     the id of the evaluation result
+     */
+    @Query("MATCH (a :Evaluation) " +
+            "WHERE a.id = $0 " +
+            "WITH a " +
+            "MATCH (b:EvaluationResult) " +
+            "WHERE b.id = $1 " +
+            "CREATE (a)-[:HasResult]->(b)")
+    void createResultRelationship(UUID evaluationId, UUID resultId);
 }

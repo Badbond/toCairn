@@ -21,22 +21,26 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class EvaluationRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(EvaluationRunner.class);
     private final EvaluationService evaluationService;
+    private final EvaluationResultService resultService;
     private final SolverFactory solverFactory;
     private final AtomicBoolean runnerRunning = new AtomicBoolean(false);
 
-    public EvaluationRunner(EvaluationService evaluationService, SolverFactory solverFactory) {
+    public EvaluationRunner(EvaluationService evaluationService,
+                            EvaluationResultService resultService,
+                            SolverFactory solverFactory) {
         this.evaluationService = evaluationService;
+        this.resultService = resultService;
         this.solverFactory = solverFactory;
     }
 
     @Async
     public void runEvaluation(Evaluation evaluation) {
-        if (!runnerRunning.compareAndSet(false, true)) {
-            throw new IllegalArgumentException("An static analysis is already running. The JavaParser library has " +
-                    "degraded coverage due to errors when running in parallel. Stopping analysis");
-        }
-
         try {
+            if (!runnerRunning.compareAndSet(false, true)) {
+                throw new IllegalArgumentException("An evaluation is already running. To make sure an analysis receives " +
+                        "all the needed resources, we don't allow to run multiple in parallel.");
+            }
+
             var input = new EvaluationInputBuilder(evaluation.getInputs()).build();
             var solver = solverFactory.createSolver(evaluation, input);
 
@@ -47,8 +51,8 @@ public class EvaluationRunner {
 
             result.setStartDate(start);
             result.setFinishDate(ZonedDateTime.now());
-            evaluation.getResults().add(result);
-            evaluation = evaluationService.save(evaluation);
+            resultService.persistResult(result);
+            evaluationService.createResultRelationship(evaluation.getId(), result.getId());
 
             var duration = DurationFormatUtils.formatDurationHMS(ChronoUnit.MILLIS.between(start, result.getFinishDate()));
             LOGGER.info("Evaluation run complete. Took {} (H:m:s.millis)", duration);

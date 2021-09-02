@@ -19,10 +19,10 @@ public interface OtherClassRepository extends ClassRepository<OtherClass> {
      * @param relationship the relationship containing the properties to set
      */
     @Query("MATCH (a:OtherClass) " +
+            "WHERE a.id = $0 " +
             "WITH a " +
             "MATCH (b:DataClass) " +
-            "WITH a, b " +
-            "WHERE a.id = $0 AND b.id = $1 " +
+            "WHERE b.id = $1 " +
             "CREATE (a)-[r:DataDepends]->(b) " +
             "SET r = $2.__properties__")
     void addDataRelationship(UUID callerId, UUID calleeId, DataRelationship relationship);

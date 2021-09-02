@@ -3,8 +3,8 @@ package me.soels.thesis.services;
 import me.soels.thesis.api.ResourceNotFoundException;
 import me.soels.thesis.api.dtos.EvaluationDto;
 import me.soels.thesis.model.*;
-import me.soels.thesis.repositories.EvaluationConfigurationRepository;
 import me.soels.thesis.repositories.EvaluationRepository;
+import me.soels.thesis.repositories.SolverConfigurationRepository;
 import me.soels.thesis.solver.metric.MetricType;
 import org.springframework.stereotype.Service;
 
@@ -24,14 +24,13 @@ import static me.soels.thesis.solver.metric.MetricType.SHARED_DEVELOPMENT_LIFECY
  */
 @Service
 public class EvaluationService {
-    // TODO: Saving evaluations left and right really messes up the graph... :X Fix it.
     private final EvaluationRepository evaluationRepository;
-    private final EvaluationConfigurationRepository configurationRepository;
+    private final SolverConfigurationRepository configurationRepository;
     private final EvaluationInputService inputService;
     private final EvaluationResultService resultService;
 
     public EvaluationService(EvaluationRepository evaluationRepository,
-                             EvaluationConfigurationRepository configurationRepository,
+                             SolverConfigurationRepository configurationRepository,
                              EvaluationInputService inputService,
                              EvaluationResultService resultService) {
         this.evaluationRepository = evaluationRepository;
@@ -114,10 +113,8 @@ public class EvaluationService {
         return evaluationRepository.saveShallow(evaluation);
     }
 
-    public Evaluation save(Evaluation evaluation) {
-        // TODO: NOOOOOO.... :-(
-        //  Store the results manually.... :-|
-        return evaluationRepository.save(evaluation);
+    public void createResultRelationship(UUID evaluationId, UUID resultId) {
+        evaluationRepository.createResultRelationship(evaluationId, resultId);
     }
 
     /**

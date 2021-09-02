@@ -36,8 +36,8 @@ These are common questions and problems encountered and how to solve them.
 
 When receiving an error message containing `Missing @TargetNode declaration in class`
 or `missing a property for the generated, internal ID (@Id @GeneratedValue Long id)`, it could be that the project did
-not compile correctly. Run `mvn clean compile` to recompile the project, and the problem should be gone. This happens
-when initializing the Spring context both during running the application and during tests.
+not compile correctly. Try to run it again or run `mvn clean compile` to recompile the project, and the problem should
+be gone. This happens when initializing the Spring context both during running the application and during tests.
 
 ### Persistence queries seem to take very long
 

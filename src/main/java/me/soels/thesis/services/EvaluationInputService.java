@@ -100,7 +100,10 @@ public class EvaluationInputService {
         sourceAnalysis.analyzeNodes(context);
 
         LOGGER.info("Storing nodes");
-        storeInput(evaluation, context.getResultBuilder().build());
+        evaluation.setInputs(context.getResultBuilder().build().getClasses());
+        // This has to be done with extreme care since it tries to model check the Java state with that in the DB.
+        // ONLY in this case it is fine as we don't have the edges extracted yet.
+        evaluation = evaluationRepository.save(evaluation);
         LOGGER.info("Stored {} nodes", evaluation.getInputs().size());
     }
 
@@ -135,7 +138,7 @@ public class EvaluationInputService {
 
         var builder = getPopulatedInputBuilder(evaluation);
         evolutionaryAnalysis.analyze(builder, analysisInput);
-        storeInput(evaluation, builder.build());
+        // TODO: Create custom query for persisting evoluationary relationships: persistInputRelationships(evaluation, builder.build());
     }
 
     /**
@@ -147,20 +150,5 @@ public class EvaluationInputService {
     private EvaluationInputBuilder getPopulatedInputBuilder(Evaluation evaluation) {
         var classes = evaluation.getInputs();
         return new EvaluationInputBuilder(classes);
-    }
-
-    /**
-     * Store the given input graph.
-     * <p>
-     * The {@link Evaluation} needs to be given as that contains the outgoing dependency
-     * to the input graph nodes.
-     *
-     * @param evaluation the evaluation to set the inputs for
-     * @param input      the input graph to store
-     */
-    private void storeInput(Evaluation evaluation, EvaluationInput input) {
-        evaluation.setInputs(input.getClasses());
-        // This also saves/created the nodes in the graph
-        evaluationRepository.save(evaluation);
     }
 }

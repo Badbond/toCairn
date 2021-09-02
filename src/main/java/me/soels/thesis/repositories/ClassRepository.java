@@ -27,10 +27,10 @@ public interface ClassRepository<T extends AbstractClass> extends Neo4jRepositor
      * @param relationship the relationship containing the properties to set
      */
     @Query("MATCH (a:AbstractClass) " +
+            "WHERE a.id = $0 " +
             "WITH a " +
             "MATCH (b:AbstractClass) " +
-            "WITH a, b " +
-            "WHERE a.id = $0 AND b.id = $1 " +
+            "WHERE b.id = $1 " +
             "CREATE (a)-[r:InteractsWith]->(b) " +
             "SET r = $2.__properties__")
     void addDependencyRelationship(UUID callerId, UUID calleeId, DependenceRelationship relationship);

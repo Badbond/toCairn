@@ -142,7 +142,8 @@ public class EvaluationInputService {
         var builder = getPopulatedInputBuilder(evaluation);
         dynamicAnalysis.analyze(builder, analysisInput);
 
-        // TODO: Persist class properties.
+        // Persist the size data
+        builder.getClasses().forEach(clazz -> classRepository.setSize(clazz.getId(), clazz.getSize()));
 
         var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);
         LOGGER.info("Dynamic analysis took {} (H:m:s.millis)", duration);

@@ -34,4 +34,17 @@ public interface ClassRepository<T extends AbstractClass> extends Neo4jRepositor
             "CREATE (a)-[r:InteractsWith]->(b) " +
             "SET r = $2.__properties__")
     void addDependencyRelationship(UUID callerId, UUID calleeId, DependenceRelationship relationship);
+
+    /**
+     * Sets the size of a class.
+     * <p>
+     * This circumvents model checking of the whole graph based on relationships when just storing the resource.
+     *
+     * @param classId the class to set the size for
+     * @param size    the size to set
+     */
+    @Query("MATCH (a :AbstractClass) " +
+            "WHERE a.id = $0 " +
+            "SET a += { size: $1 }")
+    void setSize(UUID classId, Long size);
 }

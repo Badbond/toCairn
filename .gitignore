@@ -6,3 +6,4 @@ results/
 jacoco.xml
 *.jar
 *.exec
+jfr/

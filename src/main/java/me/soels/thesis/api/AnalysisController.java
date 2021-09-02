@@ -1,5 +1,6 @@
 package me.soels.thesis.api;
 
+import me.soels.thesis.api.dtos.DynamicAnalysisInputDto;
 import me.soels.thesis.api.dtos.EvolutionaryAnalysisInputDto;
 import me.soels.thesis.api.dtos.SourceAnalysisInputDto;
 import me.soels.thesis.model.Evaluation;
@@ -13,8 +14,7 @@ import javax.validation.Valid;
 import java.io.IOException;
 import java.util.UUID;
 
-import static me.soels.thesis.model.AnalysisType.EVOLUTIONARY;
-import static me.soels.thesis.model.AnalysisType.SOURCE;
+import static me.soels.thesis.model.AnalysisType.*;
 
 /**
  * Controller containing endpoints to perform analysis which enhance the {@link EvaluationInput} for an
@@ -42,6 +42,16 @@ public class AnalysisController {
         inputService.performSourceAnalysis(evaluation, inputDto.toDao());
         evaluationService.updateAnalysisRan(evaluation, SOURCE);
     }
+
+    @Async
+    @PostMapping("/dynamic")
+    public void performDynamicAnalysis(@PathVariable UUID evaluationId,
+                                       @RequestBody @Valid DynamicAnalysisInputDto inputDto) throws IOException {
+        var evaluation = evaluationService.getEvaluation(evaluationId);
+        inputService.performDynamicAnalysis(evaluation, inputDto.toDao());
+        evaluationService.updateAnalysisRan(evaluation, DYNAMIC);
+    }
+
 
     @Async
     @PostMapping("/evolutionary")

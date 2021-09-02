@@ -19,7 +19,7 @@ public abstract class AbstractClass {
     protected UUID id;
     @CompositeProperty(prefix = "methodsDefined")
     private Map<String, List<String>> methods = new HashMap<>(); // Method FQN -> parameter FQNs
-    private Integer size;
+    private Long size;
 
     @Relationship("InteractsWith")
     private List<DependenceRelationship> dependenceRelationships = new ArrayList<>();

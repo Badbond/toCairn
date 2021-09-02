@@ -28,7 +28,7 @@ public class CarvalhoOverhead implements Metric {
     @Override
     public double calculate(Clustering clustering, EvaluationInput evaluationInput) {
         var averageSize = clustering.getByClass().keySet().stream()
-                .mapToInt(AbstractClass::getSize)
+                .mapToLong(AbstractClass::getSize)
                 .average()
                 .orElseThrow(() -> new IllegalArgumentException("Could not calculate average size of classes"));
 

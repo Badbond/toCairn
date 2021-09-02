@@ -1,5 +1,7 @@
 package me.soels.thesis.services;
 
+import me.soels.thesis.analysis.dynamic.DynamicAnalysis;
+import me.soels.thesis.analysis.dynamic.DynamicAnalysisInput;
 import me.soels.thesis.analysis.evolutionary.EvolutionaryAnalysis;
 import me.soels.thesis.analysis.evolutionary.EvolutionaryAnalysisInput;
 import me.soels.thesis.analysis.sources.SourceAnalysis;
@@ -21,8 +23,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static me.soels.thesis.model.AnalysisType.EVOLUTIONARY;
-import static me.soels.thesis.model.AnalysisType.SOURCE;
+import static me.soels.thesis.model.AnalysisType.*;
 
 /**
  * Service responsible for maintaining the {@link EvaluationInput} graph. This service allows for commanding certain
@@ -33,6 +34,7 @@ public class EvaluationInputService {
     private static final Logger LOGGER = LoggerFactory.getLogger(EvaluationInputService.class);
     private final SourceAnalysis sourceAnalysis;
     private final EvolutionaryAnalysis evolutionaryAnalysis;
+    private final DynamicAnalysis dynamicAnalysis;
     private final ClassRepository<AbstractClass> classRepository;
     private final OtherClassRepository otherClassRepository;
     private final EvaluationRepository evaluationRepository;
@@ -40,11 +42,13 @@ public class EvaluationInputService {
 
     public EvaluationInputService(SourceAnalysis sourceAnalysis,
                                   EvolutionaryAnalysis evolutionaryAnalysis,
+                                  DynamicAnalysis dynamicAnalysis,
                                   @Qualifier("classRepository") ClassRepository<AbstractClass> classRepository,
                                   @Qualifier("otherClassRepository") OtherClassRepository otherClassRepository,
                                   EvaluationRepository evaluationRepository) {
         this.sourceAnalysis = sourceAnalysis;
         this.evolutionaryAnalysis = evolutionaryAnalysis;
+        this.dynamicAnalysis = dynamicAnalysis;
         this.classRepository = classRepository;
         this.otherClassRepository = otherClassRepository;
         this.evaluationRepository = evaluationRepository;
@@ -94,8 +98,6 @@ public class EvaluationInputService {
         }
     }
 
-    // TODO: Perform dynamic JFR analysis for class size to measure Overhead.
-
     private void extractNodes(Evaluation evaluation, SourceAnalysisContext context) {
         sourceAnalysis.analyzeNodes(context);
 
@@ -120,6 +122,30 @@ public class EvaluationInputService {
             otherClass.getDataRelationships().forEach(rel -> otherClassRepository.addDataRelationship(otherClass.getId(), rel.getCallee().getId(), rel));
         });
         LOGGER.info("Stored relationships");
+    }
+
+    /**
+     * Performs dynamic analysis for the given evaluation. The result of analysis will be stored in the database.
+     *
+     * @param evaluation    the evaluation to perform source analysis for
+     * @param analysisInput the input required for performing source analysis
+     */
+    public void performDynamicAnalysis(Evaluation evaluation, DynamicAnalysisInput analysisInput) throws IOException {
+        if (!evaluation.getExecutedAnalysis().contains(SOURCE)) {
+            throw new IllegalArgumentException("Source analysis must be performed first.");
+        } else if (evaluation.getExecutedAnalysis().contains(DYNAMIC)) {
+            throw new IllegalArgumentException("Dynamic analysis already performed.");
+        }
+
+        var start = System.currentTimeMillis();
+        LOGGER.info("Starting dynamic analysis on {}", analysisInput.getPathToJfrFile());
+        var builder = getPopulatedInputBuilder(evaluation);
+        dynamicAnalysis.analyze(builder, analysisInput);
+
+        // TODO: Persist class properties.
+
+        var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);
+        LOGGER.info("Dynamic analysis took {} (H:m:s.millis)", duration);
     }
 
     /**

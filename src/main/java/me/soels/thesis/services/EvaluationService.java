@@ -12,10 +12,10 @@ import javax.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 
-import static me.soels.thesis.model.AnalysisType.EVOLUTIONARY;
-import static me.soels.thesis.model.AnalysisType.SOURCE;
+import static me.soels.thesis.model.AnalysisType.*;
 import static me.soels.thesis.model.EvaluationStatus.INCOMPLETE;
 import static me.soels.thesis.model.EvaluationStatus.RUNNING;
+import static me.soels.thesis.solver.metric.MetricType.LIMITED_COMMUNICATION_OVERHEAD;
 import static me.soels.thesis.solver.metric.MetricType.SHARED_DEVELOPMENT_LIFECYCLE;
 
 /**
@@ -209,7 +209,8 @@ public class EvaluationService {
     public boolean hasAllRequiredInput(Evaluation evaluation, List<MetricType> objectives) {
         var executed = evaluation.getExecutedAnalysis();
         return executed.contains(SOURCE) &&
-                (!objectives.contains(SHARED_DEVELOPMENT_LIFECYCLE) || executed.contains(EVOLUTIONARY));
+                (!objectives.contains(SHARED_DEVELOPMENT_LIFECYCLE) || executed.contains(EVOLUTIONARY)) &&
+                (!objectives.contains(LIMITED_COMMUNICATION_OVERHEAD) || executed.contains(DYNAMIC));
     }
 
     /**

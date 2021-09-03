@@ -1,6 +1,5 @@
 package me.soels.thesis.solver.metric;
 
-import me.soels.thesis.model.EvaluationInput;
 import me.soels.thesis.model.OtherClass;
 import me.soels.thesis.solver.Clustering;
 import org.apache.commons.lang3.tuple.Pair;
@@ -17,7 +16,7 @@ import java.util.stream.Collectors;
  */
 public class SelmadjiFInter extends SelmadjiDataAutonomy {
     @Override
-    public double calculate(Clustering clustering, EvaluationInput evaluationInput) {
+    public double calculate(Clustering clustering) {
         return clustering.getByCluster().values().stream()
                 .mapToDouble(microservice -> finter(microservice, clustering))
                 .sum();

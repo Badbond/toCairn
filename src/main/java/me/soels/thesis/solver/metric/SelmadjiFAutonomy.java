@@ -1,6 +1,5 @@
 package me.soels.thesis.solver.metric;
 
-import me.soels.thesis.model.EvaluationInput;
 import me.soels.thesis.model.OtherClass;
 import me.soels.thesis.solver.Clustering;
 import org.apache.commons.lang3.tuple.Pair;
@@ -18,7 +17,7 @@ import java.util.stream.Collectors;
  */
 public class SelmadjiFAutonomy extends SelmadjiStructuralBehavior {
     @Override
-    public double calculate(Clustering clustering, EvaluationInput evaluationInput) {
+    public double calculate(Clustering clustering) {
         var totalNbCalls = getTotalNbCalls(clustering);
         return clustering.getByCluster().values().stream()
                 .mapToDouble(microservice -> exterCoup(microservice, clustering, totalNbCalls))

@@ -23,7 +23,6 @@ import java.util.List;
  * @see EncodingType
  */
 public class ClusteringProblem extends AbstractProblem {
-    // TODO: Create multiple solvers architecture. One hierarchical and this MEOA clustering. Ideally, metrics are agnostic of it.
     private final List<Metric> metrics;
     private final EvaluationInput evaluationInput;
     private final MOEAConfiguration configuration;
@@ -68,7 +67,7 @@ public class ClusteringProblem extends AbstractProblem {
         }
 
         for (var i = 0; i < metrics.size(); i++) {
-            double metricValue = metrics.get(i).calculate(decodedClustering, evaluationInput);
+            double metricValue = metrics.get(i).calculate(decodedClustering);
             solution.setObjective(i, metricValue);
         }
     }

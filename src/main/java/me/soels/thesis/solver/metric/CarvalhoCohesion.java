@@ -1,7 +1,6 @@
 package me.soels.thesis.solver.metric;
 
 import me.soels.thesis.model.AbstractClass;
-import me.soels.thesis.model.EvaluationInput;
 import me.soels.thesis.solver.Clustering;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -30,7 +29,7 @@ import java.util.List;
  */
 public class CarvalhoCohesion implements Metric {
     @Override
-    public double calculate(Clustering clustering, EvaluationInput evaluationInput) {
+    public double calculate(Clustering clustering) {
         var clusteringByCluster = clustering.getByCluster();
 
         return -1 * clusteringByCluster.values().stream()

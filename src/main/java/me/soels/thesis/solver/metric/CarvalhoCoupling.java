@@ -2,7 +2,6 @@ package me.soels.thesis.solver.metric;
 
 import me.soels.thesis.model.AbstractClass;
 import me.soels.thesis.model.DependenceRelationship;
-import me.soels.thesis.model.EvaluationInput;
 import me.soels.thesis.solver.Clustering;
 
 import java.util.List;
@@ -23,7 +22,7 @@ import java.util.List;
  */
 public class CarvalhoCoupling implements Metric {
     @Override
-    public double calculate(Clustering clustering, EvaluationInput evaluationInput) {
+    public double calculate(Clustering clustering) {
         return clustering.getByCluster().values().stream()
                 .mapToDouble(this::calculateCoupling)
                 .sum();

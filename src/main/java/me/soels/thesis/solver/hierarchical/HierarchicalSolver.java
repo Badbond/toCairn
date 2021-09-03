@@ -92,7 +92,7 @@ public class HierarchicalSolver implements Solver {
         AtomicReference<HierarchicalClustering> bestClustering = new AtomicReference<>();
 
         possibleClusterings.parallelStream()
-                .forEach(clustering -> processClusteringParallel(clustering, input, bestQuality, bestClustering));
+                .forEach(clustering -> processClusteringParallel(clustering, bestQuality, bestClustering));
 
         if (bestClustering.get() == null) {
             // This should not happen as we always have at least one clustering which we set it to
@@ -103,11 +103,10 @@ public class HierarchicalSolver implements Solver {
     }
 
     private void processClusteringParallel(Clustering clustering,
-                                           EvaluationInput input,
                                            AtomicReference<Double> bestQuality,
                                            AtomicReference<HierarchicalClustering> bestClustering) {
 
-        var metrics = performMetrics(clustering, input);
+        var metrics = performMetrics(clustering);
         var metricsArray = metrics.values().stream()
                 .flatMapToDouble(Arrays::stream)
                 .toArray();
@@ -165,15 +164,14 @@ public class HierarchicalSolver implements Solver {
      * Performs the metrics for the given {@link Clustering}.
      *
      * @param clustering the clustering to perform the metrics for
-     * @param input      input giving additional information to the metrics
      * @return a data structure containing the resulting metric values
      */
-    private Map<MetricType, double[]> performMetrics(Clustering clustering, EvaluationInput input) {
+    private Map<MetricType, double[]> performMetrics(Clustering clustering) {
         Map<MetricType, double[]> result = new EnumMap<>(MetricType.class);
         for (var metricType : configuration.getMetrics()) {
             var metricValues = new double[metricType.getMetrics().size()];
             for (int i = 0; i < metricType.getMetrics().size(); i++) {
-                metricValues[i] = metricType.getMetrics().get(i).calculate(clustering, input);
+                metricValues[i] = metricType.getMetrics().get(i).calculate(clustering);
             }
             result.put(metricType, metricValues);
         }
@@ -198,7 +196,7 @@ public class HierarchicalSolver implements Solver {
         var clustering = builder.build();
 
         var solution = new Solution();
-        solution.setMetricValues(performMetrics(clustering, input));
+        solution.setMetricValues(performMetrics(clustering));
         solution.setMicroservices(clustering.getByCluster().entrySet().stream()
                 .map(entry -> new Microservice(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList()));

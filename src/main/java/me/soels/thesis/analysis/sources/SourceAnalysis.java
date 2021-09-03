@@ -56,7 +56,6 @@ public class SourceAnalysis {
         var projectLocation = zipExtractor.extractZip(inputZip);
         var context = new SourceAnalysisContext(projectLocation, input, builder);
 
-        // TODO: Enforce JaCoCo to be present when using certain metrics (here or in controller).
         if (input.getPathToJaCoCoXml().isPresent()) {
             var jacocoPath = input.getPathToJaCoCoXml().get();
             if (!jacocoPath.getFileName().toString().toLowerCase().endsWith(".xml")) {

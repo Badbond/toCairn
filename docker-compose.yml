@@ -16,7 +16,7 @@ services:
       - neo4j:/plugins
     environment:
       # Start with a default database
-      - NEO4J_dbms_default__database=thesis
+      - NEO4J_dbms_default__database=tocairn
       # Raise memory limits
       - NEO4J_dbms_memory_pagecache_size=1G
       - NEO4J_dbms_memory_heap_initial__size=1G

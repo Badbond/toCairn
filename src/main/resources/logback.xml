@@ -14,7 +14,7 @@
     </appender>
 
     <variable name="LOG_LEVEL" value="${logging:-INFO}"/>
-    <logger name="me.soels.thesis" level="${LOG_LEVEL}" additivity="false">
+    <logger name="me.soels.tocairn" level="${LOG_LEVEL}" additivity="false">
         <appender-ref ref="CONSOLE"/>
     </logger>
 

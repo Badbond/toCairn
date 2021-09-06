@@ -12,10 +12,10 @@
     </parent>
 
     <groupId>me.soels</groupId>
-    <artifactId>thesis-project</artifactId>
+    <artifactId>to-cairn</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <name>Thesis Project</name>
+    <name>toCairn</name>
     <description>
         Proof of Concept for thesis 'Identifying microservice boundaries in a monolithic application based on
         data autonomy'

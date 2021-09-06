@@ -19,6 +19,7 @@ public final class SourceAnalysisInput {
     private final ParserConfiguration.LanguageLevel languageLevel;
     private final String customDataAnnotation;
     private final List<String> fnqExcludeRegexes;
+    private final List<String> dataClassFqnRegexes;
 
     /**
      * Creates the input required to perform source analysis.
@@ -28,17 +29,20 @@ public final class SourceAnalysisInput {
      * @param languageLevel        the Java language to parse the project with
      * @param customDataAnnotation the custom annotation to apply on classes identifying data
      * @param fnqExcludeRegexes    a list of regexes to exclude classes in analysis for
+     * @param dataClassFqnRegexes  a list of regex to match classes with to mark them as data
      */
     public SourceAnalysisInput(Path pathToZip,
                                @Nullable Path pathToJaCoCoXml,
                                ParserConfiguration.LanguageLevel languageLevel,
                                String customDataAnnotation,
-                               List<String> fnqExcludeRegexes) {
+                               @Nullable List<String> fnqExcludeRegexes,
+                               @Nullable List<String> dataClassFqnRegexes) {
         this.pathToZip = pathToZip;
         this.pathToJaCoCoXml = pathToJaCoCoXml;
         this.languageLevel = languageLevel;
         this.customDataAnnotation = customDataAnnotation;
         this.fnqExcludeRegexes = fnqExcludeRegexes == null ? new ArrayList<>() : fnqExcludeRegexes;
+        this.dataClassFqnRegexes = dataClassFqnRegexes == null ? new ArrayList<>() : dataClassFqnRegexes;
     }
 
     public Optional<Path> getPathToJaCoCoXml() {

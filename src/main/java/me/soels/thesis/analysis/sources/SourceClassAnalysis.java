@@ -107,7 +107,9 @@ public class SourceClassAnalysis {
     }
 
     private boolean isDataClass(ClassOrInterfaceDeclaration clazz, SourceAnalysisInput input) {
-        return classNameIndicatesDataStructure(clazz) ||
+        return input.getDataClassFqnRegexes().stream()
+                .anyMatch(regex -> clazz.getFullyQualifiedName().get().matches(regex)) ||
+                classNameIndicatesDataStructure(clazz) ||
                 classContainsDataAnnotation(clazz, input);
     }
 

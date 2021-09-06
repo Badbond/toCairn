@@ -24,8 +24,10 @@ public final class SourceAnalysisInputDto {
     private final String customDataAnnotation;
     @Nullable
     private final List<String> fnqExcludeRegexes;
+    @Nullable
+    private final List<String> dataClassFqnRegexes;
 
     public SourceAnalysisInput toDao() {
-        return new SourceAnalysisInput(pathToProjectZip, pathToJaCoCoXml, languageLevel, customDataAnnotation, fnqExcludeRegexes);
+        return new SourceAnalysisInput(pathToProjectZip, pathToJaCoCoXml, languageLevel, customDataAnnotation, fnqExcludeRegexes, dataClassFqnRegexes);
     }
 }

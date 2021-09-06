@@ -83,8 +83,7 @@ public class SourceRelationshipAnalysis {
         relevantNodes.forEach((key, value) -> storeRelationship(visitorResult.getCaller(), key, value, context));
 
         getRelevantRemainingImportDecl(context, visitorResult, relevantNodes, allClasses)
-                .forEach(callee -> context.getResultBuilder().addDependency(visitorResult.getCaller(), callee, 1, 0));
-
+                .forEach(callee -> context.getResultBuilder().addDependency(visitorResult.getCaller(), callee, 1, 0L));
     }
 
     private Map<AbstractClass, List<Expression>> getRelevantConstructorCalls(SourceAnalysisContext context,
@@ -236,7 +235,7 @@ public class SourceRelationshipAnalysis {
      * @param context       the context containing the JaCoCo execution counts
      * @return the dynamic frequency or {@code null} if the source file was not found
      */
-    private Integer getDynamicFreq(AbstractClass caller, List<Expression> relevantNodes, SourceAnalysisContext context) {
+    private Long getDynamicFreq(AbstractClass caller, List<Expression> relevantNodes, SourceAnalysisContext context) {
         var source = context.getSourceExecutions().entrySet().stream()
                 .filter(entry -> caller.getIdentifier().contains(entry.getKey()))
                 .map(Map.Entry::getValue)
@@ -256,13 +255,13 @@ public class SourceRelationshipAnalysis {
                 .filter(node -> node.getRange().isPresent())
                 .map(node -> node.getRange().get())
                 .map(range -> Pair.of(range.begin.line, range.end.line))
-                .mapToInt(pair -> callerExecutionCounts.entrySet().stream()
+                .mapToLong(pair -> callerExecutionCounts.entrySet().stream()
                         // Retrieve lines matching with the range
                         .filter(entry -> entry.getKey() >= pair.getKey() && entry.getValue() <= pair.getValue())
-                        .mapToInt(Map.Entry::getValue)
+                        .mapToLong(Map.Entry::getValue)
                         // If this expression spans multiple lines, get the maximum execution counts on those lines
                         .max()
-                        .orElse(0))
+                        .orElse(0L))
                 // Sum all the execution counts of all the relevant expressions
                 .sum();
     }

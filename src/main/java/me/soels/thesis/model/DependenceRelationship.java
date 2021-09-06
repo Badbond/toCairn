@@ -31,16 +31,16 @@ public class DependenceRelationship extends Relationship {
 
     @NotNull
     private int staticFrequency;
-    private Integer dynamicFrequency;
+    private Long dynamicFrequency;
     private long size;
 
-    public DependenceRelationship(AbstractClass callee, int staticFrequency, Integer dynamicFrequency) {
+    public DependenceRelationship(AbstractClass callee, int staticFrequency, Long dynamicFrequency) {
         super(callee);
         this.staticFrequency = staticFrequency;
         this.dynamicFrequency = dynamicFrequency;
     }
 
-    public Optional<Integer> getDynamicFrequency() {
+    public Optional<Long> getDynamicFrequency() {
         // We could not store the relationship with optional properties and thus set it to -1 instead for not present
         return Optional.ofNullable(dynamicFrequency);
     }

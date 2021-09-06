@@ -9,7 +9,7 @@ import me.soels.thesis.model.DependenceRelationship;
 @Getter
 public class DependenceRelationshipDto extends AbstractRelationshipDto {
     private final int staticFrequency;
-    private final Integer dynamicFrequency;
+    private final Long dynamicFrequency;
 
     public DependenceRelationshipDto(String callerFqn, DependenceRelationship dependenceRelationship) {
         super(callerFqn, dependenceRelationship.getCallee().getIdentifier());

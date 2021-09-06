@@ -59,7 +59,7 @@ public class EvaluationInputBuilder {
      * @param staticFreq  the number of places these two classes depend on each other
      * @param dynamicFreq the dynamic frequency in which these two classes depend on each other
      */
-    public void addDependency(AbstractClass caller, AbstractClass callee, int staticFreq, Integer dynamicFreq) {
+    public void addDependency(AbstractClass caller, AbstractClass callee, int staticFreq, Long dynamicFreq) {
         var dependency = new DependenceRelationship(callee, staticFreq, dynamicFreq);
         caller.getDependenceRelationships().add(dependency);
     }
@@ -75,7 +75,7 @@ public class EvaluationInputBuilder {
      * @param staticFrequency the number of places these two classes depend on each other
      * @param dynamicFreq     the dynamic frequency in which these two classes depend on each other
      */
-    public void addDataRelationship(OtherClass caller, DataClass callee, DataRelationshipType type, int staticFrequency, Integer dynamicFreq) {
+    public void addDataRelationship(OtherClass caller, DataClass callee, DataRelationshipType type, int staticFrequency, Long dynamicFreq) {
         var dataRelationship = new DataRelationship(callee, type, staticFrequency, dynamicFreq);
         caller.getDataRelationships().add(dataRelationship);
     }

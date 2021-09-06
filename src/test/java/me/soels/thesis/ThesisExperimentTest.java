@@ -130,7 +130,7 @@ class ThesisExperimentTest {
             var classB = classMapping.computeIfAbsent(split.get(1), key ->
                     new OtherClass("Class" + classMapping.size(), split.get(1), null));
             classB.setId(UUID.randomUUID());
-            classA.getDependenceRelationships().add(new DependenceRelationship(classB, 1, 1));
+            classA.getDependenceRelationships().add(new DependenceRelationship(classB, 1, 1L));
         }
         return new ArrayList<>(classMapping.values());
     }

@@ -7,3 +7,4 @@ jacoco.xml
 *.jar
 *.exec
 jfr/
+scripts/ignored

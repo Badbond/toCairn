@@ -16,7 +16,7 @@ public class JacocoReportExtractor {
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             .findAndRegisterModules();
 
-    public void extractJaCoCoReport(Path jacocoReport, Map<String, Map<Integer, Integer>> sourceExecutions) throws IOException {
+    public void extractJaCoCoReport(Path jacocoReport, Map<String, Map<Integer, Long>> sourceExecutions) throws IOException {
         var report = xmlMapper.readValue(Files.newInputStream(jacocoReport), JacocoReport.class);
         for (var sourcePackage : report.getPackages()) {
             for (var sourceFile : sourcePackage.getSourceFiles()) {
@@ -25,7 +25,7 @@ public class JacocoReportExtractor {
                 sourceExecutions.put(fqn, sourceFile.getLines().stream()
                         .collect(Collectors.toMap(
                                 line -> Integer.valueOf(line.getNr()),
-                                line -> Integer.valueOf(line.getEc())))
+                                line -> Long.valueOf(line.getEc())))
                 );
             }
         }

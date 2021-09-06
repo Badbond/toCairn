@@ -15,7 +15,7 @@ import lombok.Setter;
 public final class DataRelationship extends DependenceRelationship {
     private DataRelationshipType type;
 
-    public DataRelationship(DataClass callee, DataRelationshipType type, int staticFrequency, Integer dynamicFrequency) {
+    public DataRelationship(DataClass callee, DataRelationshipType type, int staticFrequency, Long dynamicFrequency) {
         super(callee, staticFrequency, dynamicFrequency);
         this.type = type;
     }

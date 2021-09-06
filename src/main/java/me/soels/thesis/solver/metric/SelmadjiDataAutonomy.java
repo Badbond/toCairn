@@ -80,8 +80,8 @@ public abstract class SelmadjiDataAutonomy implements Metric {
      * @return the frequency metric
      */
     private double freq(DataRelationship i, DataRelationship j) {
-        var freqI = i.getStaticFrequency() + i.getDynamicFrequency().orElse(0);
-        var freqJ = j.getStaticFrequency() + j.getDynamicFrequency().orElse(0);
+        var freqI = i.getStaticFrequency() + i.getDynamicFrequency().orElse(0L);
+        var freqJ = j.getStaticFrequency() + j.getDynamicFrequency().orElse(0L);
 
         // Based on https://stackoverflow.com/a/14839593
         var sum = freqI + freqJ;

@@ -26,7 +26,7 @@ public class SourceAnalysisContext {
     private final EvaluationInputBuilder resultBuilder;
     private final Counters counters = new Counters();
     private final List<Pair<ClassOrInterfaceDeclaration, AbstractClass>> typesAndClasses = new ArrayList<>();
-    private final Map<String, Map<Integer, Integer>> sourceExecutions = new HashMap<>();
+    private final Map<String, Map<Integer, Long>> sourceExecutions = new HashMap<>();
 
     public SourceAnalysisContext(Path projectLocation,
                                  SourceAnalysisInput input,

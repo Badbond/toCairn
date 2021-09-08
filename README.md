@@ -1,14 +1,22 @@
-# Thesis Project
+# toCairn
 
-Proof of Concept on identifying microservice boundaries in a monolithic application using data autonomy, amongst others,
-as objectives. For clustering the classes representing a microservice, multi-objective evolutionary clustering
-algorithms are used. As this is a Proof of Concept, please consider it for evaluation but not for production purposes.
+Proof of Concept for the thesis 'Identifying microservice boundaries in a monolithic application based on data
+autonomy'. toCairn can cluster the classes based on multiple metrics. The metrics used determine the input required.
+Multiple clustering algorithms can be used to identify the microservice boundaries. These algorithms include an
+agglomerative hierarchical clustering algorithm as well as multiple multi-objective evolutionary clustering algorithms
+(MOEA). As this is a Proof of Concept, please consider it for evaluation but not for production purposes.
 
 This thesis project was conducted at the University of Amsterdam by Pieter Dirk Soels.
 
 ## Features
 
-_Coming soon_
+- Creates a dependency graph of your application.
+- Identifies frequency of class interaction based on static source code analysis.
+- Identifies frequency of class interaction based on a custom JaCoCo coverage report.
+- Identifies size of a class based on JFR memory allocation analysis.
+- Identify microservices based on multiple established metrics formed from microservice characteristics.
+- Perform clustering using an agglomerative hierarchical clustering algorithm with provided weights for the metrics.
+- Perform clustering using MOEA to generate a non-dominated solution space optimizing these multiple objectives.
 
 ## Running the project locally
 
@@ -24,9 +32,27 @@ configured Neo4j instance through application properties (see `application.yml`)
 To run the server, start the Spring server defined in `ThesisApplication.java`. This will start the server upon which it
 will be accessible at `localhost:8080`.
 
+## Prerequisites
+
+For this application to work, you need to compile this project. For this, one needs to have Java JDK 11 and Maven 3.8+
+installed. Furthermore, one needs to have a Neo4J database. One can set one up themselves manually or use our convenient
+`docker-compose.yaml` script to set one up with defaults matching the application. Storage is persisted in a Docker
+volume in this set up. For the latter, one needs to have both `docker` and `docker-compose` installed on their system.
+
+Lastly, a convenience would be the use of Postman to communicate with our API. In the root of this repository, there is
+a collection file (``) that you can import to start using the application straight away.
+
 ## Usage
 
-_Coming soon_
+This PoC does not come with a frontend. Instead, we use manual API requests to store and retrieve data as well as to
+perform actions. On top of that, we use the visualisations from Neo4J to inspect our created graph and its configuration
+manually.
+
+Make sure you have a Neo4J database running either through the aforementioned manual set up or through running
+`docker-compose up -d` in the root of this repository. Then, run `ToCairnApplication` to start the application.
+
+You can then interact with the application on `http://localhost:8080` and interact with the database on
+`localhost:7474`.
 
 ## FAQ
 

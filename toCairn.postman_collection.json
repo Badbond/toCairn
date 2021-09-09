@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "0a255a57-39d5-4f5a-9745-34cac453de20",
+		"_postman_id": "52f7d5c4-dfb1-4df2-bb49-9d19704fa492",
 		"name": "toCairn",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -20,7 +20,7 @@
 									"    ",
 									"    var jsonData = pm.response.json();",
 									"    if(jsonData.length != 0) {",
-									"        pm.environment.set(\"id\", jsonData[0].id);",
+									"        pm.collectionVariables.set(\"id\", jsonData[0].id);",
 									"    }",
 									"});",
 									""
@@ -89,7 +89,7 @@
 									"    pm.response.to.have.status(201);",
 									"    ",
 									"    var jsonData = pm.response.json();",
-									"    pm.environment.set(\"id\", jsonData.id);",
+									"    pm.collectionVariables.set(\"id\", jsonData.id);",
 									"});",
 									""
 								],
@@ -133,7 +133,7 @@
 									"    pm.response.to.have.status(201);",
 									"    ",
 									"    var jsonData = pm.response.json();",
-									"    pm.environment.set(\"id\", jsonData.id);",
+									"    pm.collectionVariables.set(\"id\", jsonData.id);",
 									"});",
 									""
 								],
@@ -177,7 +177,6 @@
 									"    pm.response.to.have.status(201);",
 									"    ",
 									"    var jsonData = pm.response.json();",
-									"    pm.environment.set(\"id\", jsonData.id);",
 									"});",
 									""
 								],
@@ -265,7 +264,9 @@
 									"    pm.response.to.have.status(204);",
 									"    ",
 									"    // Reset the ID in the environment",
-									"    pm.environment.set(\"id\", \"\");",
+									"    pm.collectionVariables.set(\"id\", \"\");",
+									"    pm.collectionVariables.set(\"resultId\", \"\");",
+									"    pm.collectionVariables.set(\"solutionId\", \"\");",
 									"});",
 									""
 								],
@@ -570,7 +571,7 @@
 									"",
 									"    var jsonData = pm.response.json();",
 									"    if(jsonData.solutionIds.length != 0) {",
-									"        pm.environment.set(\"solutionId\", jsonData.solutionIds[0]);",
+									"        pm.collectionVariables.set(\"solutionId\", jsonData.solutionIds[0]);",
 									"    }",
 									"});",
 									""
@@ -617,7 +618,7 @@
 									"",
 									"    var jsonData = pm.response.json();",
 									"    if(jsonData.length != 0) {",
-									"        pm.environment.set(\"resultId\", jsonData[0].id);",
+									"        pm.collectionVariables.set(\"resultId\", jsonData[0].id);",
 									"    }",
 									"});",
 									""
@@ -662,6 +663,8 @@
 								"exec": [
 									"pm.test(\"Status code is 204\", function () {",
 									"    pm.response.to.have.status(204);",
+									"    ",
+									"    pm.collectionVariables.set(\"resultId\", \"\");",
 									"});",
 									""
 								],

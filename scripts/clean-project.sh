@@ -36,17 +36,20 @@ echo "Storing project in temporary location ${tmpProject}"
 cp -r "${projectLocation}." "${tmpProject}"
 
 echo "Compiling project"
-mvn -T 1.0C -f "$tmpProject/pom.xml" clean compile -DskipTests >/dev/null
+mvn -T 1.0C -f "$tmpProject/pom.xml" clean install -DskipTests >/dev/null
 
 # Clean the jar if requested. It is better to include them to resolve more AST nodes and therefore potentially increase
 # coverage, but it will slow down analysis as more classes need to be checked when resolving an AST node.
 while true; do
-  echo "Do you wish to clean the .jars as well? Doing so would drastically fasten the static analysis but would result in that less relationships can be resolved due to library usage where library jars are missing."
-  read -r -p "Do you wish to clean .jars? [Yn]" yn
-  case $yn in
-      [Yy]* ) find "$tmpProject" -type f -name '*.jar' -print0 | xargs -0 rm; break;;
-      [Nn]* ) break;;
-      * ) find "$tmpProject" -type f -name '*.jar' -print0 | xargs -0 rm; break;;
+  echo "Do you wish to clean the .jars as well?"
+  echo "Doing so would drastically fasten the static analysis but would result in that less relationships can be resolved due to library usage where library jars are missing."
+  echo "Next, we will ask for a glob for which will keep .jar files with."
+  echo "If you fill in '*', we will keep all .jar files. If you fill in '', we will remove all .jar files"
+  echo "If you fill in \"*exec.jar\" we will remove all .jar files except those ending with exec.jar."
+  read -r -p "With what glob do you wish to keep .jar files?" glob
+  case $glob in
+      [''] ) find "$tmpProject" -type f -name '*.jar' -print0 | xargs -0 rm; break;;
+      * ) find "$tmpProject" -type f -name '*.jar' -not -name "$glob" -print0 | xargs -0 rm; break;;
   esac
 done
 

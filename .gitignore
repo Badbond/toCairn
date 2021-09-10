@@ -3,7 +3,7 @@
 target/
 results/
 *.zip
-jacoco.xml
+*jacoco.xml
 *.jar
 *.exec
 jfr/

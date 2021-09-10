@@ -61,8 +61,12 @@ public class SourceRelationshipAnalysis {
                 .map(pair -> pair.getKey().getNameAsString())
                 .collect(Collectors.toSet());
 
-        visitorResults.forEach(visitorResult ->
-                this.storeClassDependencies(context, visitorResult, methodNameSet, classNameSet));
+        for (int i = 0; i < visitorResults.size(); i++) {
+            if (i != 0 && i % 100 == 0) {
+                LOGGER.info("... Processed relationships for {} classes", i);
+            }
+            this.storeClassDependencies(context, visitorResults.get(i), methodNameSet, classNameSet);
+        }
 
         printResults(context, visitorResults, methodNameSet);
         var duration = DurationFormatUtils.formatDurationHMS(System.currentTimeMillis() - start);

@@ -2,8 +2,10 @@ package me.soels.tocairn.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
-import org.springframework.data.neo4j.core.schema.*;
 
 import java.util.*;
 
@@ -18,8 +20,6 @@ public abstract class AbstractClass {
     @Id
     @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)
     protected UUID id;
-    @CompositeProperty(prefix = "methodsDefined")
-    private Map<String, List<String>> methods = new HashMap<>(); // Method FQN -> parameter FQNs
     private Long size;
 
     @Relationship("InteractsWith")

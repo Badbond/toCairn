@@ -130,7 +130,7 @@ class ExperimentTest {
             var classB = classMapping.computeIfAbsent(split.get(1), key ->
                     new OtherClass("Class" + classMapping.size(), split.get(1), null, Collections.emptySet()));
             classB.setId(UUID.randomUUID());
-            classA.getDependenceRelationships().add(new DependenceRelationship(classB, 1, 1L));
+            classA.getDependenceRelationships().add(new DependenceRelationship(classB, 1, 1L, Collections.emptyMap()));
         }
         return new ArrayList<>(classMapping.values());
     }

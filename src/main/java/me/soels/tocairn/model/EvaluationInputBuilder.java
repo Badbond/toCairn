@@ -4,6 +4,7 @@ import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static me.soels.tocairn.util.GenericCollectionExtractor.extractType;
@@ -57,13 +58,14 @@ public class EvaluationInputBuilder {
     /**
      * Creates a {@link DependenceRelationship} between the given {@code caller} and {@code callee}.
      *
-     * @param caller      the class that calls the callee
-     * @param callee      the class that is being called by the caller
-     * @param staticFreq  the number of places these two classes depend on each other
-     * @param dynamicFreq the dynamic frequency in which these two classes depend on each other
+     * @param caller        the class that calls the callee
+     * @param callee        the class that is being called by the caller
+     * @param staticFreq    the number of places these two classes depend on each other
+     * @param dynamicFreq   the dynamic frequency in which these two classes depend on each other
+     * @param sharedClasses   the classes shared with this dependency and their dynamic frequency data
      */
-    public void addDependency(AbstractClass caller, AbstractClass callee, int staticFreq, Long dynamicFreq) {
-        var dependency = new DependenceRelationship(callee, staticFreq, dynamicFreq);
+    public void addDependency(AbstractClass caller, AbstractClass callee, int staticFreq, Long dynamicFreq, Map<String, Long> sharedClasses) {
+        var dependency = new DependenceRelationship(callee, staticFreq, dynamicFreq, sharedClasses);
         caller.getDependenceRelationships().add(dependency);
     }
 
@@ -77,9 +79,10 @@ public class EvaluationInputBuilder {
      * @param callee          the class that is being called by the caller
      * @param staticFrequency the number of places these two classes depend on each other
      * @param dynamicFreq     the dynamic frequency in which these two classes depend on each other
+     * @param sharedClasses   the classes shared with this dependency and their dynamic frequency data
      */
-    public void addDataRelationship(OtherClass caller, DataClass callee, DataRelationshipType type, int staticFrequency, Long dynamicFreq) {
-        var dataRelationship = new DataRelationship(callee, type, staticFrequency, dynamicFreq);
+    public void addDataRelationship(OtherClass caller, DataClass callee, DataRelationshipType type, int staticFrequency, Long dynamicFreq, Map<String, Long> sharedClasses) {
+        var dataRelationship = new DataRelationship(callee, type, staticFrequency, dynamicFreq, sharedClasses);
         caller.getDataRelationships().add(dataRelationship);
     }
 

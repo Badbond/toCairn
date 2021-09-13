@@ -25,19 +25,20 @@ import java.util.Optional;
 @Getter
 @Setter
 public class DependenceRelationship extends Relationship {
-    // Map showing how often one method FQN of method in callee has been called dynamically
-    @CompositeProperty(prefix = "methodsCalled")
-    private Map<String, Long> methodCalls = new HashMap<>();
+    // Map showing how which classes (FQN) have been sent over for communication and how often
+    @CompositeProperty(prefix = "sharedClasses")
+    private Map<String, Long> sharedClasses = new HashMap<>();
 
     @NotNull
     private int staticFrequency;
     private Long dynamicFrequency;
     private long size;
 
-    public DependenceRelationship(AbstractClass callee, int staticFrequency, Long dynamicFrequency) {
+    public DependenceRelationship(AbstractClass callee, int staticFrequency, Long dynamicFrequency, Map<String, Long> sharedClasses) {
         super(callee);
         this.staticFrequency = staticFrequency;
         this.dynamicFrequency = dynamicFrequency;
+        this.sharedClasses.putAll(sharedClasses);
     }
 
     public Optional<Long> getDynamicFrequency() {

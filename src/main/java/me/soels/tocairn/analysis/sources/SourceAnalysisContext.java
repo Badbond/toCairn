@@ -2,6 +2,7 @@ package me.soels.tocairn.analysis.sources;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import lombok.Getter;
+import lombok.Setter;
 import me.soels.tocairn.model.AbstractClass;
 import me.soels.tocairn.model.EvaluationInputBuilder;
 import org.apache.commons.lang3.tuple.Pair;
@@ -20,6 +21,7 @@ import java.util.Map;
  * stored within this context, and additional data in favor of debugging such as counters.
  */
 @Getter
+@Setter
 public class SourceAnalysisContext {
     private final Path projectLocation;
     private final SourceAnalysisInput input;
@@ -27,6 +29,7 @@ public class SourceAnalysisContext {
     private final Counters counters = new Counters();
     private final List<Pair<ClassOrInterfaceDeclaration, AbstractClass>> typesAndClasses = new ArrayList<>();
     private final Map<String, Map<Integer, Long>> sourceExecutions = new HashMap<>();
+    private double averageSize;
 
     public SourceAnalysisContext(Path projectLocation,
                                  SourceAnalysisInput input,

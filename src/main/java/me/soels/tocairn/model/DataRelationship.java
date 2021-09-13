@@ -3,6 +3,8 @@ package me.soels.tocairn.model;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Map;
+
 /**
  * Indicates that there is a relationship between an {@link OtherClass} and a {@link DataClass}.
  * <p>
@@ -15,8 +17,8 @@ import lombok.Setter;
 public final class DataRelationship extends DependenceRelationship {
     private DataRelationshipType type;
 
-    public DataRelationship(DataClass callee, DataRelationshipType type, int staticFrequency, Long dynamicFrequency) {
-        super(callee, staticFrequency, dynamicFrequency);
+    public DataRelationship(DataClass callee, DataRelationshipType type, int staticFrequency, Long dynamicFrequency, Map<String, Long> sharedClasses) {
+        super(callee, staticFrequency, dynamicFrequency, sharedClasses);
         this.type = type;
     }
 

@@ -6,9 +6,10 @@ import me.soels.tocairn.solver.Clustering;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static me.soels.tocairn.util.Constants.PRIMITIVE_STRING;
 
 /**
  * Overhead measurement by Carvalho et al. (2020).
@@ -77,58 +78,30 @@ public class CarvalhoOverhead implements Metric {
             return 0;
         }
 
-        var sum = 0;
-        var dep = maybeDep.get();
-
-        // Measure size shared with every method call
-        for (var methodCall : dep.getMethodCalls().entrySet()) {
-            for (var method : dep.getCallee().getMethods().entrySet()) {
-                if (method.getKey().equals(methodCall.getKey())) {
-                    // Found matching method of method call with FQN in callee, retrieve the size of its parameters
-                    var parameterSize = sizeOf(method, allClasses, averageSize);
-                    // Increase the sum with the parameter's size multiplied by the dynamic frequency
-                    sum += parameterSize * methodCall.getValue();
-                }
-            }
-        }
-
-        return sum;
+        // Increase sum based size of classes shared in this dependency times how often they are shared
+        return maybeDep.get().getSharedClasses().entrySet().stream()
+                .mapToDouble(classShared -> sizeOf(classShared.getKey(), allClasses, averageSize) * classShared.getValue())
+                .sum();
     }
 
     /**
-     * Measures the size of the data shared in the given method call.
+     * Measures the size of the class shared in this dependency.
      *
-     * @param method      the method called
+     * @param classShared the class shared for which to determine the size of
      * @param allClasses  all the classes containing size definitions
      * @param averageSize the average measured size of the classes in the application
      * @return the size of the method call
      */
-    private double sizeOf(Map.Entry<String, List<String>> method, Set<OtherClass> allClasses, double averageSize) {
-        var parameterSize = 0.0;
-        for (var parameter : method.getValue()) {
-            if (isPrimitive(parameter)) {
-                parameterSize += 4; // Most primitives are allocated with 32 bits = 8 bytes.
-                continue;
-            }
-            // We have an object which we match against known classes or default to the average size otherwise.
-            parameterSize += allClasses.stream()
-                    .filter(clazz -> clazz.getIdentifier().equals(parameter))
+    private double sizeOf(String classShared, Set<OtherClass> allClasses, double averageSize) {
+        if (classShared.equals(PRIMITIVE_STRING)) {
+            return 4; // Most primitives are allocated with 32 bits = 8 bytes.
+        } else {
+            return allClasses.stream()
+                    .filter(clazz -> clazz.getIdentifier().equals(classShared))
                     .findFirst()
                     .map(AbstractClass::getSize)
                     .map(Double::valueOf)
                     .orElse(averageSize);
         }
-        return parameterSize;
-    }
-
-    /**
-     * Returns whether the class identified by the FQN is a (boxed) primitive class or not.
-     *
-     * @param fqn the class to check
-     * @return whether the class is a (boxed) primitive or not
-     */
-    private boolean isPrimitive(String fqn) {
-        // TODO: Return whether the FQN is a (boxed) Java primitive or not.
-        return fqn.length() % 2 == 0;
     }
 }

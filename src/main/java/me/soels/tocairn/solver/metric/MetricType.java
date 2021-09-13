@@ -15,11 +15,14 @@ public enum MetricType {
     DATA_AUTONOMY,
     FOCUSED_ON_ONE,
     BEHAVIORAL_AUTONOMY,
-    SHARED_DEVELOPMENT_LIFECYCLE,
     DECOUPLED_COHESIVE,
     REUSABLE,
     LIMITED_COMMUNICATION_OVERHEAD,
-    LIMITED_COMMUNICATION;
+    MODULARIZED_FEATURES,
+    LIMITED_COMMUNICATION,
+    SHARED_DEVELOPMENT_LIFECYCLE,
+    SEMANTIC_COUPLING,
+    STATIC_COUPLING;
 
     public List<Metric> getMetrics() {
         switch (this) {
@@ -29,16 +32,23 @@ public enum MetricType {
                 return List.of(new SelmadjiFOne());
             case BEHAVIORAL_AUTONOMY:
                 return List.of(new SelmadjiFAutonomy());
-            case SHARED_DEVELOPMENT_LIFECYCLE:
-                return List.of(new LohnertzEvolutionaryCouplingModularity());
             case DECOUPLED_COHESIVE:
                 return List.of(new CarvalhoCohesion(), new CarvalhoCoupling());
             case REUSABLE:
                 return List.of(new CarvalhoReusable());
             case LIMITED_COMMUNICATION_OVERHEAD:
                 return List.of(new CarvalhoOverhead());
+            case MODULARIZED_FEATURES:
+                return List.of(new CarvalhoFeatureModularization());
             case LIMITED_COMMUNICATION:
                 return List.of(new LohnertzDynamicCoupling());
+            case SHARED_DEVELOPMENT_LIFECYCLE:
+                return List.of(new LohnertzEvolutionaryCoupling());
+            // TODO: Rename semantic and static coupling to descriptive of MSA. Create new Postman collection.
+            case SEMANTIC_COUPLING:
+                return List.of(new LohnertzSemanticCoupling());
+            case STATIC_COUPLING:
+                return List.of(new LohnertzStaticCoupling());
             default:
                 throw new IllegalStateException("Unknown metric type " + this);
         }

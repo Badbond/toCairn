@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * Lucena, C. (2020, September). On the Performance and Adoption of Search-Based Microservice Identification with
  * toMicroservices. In <i>2020 IEEE International Conference on Software Maintenance and Evolution (ICSME)</i>
  * (pp. 569-580). IEEE.' and 'Chidamber, S. R., & Kemerer, C. F. (1994). A metrics suite for object oriented design.
- * <i>IEEE T
+ * <i>IEEE Transactions on software engineering, 20</i>(6), 476-493.'.
  **/
 public class CarvalhoOverhead implements Metric {
     @Override

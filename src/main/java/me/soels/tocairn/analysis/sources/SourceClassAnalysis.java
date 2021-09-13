@@ -17,8 +17,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static me.soels.tocairn.util.StringContainsIgnoreCaseMatcher.containsStringIgnoringCase;
@@ -95,15 +98,32 @@ public class SourceClassAnalysis {
                                      String location) {
         var fqn = clazz.getFullyQualifiedName()
                 .orElseThrow(() -> new IllegalStateException("Could not retrieve FQN from already filtered class"));
+        var featureSet = getFeatureSet(input, clazz);
 
-        // TODO: Populate declared and inherited method FQN.
         if (isDataClass(clazz, input)) {
             // Use line count as initial size of the data class, to be overridden by dynamic analysis with more accurate
             // size calculations.
-            return context.getResultBuilder().addDataClass(fqn, clazz.getNameAsString(), location);
+            return context.getResultBuilder().addDataClass(fqn, clazz.getNameAsString(), location, featureSet);
         } else {
-            return context.getResultBuilder().addOtherClass(fqn, clazz.getNameAsString(), location);
+            return context.getResultBuilder().addOtherClass(fqn, clazz.getNameAsString(), location, featureSet);
         }
+    }
+
+    private Set<String> getFeatureSet(SourceAnalysisInput input, ClassOrInterfaceDeclaration clazz) {
+        var packageName = clazz.findCompilationUnit()
+                .flatMap(CompilationUnit::getPackageDeclaration)
+                .map(NodeWithName::getNameAsString)
+                .orElse("");
+        var matcher = Pattern.compile("$(" + input.getTopPackageRegex() + ")(.*)^")
+                .matcher(packageName);
+        if (matcher.matches()) {
+            // Get last group per our regex and set the package to that
+            packageName = matcher.group(matcher.groupCount());
+        }
+
+        return Arrays.stream(packageName.split("\\."))
+                .filter(StringUtils::isNotEmpty)
+                .collect(Collectors.toSet());
     }
 
     private boolean isDataClass(ClassOrInterfaceDeclaration clazz, SourceAnalysisInput input) {

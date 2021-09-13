@@ -20,6 +20,8 @@ public final class SourceAnalysisInputDto {
     private final Path pathToJaCoCoXml;
     @NotNull
     private final ParserConfiguration.LanguageLevel languageLevel;
+    @NotNull
+    private final String topPackageRegex;
     @Pattern(regexp = ".*\\S+.*") // Don't allow empty. @Pattern allows null.
     private final String customDataAnnotation;
     @Nullable
@@ -28,6 +30,6 @@ public final class SourceAnalysisInputDto {
     private final List<String> dataClassFqnRegexes;
 
     public SourceAnalysisInput toDao() {
-        return new SourceAnalysisInput(pathToProjectZip, pathToJaCoCoXml, languageLevel, customDataAnnotation, fnqExcludeRegexes, dataClassFqnRegexes);
+        return new SourceAnalysisInput(pathToProjectZip, pathToJaCoCoXml,topPackageRegex, languageLevel, customDataAnnotation, fnqExcludeRegexes, dataClassFqnRegexes);
     }
 }

@@ -64,7 +64,7 @@ class ExperimentTest {
         var project = tryGetResource(ZIP_FILE)
                 .orElseThrow(() -> new IllegalStateException("Could not find required file " + ZIP_FILE));
         var jacocoXML = tryGetResource(JACOCO_REPORT_FILE).orElse(null);
-        var analysisInput = new SourceAnalysisInput(project, jacocoXML, JAVA_11, null, List.of(".*MainApplication"), null);
+        var analysisInput = new SourceAnalysisInput(project, jacocoXML, ".", JAVA_11, null, List.of(".*MainApplication"), null);
         var modelBuilder = new EvaluationInputBuilder(Collections.emptyList());
         var context = sourceAnalysis.prepareContext(modelBuilder, analysisInput);
         sourceAnalysis.analyzeNodes(context);
@@ -125,10 +125,10 @@ class ExperimentTest {
                     .map(StringUtils::trim)
                     .collect(Collectors.toList());
             var classA = classMapping.computeIfAbsent(split.get(0), key ->
-                    new OtherClass("Class" + classMapping.size(), split.get(0), null));
+                    new OtherClass("Class" + classMapping.size(), split.get(0), null, Collections.emptySet()));
             classA.setId(UUID.randomUUID());
             var classB = classMapping.computeIfAbsent(split.get(1), key ->
-                    new OtherClass("Class" + classMapping.size(), split.get(1), null));
+                    new OtherClass("Class" + classMapping.size(), split.get(1), null, Collections.emptySet()));
             classB.setId(UUID.randomUUID());
             classA.getDependenceRelationships().add(new DependenceRelationship(classB, 1, 1L));
         }

@@ -14,6 +14,7 @@ public abstract class AbstractClass {
     private final String identifier;
     private final String humanReadableName;
     private final String location;
+    private final Set<String> features = new HashSet<>();
     @Id
     @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)
     protected UUID id;
@@ -24,10 +25,11 @@ public abstract class AbstractClass {
     @Relationship("InteractsWith")
     private List<DependenceRelationship> dependenceRelationships = new ArrayList<>();
 
-    protected AbstractClass(String identifier, String humanReadableName, String location) {
+    protected AbstractClass(String identifier, String humanReadableName, String location, Set<String> features) {
         this.identifier = identifier;
         this.humanReadableName = humanReadableName;
         this.location = location;
+        this.features.addAll(features);
     }
 
     /**

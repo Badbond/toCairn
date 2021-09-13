@@ -4,6 +4,7 @@ import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static me.soels.tocairn.util.GenericCollectionExtractor.extractType;
 
@@ -29,10 +30,11 @@ public class EvaluationInputBuilder {
      * @param fqn               the fully qualified name of the class
      * @param humanReadableName the human readable name of the class
      * @param location          the location of the source file for this class
+     * @param featureSet        the features this class implements
      * @return this builder
      */
-    public DataClass addDataClass(String fqn, String humanReadableName, String location) {
-        var dataClass = new DataClass(fqn, humanReadableName, location);
+    public DataClass addDataClass(String fqn, String humanReadableName, String location, Set<String> featureSet) {
+        var dataClass = new DataClass(fqn, humanReadableName, location, featureSet);
         classes.add(dataClass);
         return dataClass;
     }
@@ -43,10 +45,11 @@ public class EvaluationInputBuilder {
      * @param fqn               the fully qualified name of the class
      * @param humanReadableName the human readable name of the class
      * @param location          the location of the source file for this class
+     * @param featureSet        the features this class implements
      * @return this builder
      */
-    public OtherClass addOtherClass(String fqn, String humanReadableName, String location) {
-        var otherClass = new OtherClass(fqn, humanReadableName, location);
+    public OtherClass addOtherClass(String fqn, String humanReadableName, String location, Set<String> featureSet) {
+        var otherClass = new OtherClass(fqn, humanReadableName, location, featureSet);
         classes.add(otherClass);
         return otherClass;
     }

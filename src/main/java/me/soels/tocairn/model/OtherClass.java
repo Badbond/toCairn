@@ -7,6 +7,7 @@ import org.springframework.data.neo4j.core.schema.Relationship;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @Node
 @Getter
@@ -14,8 +15,8 @@ public final class OtherClass extends AbstractClass {
     @Relationship("DataDepends")
     private List<DataRelationship> dataRelationships = new ArrayList<>();
 
-    public OtherClass(String identifier, String humanReadableName, String location) {
-        super(identifier, humanReadableName, location);
+    public OtherClass(String identifier, String humanReadableName, String location, Set<String> packageName) {
+        super(identifier, humanReadableName, location, packageName);
     }
 
     /**

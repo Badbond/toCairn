@@ -17,6 +17,7 @@ public final class SourceAnalysisInput {
     private final Path pathToZip;
     private final Path pathToJaCoCoXml;
     private final ParserConfiguration.LanguageLevel languageLevel;
+    private final String topPackageRegex;
     private final String customDataAnnotation;
     private final List<String> fnqExcludeRegexes;
     private final List<String> dataClassFqnRegexes;
@@ -26,6 +27,7 @@ public final class SourceAnalysisInput {
      *
      * @param pathToZip            the path to the .zip file to analyze containing (generated) source code
      * @param pathToJaCoCoXml      the path to the jacoco.xml report
+     * @param topPackageRegex      the top-level package definition regex for feature extraction
      * @param languageLevel        the Java language to parse the project with
      * @param customDataAnnotation the custom annotation to apply on classes identifying data
      * @param fnqExcludeRegexes    a list of regexes to exclude classes in analysis for
@@ -33,6 +35,7 @@ public final class SourceAnalysisInput {
      */
     public SourceAnalysisInput(Path pathToZip,
                                @Nullable Path pathToJaCoCoXml,
+                               String topPackageRegex,
                                ParserConfiguration.LanguageLevel languageLevel,
                                String customDataAnnotation,
                                @Nullable List<String> fnqExcludeRegexes,
@@ -40,6 +43,7 @@ public final class SourceAnalysisInput {
         this.pathToZip = pathToZip;
         this.pathToJaCoCoXml = pathToJaCoCoXml;
         this.languageLevel = languageLevel;
+        this.topPackageRegex = topPackageRegex;
         this.customDataAnnotation = customDataAnnotation;
         this.fnqExcludeRegexes = fnqExcludeRegexes == null ? new ArrayList<>() : fnqExcludeRegexes;
         this.dataClassFqnRegexes = dataClassFqnRegexes == null ? new ArrayList<>() : dataClassFqnRegexes;

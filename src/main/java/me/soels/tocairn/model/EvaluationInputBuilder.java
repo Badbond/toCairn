@@ -47,10 +47,11 @@ public class EvaluationInputBuilder {
      * @param humanReadableName the human readable name of the class
      * @param location          the location of the source file for this class
      * @param featureSet        the features this class implements
+     * @param methodCount       the number of methods the class implements
      * @return this builder
      */
-    public OtherClass addOtherClass(String fqn, String humanReadableName, String location, Set<String> featureSet) {
-        var otherClass = new OtherClass(fqn, humanReadableName, location, featureSet);
+    public OtherClass addOtherClass(String fqn, String humanReadableName, String location, Set<String> featureSet, int methodCount) {
+        var otherClass = new OtherClass(fqn, humanReadableName, location, featureSet, methodCount);
         classes.add(otherClass);
         return otherClass;
     }
@@ -62,10 +63,15 @@ public class EvaluationInputBuilder {
      * @param callee        the class that is being called by the caller
      * @param staticFreq    the number of places these two classes depend on each other
      * @param dynamicFreq   the dynamic frequency in which these two classes depend on each other
-     * @param sharedClasses   the classes shared with this dependency and their dynamic frequency data
+     * @param connections   the unique connections made to the target
+     * @param sharedClasses the classes shared with this dependency and their dynamic frequency data
      */
-    public void addDependency(AbstractClass caller, AbstractClass callee, int staticFreq, Long dynamicFreq, Map<String, Long> sharedClasses) {
-        var dependency = new DependenceRelationship(callee, staticFreq, dynamicFreq, sharedClasses);
+    public void addDependency(AbstractClass caller, AbstractClass callee,
+                              int staticFreq,
+                              Long dynamicFreq,
+                              int connections,
+                              Map<String, Long> sharedClasses) {
+        var dependency = new DependenceRelationship(callee, staticFreq, dynamicFreq, connections, sharedClasses);
         caller.getDependenceRelationships().add(dependency);
     }
 
@@ -77,12 +83,20 @@ public class EvaluationInputBuilder {
      *
      * @param caller          the class that calls the callee
      * @param callee          the class that is being called by the caller
+     * @param type            the type of data relationship
      * @param staticFrequency the number of places these two classes depend on each other
      * @param dynamicFreq     the dynamic frequency in which these two classes depend on each other
+     * @param connections     the unique connections made to the target
      * @param sharedClasses   the classes shared with this dependency and their dynamic frequency data
      */
-    public void addDataRelationship(OtherClass caller, DataClass callee, DataRelationshipType type, int staticFrequency, Long dynamicFreq, Map<String, Long> sharedClasses) {
-        var dataRelationship = new DataRelationship(callee, type, staticFrequency, dynamicFreq, sharedClasses);
+    public void addDataRelationship(OtherClass caller,
+                                    DataClass callee,
+                                    DataRelationshipType type,
+                                    int staticFrequency,
+                                    Long dynamicFreq,
+                                    int connections,
+                                    Map<String, Long> sharedClasses) {
+        var dataRelationship = new DataRelationship(callee, type, staticFrequency, dynamicFreq, connections, sharedClasses);
         caller.getDataRelationships().add(dataRelationship);
     }
 

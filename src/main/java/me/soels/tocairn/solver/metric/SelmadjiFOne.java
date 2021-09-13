@@ -1,5 +1,6 @@
 package me.soels.tocairn.solver.metric;
 
+import me.soels.tocairn.model.DependenceRelationship;
 import me.soels.tocairn.model.OtherClass;
 import me.soels.tocairn.solver.Clustering;
 import org.apache.commons.lang3.tuple.Pair;
@@ -64,9 +65,17 @@ public class SelmadjiFOne extends SelmadjiStructuralBehavior {
      * @return the inter cohesion value for this microservice
      */
     private double interCoh(List<OtherClass> microservice) {
-        // TODO: Extract method information and use here.
-        var nbDirectConnections = 1;
-        var nbPossibleConnections = 1;
-        return nbDirectConnections / nbPossibleConnections;
+        var nbDirectConnections = microservice.stream()
+                .flatMap(clazz -> clazz.getDependenceRelationships().stream())
+                .filter(dep -> microservice.contains(dep.getCallee()))
+                .mapToInt(DependenceRelationship::getConnections)
+                .sum();
+        var nbPossibleConnections = microservice.stream()
+                .mapToInt(OtherClass::getMethodCount)
+                .sum() * microservice.size();
+        if (nbPossibleConnections == 0) {
+            return 0;
+        }
+        return nbDirectConnections / (double) nbPossibleConnections;
     }
 }

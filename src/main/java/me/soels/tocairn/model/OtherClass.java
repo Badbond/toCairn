@@ -14,9 +14,11 @@ import java.util.Set;
 public final class OtherClass extends AbstractClass {
     @Relationship("DataDepends")
     private List<DataRelationship> dataRelationships = new ArrayList<>();
+    private final int methodCount;
 
-    public OtherClass(String identifier, String humanReadableName, String location, Set<String> packageName) {
-        super(identifier, humanReadableName, location, packageName);
+    public OtherClass(String identifier, String humanReadableName, String location, Set<String> features, int methodCount) {
+        super(identifier, humanReadableName, location, features);
+        this.methodCount = methodCount;
     }
 
     /**

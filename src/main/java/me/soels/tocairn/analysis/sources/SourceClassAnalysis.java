@@ -105,7 +105,7 @@ public class SourceClassAnalysis {
             // size calculations.
             return context.getResultBuilder().addDataClass(fqn, clazz.getNameAsString(), location, featureSet);
         } else {
-            return context.getResultBuilder().addOtherClass(fqn, clazz.getNameAsString(), location, featureSet);
+            return context.getResultBuilder().addOtherClass(fqn, clazz.getNameAsString(), location, featureSet, clazz.getMethods().size());
         }
     }
 
@@ -114,7 +114,7 @@ public class SourceClassAnalysis {
                 .flatMap(CompilationUnit::getPackageDeclaration)
                 .map(NodeWithName::getNameAsString)
                 .orElse("");
-        var matcher = Pattern.compile("$(" + input.getTopPackageRegex() + ")(.*)^")
+        var matcher = Pattern.compile("^(" + input.getTopPackageRegex() + ")(.*)$")
                 .matcher(packageName);
         if (matcher.matches()) {
             // Get last group per our regex and set the package to that

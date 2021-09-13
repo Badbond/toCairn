@@ -17,8 +17,8 @@ import java.util.Map;
 public final class DataRelationship extends DependenceRelationship {
     private DataRelationshipType type;
 
-    public DataRelationship(DataClass callee, DataRelationshipType type, int staticFrequency, Long dynamicFrequency, Map<String, Long> sharedClasses) {
-        super(callee, staticFrequency, dynamicFrequency, sharedClasses);
+    public DataRelationship(DataClass callee, DataRelationshipType type, int staticFrequency, Long dynamicFrequency, int connections, Map<String, Long> sharedClasses) {
+        super(callee, staticFrequency, dynamicFrequency, connections, sharedClasses);
         this.type = type;
     }
 

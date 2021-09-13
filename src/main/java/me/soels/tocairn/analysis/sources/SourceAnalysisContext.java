@@ -29,7 +29,6 @@ public class SourceAnalysisContext {
     private final Counters counters = new Counters();
     private final List<Pair<ClassOrInterfaceDeclaration, AbstractClass>> typesAndClasses = new ArrayList<>();
     private final Map<String, Map<Integer, Long>> sourceExecutions = new HashMap<>();
-    private double averageSize;
 
     public SourceAnalysisContext(Path projectLocation,
                                  SourceAnalysisInput input,

@@ -1,11 +1,9 @@
 package me.soels.tocairn.analysis.sources;
 
-import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.*;
+import com.github.javaparser.ast.nodeTypes.NodeWithArguments;
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
-import com.github.javaparser.ast.nodeTypes.NodeWithTypeArguments;
-import com.github.javaparser.ast.type.Type;
-import com.github.javaparser.resolution.declarations.ResolvedTypeDeclaration;
 import me.soels.tocairn.analysis.sources.CustomClassOrInterfaceVisitor.VisitorResult;
 import me.soels.tocairn.model.AbstractClass;
 import me.soels.tocairn.model.DataClass;
@@ -20,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static java.util.stream.Collectors.groupingBy;
 import static me.soels.tocairn.model.DataRelationshipType.READ;
@@ -52,11 +51,6 @@ public class SourceRelationshipAnalysis {
     public void analyze(SourceAnalysisContext context) {
         LOGGER.info("Extracting relationships");
         var start = System.currentTimeMillis();
-
-        context.setAverageSize(context.getResultBuilder().getClasses().stream()
-                .mapToLong(AbstractClass::getSize)
-                .average()
-                .orElse(1L));
 
         var visitorResults = context.getTypesAndClasses().stream()
                 .map(pair -> classVisitor.visit(pair.getKey(), pair.getValue()))
@@ -92,10 +86,10 @@ public class SourceRelationshipAnalysis {
         relevantNodes.putAll(getRelevantConstructorCalls(context, visitorResult, allClasses, classNameSet));
         relevantNodes.putAll(getRelevantFieldAccess(context, visitorResult, allClasses));
         relevantNodes.putAll(getRelevantStaticImportUsage(context, visitorResult, allClasses));
-        relevantNodes.forEach((key, value) -> storeRelationship(visitorResult.getCaller(), key, value, context));
+        relevantNodes.forEach((key, value) -> storeRelationship(visitorResult.getCaller(), key, value, allClasses, context));
 
         getRelevantRemainingImportDecl(context, visitorResult, relevantNodes, allClasses)
-                .forEach(callee -> context.getResultBuilder().addDependency(visitorResult.getCaller(), callee, 1, 0L, Collections.emptyMap()));
+                .forEach(callee -> context.getResultBuilder().addDependency(visitorResult.getCaller(), callee, 1, 0L, 1, Collections.emptyMap()));
     }
 
     private Map<AbstractClass, List<Expression>> getRelevantConstructorCalls(SourceAnalysisContext context,
@@ -212,11 +206,13 @@ public class SourceRelationshipAnalysis {
      * @param caller        the source of the relationship
      * @param callee        the target of the relationship
      * @param relevantNodes the list of AST nodes related to the relationship
+     * @param allClasses    the fqn of all classes in our graph
      * @param context       the context to add the relationships to
      */
     private void storeRelationship(AbstractClass caller,
                                    AbstractClass callee,
                                    List<Expression> relevantNodes,
+                                   List<AbstractClass> allClasses,
                                    SourceAnalysisContext context) {
         var dynamicFreq = getDynamicFreq(caller, relevantNodes, context);
         var dynamicFreqSum = dynamicFreq.values().stream()
@@ -224,8 +220,14 @@ public class SourceRelationshipAnalysis {
                 .sum();
 
         var sharedClasses = dynamicFreq.entrySet().stream()
-                .flatMap(entry -> getSharedClasses(entry.getKey(), entry.getValue()).entrySet().stream())
+                .flatMap(entry -> getSharedClasses(entry.getKey(), entry.getValue(), allClasses).entrySet().stream())
+                .filter(Objects::nonNull)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, Long::sum));
+
+        var uniqueConnections = (int) relevantNodes.stream()
+                .map(Node::toString)
+                .distinct()
+                .count();
 
         if (caller instanceof OtherClass && callee instanceof DataClass) {
             var type = identifyReadWrite(relevantNodes);
@@ -234,46 +236,46 @@ public class SourceRelationshipAnalysis {
                     type,
                     relevantNodes.size(),
                     dynamicFreqSum,
+                    uniqueConnections,
                     sharedClasses
             );
         } else {
-            context.getResultBuilder().addDependency(caller, callee, relevantNodes.size(), dynamicFreqSum, sharedClasses);
+            context.getResultBuilder().addDependency(caller, callee, relevantNodes.size(), dynamicFreqSum, uniqueConnections, sharedClasses);
         }
     }
 
     /**
      * Gets the classes shared as part of the dependencies in these two classes.
      *
-     * @param expr        the dependency exprepssion
+     * @param expr        the dependency expression
      * @param dynamicFreq how often the expression has been executed dynamically
+     * @param allClasses  all classes in our graph to retrieve the FQNs from
      * @return which classes have been shared in the expressions and how often
      */
     @SuppressWarnings({"unchecked", "rawtypes"}) // Safe as type is the maximum common type that it can be.
-    private Map<String, Long> getSharedClasses(Expression expr, Long dynamicFreq) {
-        if (!(expr instanceof NodeWithTypeArguments)) {
-            LOGGER.info("Can not determine how much data is shared for expression {}", expr);
+    private Map<String, Long> getSharedClasses(Expression expr, Long dynamicFreq, List<AbstractClass> allClasses) {
+        if (!(expr instanceof NodeWithArguments)) {
+            LOGGER.debug("Can not determine how much data is shared for expression {}", expr);
             return Collections.emptyMap();
         }
-
-        Optional<NodeList<Type>> typeArguments = ((NodeWithTypeArguments) expr).getTypeArguments();
-        if (typeArguments.isEmpty()) {
-            // No arguments shared
-            return Collections.emptyMap();
-        }
-
-        return typeArguments.get().stream()
-                .map(type -> getFqnFromType(type, expr).orElse(null))
+        var allFqns = allClasses.stream()
+                .map(AbstractClass::getIdentifier)
+                .collect(Collectors.toList());
+        Spliterator<Expression> spliterator = ((NodeWithArguments) expr).getArguments().spliterator();
+        return StreamSupport.stream(spliterator, false)
+                .map(arg -> getFqnFromType(arg, expr).orElse(null))
                 .filter(Objects::nonNull)
-                .collect(Collectors.toMap(fqn -> fqn, fqn -> dynamicFreq));
+                .filter(allFqns::contains)
+                .collect(Collectors.toMap(fqn -> fqn, fqn -> dynamicFreq, Long::sum));
     }
 
-    private Optional<String> getFqnFromType(Type type, Expression expr) {
+    private Optional<String> getFqnFromType(Expression expression, Expression expr) {
         try {
-            return type.isPrimitiveType() ? Optional.of(PRIMITIVE_STRING) :
-                    type.resolve().asReferenceType().getTypeDeclaration()
-                            .map(ResolvedTypeDeclaration::getQualifiedName);
+            var type = expression.calculateResolvedType();
+            return type.isPrimitive() ? Optional.of(PRIMITIVE_STRING) :
+                    Optional.of(type.asReferenceType().asReferenceType().getQualifiedName());
         } catch (Exception e) {
-            LOGGER.debug("Could not determine type of argument {} in expression {}", type, expr, e);
+            LOGGER.debug("Could not determine expression of argument {} in expression {}", expression, expr, e);
             return Optional.empty();
         }
     }
@@ -319,7 +321,7 @@ public class SourceRelationshipAnalysis {
                                 // If this expression spans multiple lines, get the maximum execution counts on those lines
                                 .max()
                                 .orElse(0L)))
-                .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+                .collect(Collectors.toMap(Pair::getKey, Pair::getValue, Long::sum));
     }
 
     /**

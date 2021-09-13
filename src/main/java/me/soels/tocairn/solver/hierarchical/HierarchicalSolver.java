@@ -31,7 +31,7 @@ public class HierarchicalSolver implements Solver {
         var initialClustering = createInitialSolution(input);
         var allSolutions = new ArrayList<Solution>();
 
-        var singleSolution = performAlgorithm(initialClustering, allSolutions, input);
+        var singleSolution = performAlgorithm(initialClustering, allSolutions);
         var solutions = singleSolution
                 .map(Collections::singletonList)
                 .orElse(allSolutions);
@@ -52,10 +52,9 @@ public class HierarchicalSolver implements Solver {
      *
      * @param initialClustering the initial clustering
      * @param allSolutions      a data pass by reference for accumulating all intermittent solutions from the algorithm
-     * @param input             the input graph for metrics calculation
      * @return the preferable solution (if present)
      */
-    private Optional<Solution> performAlgorithm(HierarchicalClustering initialClustering, ArrayList<Solution> allSolutions, EvaluationInput input) {
+    private Optional<Solution> performAlgorithm(HierarchicalClustering initialClustering, ArrayList<Solution> allSolutions) {
         var currentClustering = initialClustering;
         int counter = 0;
         while (true) {
@@ -72,9 +71,9 @@ public class HierarchicalSolver implements Solver {
             }
 
             var possibleClusterings = getPossibleMergers(currentClustering.clustering);
-            currentClustering = getBestMerger(possibleClusterings, input);
+            currentClustering = getBestMerger(possibleClusterings);
             counter++;
-            if (possibleClusterings.size() > 100 || counter % 10 == 0 ) {
+            if (possibleClusterings.size() > 100 || counter % 10 == 0) {
                 // When we still have more than 100 possible clusters, print every time as it takes a long time.
                 // When it is less than 100, print on every 10th iteration as it will go faster.
                 LOGGER.info("Performed {} steps in the clustering algorithm", counter);
@@ -87,10 +86,9 @@ public class HierarchicalSolver implements Solver {
      * the configured metrics.
      *
      * @param possibleClusterings the possible clusterings
-     * @param input               input data needed for metric calculation
      * @return the best clustering
      */
-    private HierarchicalClustering getBestMerger(List<Clustering> possibleClusterings, EvaluationInput input) {
+    private HierarchicalClustering getBestMerger(List<Clustering> possibleClusterings) {
         AtomicReference<Double> bestQuality = new AtomicReference<>();
         AtomicReference<HierarchicalClustering> bestClustering = new AtomicReference<>();
 

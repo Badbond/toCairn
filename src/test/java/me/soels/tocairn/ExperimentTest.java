@@ -125,12 +125,12 @@ class ExperimentTest {
                     .map(StringUtils::trim)
                     .collect(Collectors.toList());
             var classA = classMapping.computeIfAbsent(split.get(0), key ->
-                    new OtherClass("Class" + classMapping.size(), split.get(0), null, Collections.emptySet()));
+                    new OtherClass("Class" + classMapping.size(), split.get(0), null, Collections.emptySet(), 1));
             classA.setId(UUID.randomUUID());
             var classB = classMapping.computeIfAbsent(split.get(1), key ->
-                    new OtherClass("Class" + classMapping.size(), split.get(1), null, Collections.emptySet()));
+                    new OtherClass("Class" + classMapping.size(), split.get(1), null, Collections.emptySet(), 1));
             classB.setId(UUID.randomUUID());
-            classA.getDependenceRelationships().add(new DependenceRelationship(classB, 1, 1L, Collections.emptyMap()));
+            classA.getDependenceRelationships().add(new DependenceRelationship(classB, 1, 1L, 1, Collections.emptyMap()));
         }
         return new ArrayList<>(classMapping.values());
     }

@@ -7,4 +7,6 @@ results/
 *.jar
 *.exec
 jfr/
+*.jfr
 scripts/ignored
+/**/report

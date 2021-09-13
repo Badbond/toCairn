@@ -32,12 +32,14 @@ public class DependenceRelationship extends Relationship {
     @NotNull
     private int staticFrequency;
     private Long dynamicFrequency;
+    private int connections;
     private long size;
 
-    public DependenceRelationship(AbstractClass callee, int staticFrequency, Long dynamicFrequency, Map<String, Long> sharedClasses) {
+    public DependenceRelationship(AbstractClass callee, int staticFrequency, Long dynamicFrequency, int connections, Map<String, Long> sharedClasses) {
         super(callee);
         this.staticFrequency = staticFrequency;
         this.dynamicFrequency = dynamicFrequency;
+        this.connections = connections;
         this.sharedClasses.putAll(sharedClasses);
     }
 

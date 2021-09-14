@@ -3,7 +3,7 @@ projectLocation="$1"
 targetLocation="$2"
 
 SCRIPT="$(basename "${0}")"
-if [ "${#}" -lt 1 ]; then
+if [ "${#}" -lt 2 ]; then
   echo "Script to compile and clean the given project (in a temporary directory) as preparation for source code analysis"
   echo "Usage: ./${SCRIPT} <project location> <target ZIP to create>"
   echo "Requirements:"

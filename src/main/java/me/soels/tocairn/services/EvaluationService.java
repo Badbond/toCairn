@@ -25,17 +25,11 @@ import static me.soels.tocairn.solver.metric.MetricType.*;
 public class EvaluationService {
     private final EvaluationRepository evaluationRepository;
     private final SolverConfigurationRepository configurationRepository;
-    private final EvaluationInputService inputService;
-    private final EvaluationResultService resultService;
 
     public EvaluationService(EvaluationRepository evaluationRepository,
-                             SolverConfigurationRepository configurationRepository,
-                             EvaluationInputService inputService,
-                             EvaluationResultService resultService) {
+                             SolverConfigurationRepository configurationRepository) {
         this.evaluationRepository = evaluationRepository;
         this.configurationRepository = configurationRepository;
-        this.inputService = inputService;
-        this.resultService = resultService;
     }
 
     /**
@@ -54,6 +48,7 @@ public class EvaluationService {
      * @return the requested evaluation
      */
     public Evaluation getEvaluation(UUID id) {
+        // TODO: Refactor
         return evaluationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(id));
     }
@@ -124,12 +119,7 @@ public class EvaluationService {
      * @param id the evaluation to delete
      */
     public void deleteEvaluation(UUID id) {
-        evaluationRepository.findById(id).ifPresent(evaluation -> {
-            evaluation.getResults().stream().map(EvaluationResult::getId).forEach(resultService::deleteResult);
-            inputService.deleteAllInputs(evaluation);
-            configurationRepository.deleteById(evaluation.getConfiguration().getId());
-            evaluationRepository.deleteById(evaluation.getId());
-        });
+        evaluationRepository.cascadeDelete(id);
     }
 
     /**
@@ -233,5 +223,9 @@ public class EvaluationService {
             }
         }
         return configuration;
+    }
+
+    public Evaluation saveTotal(Evaluation evaluation) {
+        return evaluationRepository.saveShallow(evaluation);
     }
 }

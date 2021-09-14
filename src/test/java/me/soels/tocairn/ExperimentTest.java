@@ -23,13 +23,17 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.github.javaparser.ParserConfiguration.LanguageLevel.JAVA_11;
+import static org.assertj.core.api.Assertions.fail;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
@@ -61,9 +65,9 @@ class ExperimentTest {
     }
 
     private EvaluationInput getZipInput() throws URISyntaxException, IOException {
-        var project = tryGetResource(ZIP_FILE)
+        var project = tryGetResourceFromDataDir(ZIP_FILE)
                 .orElseThrow(() -> new IllegalStateException("Could not find required file " + ZIP_FILE));
-        var jacocoXML = tryGetResource(JACOCO_REPORT_FILE).orElse(null);
+        var jacocoXML = tryGetResourceFromDataDir(JACOCO_REPORT_FILE).orElse(null);
         var analysisInput = new SourceAnalysisInput(project, jacocoXML, ".", JAVA_11, null, List.of(".*MainApplication"), null);
         var modelBuilder = new EvaluationInputBuilder(Collections.emptyList());
         var context = sourceAnalysis.prepareContext(modelBuilder, analysisInput);
@@ -177,8 +181,13 @@ class ExperimentTest {
         }
     }
 
-    private Optional<Path> tryGetResource(String resource) throws URISyntaxException {
-        var url = this.getClass().getClassLoader().getResource(resource);
+    private Optional<Path> tryGetResourceFromDataDir(String fileName) throws URISyntaxException, MalformedURLException {
+        var currentDir = this.getClass().getClassLoader().getResource("./");
+        var fileLocation = currentDir.toString() + "../../data/" + fileName;
+        var url = new URL(fileLocation);
+        if (!Files.exists(Path.of(url.toURI()))) {
+            fail("Could not find file " + fileLocation);
+        }
         if (url != null) {
             return Optional.of(Path.of(url.toURI()));
         }

@@ -12,7 +12,6 @@ import me.soels.tocairn.model.Evaluation;
 import me.soels.tocairn.model.EvaluationInput;
 import me.soels.tocairn.model.EvaluationInputBuilder;
 import me.soels.tocairn.repositories.ClassRepository;
-import me.soels.tocairn.repositories.EvaluationRepository;
 import me.soels.tocairn.repositories.OtherClassRepository;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
@@ -35,32 +34,23 @@ public class EvaluationInputService {
     private final SourceAnalysis sourceAnalysis;
     private final EvolutionaryAnalysis evolutionaryAnalysis;
     private final DynamicAnalysis dynamicAnalysis;
+    private final EvaluationService evaluationService;
     private final ClassRepository<AbstractClass> classRepository;
     private final OtherClassRepository otherClassRepository;
-    private final EvaluationRepository evaluationRepository;
     private final AtomicBoolean sourceAnalysisRunning = new AtomicBoolean(false);
 
     public EvaluationInputService(SourceAnalysis sourceAnalysis,
                                   EvolutionaryAnalysis evolutionaryAnalysis,
                                   DynamicAnalysis dynamicAnalysis,
+                                  EvaluationService evaluationService,
                                   @Qualifier("classRepository") ClassRepository<AbstractClass> classRepository,
-                                  @Qualifier("otherClassRepository") OtherClassRepository otherClassRepository,
-                                  EvaluationRepository evaluationRepository) {
+                                  @Qualifier("otherClassRepository") OtherClassRepository otherClassRepository) {
         this.sourceAnalysis = sourceAnalysis;
         this.evolutionaryAnalysis = evolutionaryAnalysis;
         this.dynamicAnalysis = dynamicAnalysis;
+        this.evaluationService = evaluationService;
         this.classRepository = classRepository;
         this.otherClassRepository = otherClassRepository;
-        this.evaluationRepository = evaluationRepository;
-    }
-
-    /**
-     * Delete the input graph for the given evaluation.
-     *
-     * @param evaluation the evaluation to delete the input graph for
-     */
-    public void deleteAllInputs(Evaluation evaluation) {
-        classRepository.deleteAll(evaluation.getInputs());
     }
 
     /**
@@ -105,7 +95,7 @@ public class EvaluationInputService {
         evaluation.setInputs(context.getResultBuilder().build().getClasses());
         // This has to be done with extreme care since it tries to model check the Java state with that in the DB.
         // ONLY in this case it is fine as we don't have the edges extracted yet.
-        evaluation = evaluationRepository.save(evaluation);
+        evaluation = evaluationService.saveTotal(evaluation);
         LOGGER.info("Stored {} nodes", evaluation.getInputs().size());
     }
 

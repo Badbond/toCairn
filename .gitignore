@@ -1,12 +1,13 @@
+# IntelliJ
 .idea/
 *.iml
-target/
-results/
-*.zip
-*jacoco.xml
-*.jar
-*.exec
-jfr/
-*.jfr
+
+# Custom scripts
 scripts/ignored
-/**/report
+
+# Maven compile output directory
+target/
+
+# Custom directories holding data for/from analysis
+results/
+data/

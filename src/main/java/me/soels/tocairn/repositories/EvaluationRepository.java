@@ -69,4 +69,21 @@ public interface EvaluationRepository extends Neo4jRepository<Evaluation, UUID> 
             "WHERE b.id = $1 " +
             "CREATE (a)-[:HasResult]->(b)")
     void createResultRelationship(UUID evaluationId, UUID resultId);
+
+    /**
+     * Performs a cascaded delete for an evaluation.
+     *
+     * @param evaluationId the evaluation to delete
+     */
+    @Query("MATCH (e :Evaluation) " +
+            "WHERE e.id = $0 " +
+            "WITH e " +
+            "OPTIONAL MATCH (e)--(conf1 :HierarchicalConfiguration) " +
+            "OPTIONAL MATCH (e)--(conf2 :MOEAConfiguration) " +
+            "OPTIONAL MATCH (e)--(r :EvaluationResult) " +
+            "OPTIONAL MATCH (e)--(c :AbstractClass) " +
+            "OPTIONAL MATCH (r)--(s :Solution) " +
+            "OPTIONAL MATCH (s)--(ms :Microservice) " +
+            "DETACH DELETE e, conf1, conf2, r, c, s, ms")
+    void cascadeDelete(UUID evaluationId);
 }

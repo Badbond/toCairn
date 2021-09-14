@@ -12,12 +12,14 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 import static com.github.javaparser.ParserConfiguration.LanguageLevel.JAVA_11;
+import static org.assertj.core.api.Assertions.fail;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
@@ -27,7 +29,13 @@ class SourceAnalysisTest {
 
     @Test
     void testSourceAnalysis() throws URISyntaxException, IOException {
-        var resource = this.getClass().getClassLoader().getResource("./thesis-project-master.zip");
+        var fileName = "thesis-project-cleaned.zip";
+        var currentDir = this.getClass().getClassLoader().getResource("./");
+        var fileLocation = currentDir.toString() + "../../data/" + fileName;
+        var resource = new URL(fileLocation);
+        if (!Files.exists(Path.of(resource.toURI()))) {
+            fail("Could not find file " + fileLocation);
+        }
         runAnalysis(resource);
     }
 

@@ -15,8 +15,7 @@ import java.util.UUID;
 import static me.soels.tocairn.model.AnalysisType.*;
 import static me.soels.tocairn.model.EvaluationStatus.INCOMPLETE;
 import static me.soels.tocairn.model.EvaluationStatus.RUNNING;
-import static me.soels.tocairn.solver.metric.MetricType.LIMITED_COMMUNICATION_OVERHEAD;
-import static me.soels.tocairn.solver.metric.MetricType.SHARED_DEVELOPMENT_LIFECYCLE;
+import static me.soels.tocairn.solver.metric.MetricType.*;
 
 /**
  * Service responsible for managing evaluations and their configuration including preparation steps for running
@@ -210,7 +209,9 @@ public class EvaluationService {
         var executed = evaluation.getExecutedAnalysis();
         return executed.contains(SOURCE) &&
                 (!objectives.contains(SHARED_DEVELOPMENT_LIFECYCLE) || executed.contains(EVOLUTIONARY)) &&
-                (!objectives.contains(LIMITED_COMMUNICATION_OVERHEAD) || executed.contains(DYNAMIC));
+                (!objectives.contains(LIMITED_COMMUNICATION_OVERHEAD) || executed.contains(DYNAMIC)) &&
+                (!objectives.contains(REUSABLE) || executed.contains(DYNAMIC)) &&
+                (!objectives.contains(SEMANTIC_COUPLING) || executed.contains(SEMANTIC));
     }
 
     /**

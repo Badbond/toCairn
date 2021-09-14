@@ -13,6 +13,9 @@ import java.util.stream.Collectors;
  * They calculate this metric on a method-unit instead of class-unit. Therefore, they measure how much methods in a
  * microservice implement features. Instead, we measure how much classes in a microservice implement features.
  * <p>
+ * This metric should be maximized but, as the MOEA framework only allows for minimization objectives, we negate the
+ * value.
+ * <p>
  * See related work 'Carvalho, L., Garcia, A., Colanzi, T. E., Assunção, W. K., Pereira, J. A., Fonseca, B., ... &
  * Lucena, C. (2020, September). On the Performance and Adoption of Search-Based Microservice Identification with
  * toMicroservices. In <i>2020 IEEE International Conference on Software Maintenance and Evolution (ICSME)</i>

@@ -12,6 +12,9 @@ import java.util.stream.Collectors;
 /**
  * FOne metric as proposed by Selmadji et al. (2020).
  * <p>
+ * This metric should be maximized but, as the MOEA framework only allows for minimization objectives, we negate the
+ * value.
+ * <p>
  * See related work 'Selmadji, A., Seriai, A. D., Bouziane, H. L., Mahamane, R. O., Zaragoza, P., & Dony, C. (2020,
  * March). From monolithic architecture style to microservice one based on a semi-automatic approach. In 2020 IEEE
  * International Conference on Software Architecture (ICSA) (pp. 157-168). IEEE.'.
@@ -23,7 +26,7 @@ public class SelmadjiFOne extends SelmadjiStructuralBehavior {
         var nbTotalCalls = getTotalNbCalls(clustering);
 
         // Perform the FOne metric
-        return clustering.getByCluster().values().stream()
+        return -1 * clustering.getByCluster().values().stream()
                 .mapToDouble(microservice -> 0.5 * (interCoup(microservice, nbTotalCalls) + interCoh(microservice)))
                 .sum();
     }
@@ -60,6 +63,9 @@ public class SelmadjiFOne extends SelmadjiStructuralBehavior {
 
     /**
      * Calculates the interCoh measurement as devised by Selmadji et al. (2020).
+     * <p>
+     * Here, the amount of direct connections are method calls, references and construct calls actually made where
+     * the possible connections are those of all methods defined in all classes in this microservice.
      *
      * @param microservice the classes in the microservice
      * @return the inter cohesion value for this microservice
@@ -72,8 +78,9 @@ public class SelmadjiFOne extends SelmadjiStructuralBehavior {
                 .sum();
         var nbPossibleConnections = microservice.stream()
                 .mapToInt(OtherClass::getMethodCount)
-                .sum() * microservice.size();
-        if (nbPossibleConnections == 0) {
+                .sum() * (microservice.size() - 1); // Minus one to exclude self-reference.
+        if (nbPossibleConnections <= 0) {
+            // Only one class in microservice, we want to penalize this and therefore set cohesion to 0.
             return 0;
         }
         return nbDirectConnections / (double) nbPossibleConnections;

@@ -32,7 +32,7 @@ public class CarvalhoOverhead implements Metric {
                 .average()
                 .orElseThrow(() -> new IllegalArgumentException("Could not calculate average size of classes"));
 
-        return -1 * clustering.getByCluster().values().stream()
+        return clustering.getByCluster().values().stream()
                 .mapToDouble(microservice -> overhead(microservice, clustering.getByClass().keySet(), averageSize))
                 .sum();
     }

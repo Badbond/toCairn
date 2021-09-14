@@ -43,15 +43,16 @@ public class EvaluationInputBuilder {
     /**
      * Adds an {@link OtherClass} to the persisted state of this builder.
      *
-     * @param fqn               the fully qualified name of the class
-     * @param humanReadableName the human readable name of the class
-     * @param location          the location of the source file for this class
-     * @param featureSet        the features this class implements
-     * @param methodCount       the number of methods the class implements
+     * @param fqn                the fully qualified name of the class
+     * @param humanReadableName  the human readable name of the class
+     * @param location           the location of the source file for this class
+     * @param featureSet         the features this class implements
+     * @param methodCount        the number of methods the class implements
+     * @param isExecutedAPIClass whether the class is an executed API class
      * @return this builder
      */
-    public OtherClass addOtherClass(String fqn, String humanReadableName, String location, Set<String> featureSet, int methodCount) {
-        var otherClass = new OtherClass(fqn, humanReadableName, location, featureSet, methodCount);
+    public OtherClass addOtherClass(String fqn, String humanReadableName, String location, Set<String> featureSet, int methodCount, boolean isExecutedAPIClass) {
+        var otherClass = new OtherClass(fqn, humanReadableName, location, featureSet, methodCount, isExecutedAPIClass);
         classes.add(otherClass);
         return otherClass;
     }

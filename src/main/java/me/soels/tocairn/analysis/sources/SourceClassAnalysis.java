@@ -33,6 +33,7 @@ import static org.hamcrest.CoreMatchers.anyOf;
 @Service
 public class SourceClassAnalysis {
     private static final Logger LOGGER = LoggerFactory.getLogger(SourceClassAnalysis.class);
+    private static final String CONTROLLER = "controller";
 
     public void analyze(SourceAnalysisContext context) {
         LOGGER.info("Extracting classes");
@@ -105,7 +106,17 @@ public class SourceClassAnalysis {
             // size calculations.
             return context.getResultBuilder().addDataClass(fqn, clazz.getNameAsString(), location, featureSet);
         } else {
-            return context.getResultBuilder().addOtherClass(fqn, clazz.getNameAsString(), location, featureSet, clazz.getMethods().size());
+            var isAPIClass = clazz.getNameAsString().toLowerCase().contains(CONTROLLER) ||
+                    featureSet.stream().anyMatch(feature ->
+                            feature.toLowerCase().contains(CONTROLLER) ||
+                                    feature.toLowerCase().contains("api")) ||
+                    clazz.getAnnotations().stream()
+                            .map(NodeWithName::getNameAsString)
+                            .anyMatch(ann -> ann.toLowerCase().contains(CONTROLLER));
+            var isExecutedAPIClass = isAPIClass &&
+                    context.getSourceExecutions().get(fqn) != null &&
+                    context.getSourceExecutions().get(fqn).values().stream().anyMatch(value -> value > 0);
+            return context.getResultBuilder().addOtherClass(fqn, clazz.getNameAsString(), location, featureSet, clazz.getMethods().size(), isExecutedAPIClass);
         }
     }
 

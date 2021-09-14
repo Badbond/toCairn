@@ -15,10 +15,12 @@ public final class OtherClass extends AbstractClass {
     @Relationship("DataDepends")
     private List<DataRelationship> dataRelationships = new ArrayList<>();
     private final int methodCount;
+    private final boolean isExecutedAPIClass;
 
-    public OtherClass(String identifier, String humanReadableName, String location, Set<String> features, int methodCount) {
+    public OtherClass(String identifier, String humanReadableName, String location, Set<String> features, int methodCount, boolean isExecutedAPIClass) {
         super(identifier, humanReadableName, location, features);
         this.methodCount = methodCount;
+        this.isExecutedAPIClass = isExecutedAPIClass;
     }
 
     /**

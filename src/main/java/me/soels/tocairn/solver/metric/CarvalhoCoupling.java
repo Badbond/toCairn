@@ -28,11 +28,11 @@ public class CarvalhoCoupling implements Metric {
                 .sum();
     }
 
-    private double calculateCoupling(List<? extends AbstractClass> cluster) {
-        return cluster.stream()
+    private double calculateCoupling(List<? extends AbstractClass> microservice) {
+        return microservice.stream()
                 .flatMap(clazz -> clazz.getDependenceRelationships().stream()
                         // Only include relationships to other clusters
-                        .filter(relationship -> !cluster.contains(relationship.getCallee())))
+                        .filter(relationship -> !microservice.contains(relationship.getCallee())))
                 // This metric uses the frequency of calls to other units
                 .mapToDouble(DependenceRelationship::getStaticFrequency)
                 .sum();

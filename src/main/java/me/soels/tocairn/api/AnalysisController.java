@@ -38,7 +38,7 @@ public class AnalysisController {
     @PostMapping("/source")
     public void performSourceAnalysis(@PathVariable UUID evaluationId,
                                       @RequestBody @Valid SourceAnalysisInputDto inputDto) throws IOException {
-        var evaluation = evaluationService.getEvaluation(evaluationId);
+        var evaluation = evaluationService.getEvaluationDeep(evaluationId);
         inputService.performSourceAnalysis(evaluation, inputDto.toDao());
         evaluationService.updateAnalysisRan(evaluation, SOURCE);
     }
@@ -47,7 +47,7 @@ public class AnalysisController {
     @PostMapping("/dynamic")
     public void performDynamicAnalysis(@PathVariable UUID evaluationId,
                                        @RequestBody @Valid DynamicAnalysisInputDto inputDto) throws IOException {
-        var evaluation = evaluationService.getEvaluation(evaluationId);
+        var evaluation = evaluationService.getEvaluationDeep(evaluationId);
         inputService.performDynamicAnalysis(evaluation, inputDto.toDao());
         evaluationService.updateAnalysisRan(evaluation, DYNAMIC);
     }
@@ -57,7 +57,7 @@ public class AnalysisController {
     @PostMapping("/evolutionary")
     public void performEvolutionaryAnalysis(@PathVariable UUID evaluationId,
                                             @RequestBody @Valid EvolutionaryAnalysisInputDto inputDto) {
-        var evaluation = evaluationService.getEvaluation(evaluationId);
+        var evaluation = evaluationService.getEvaluationDeep(evaluationId);
         inputService.performEvolutionaryAnalysis(evaluation, inputDto.toDao());
         evaluationService.updateAnalysisRan(evaluation, EVOLUTIONARY);
     }

@@ -47,10 +47,12 @@ public class EvaluationService {
      * @param id the id of the evaluation to retrieve
      * @return the requested evaluation
      */
-    public Evaluation getEvaluation(UUID id) {
-        // TODO: Refactor
-        return evaluationRepository.findById(id)
+    public Evaluation getEvaluationDeep(UUID id) {
+        // TODO: Finalize this.. Headache..
+        var result = evaluationRepository.findByIdDeep(id)
                 .orElseThrow(() -> new ResourceNotFoundException(id));
+        var a = 0;
+        return result;
     }
 
     /**
@@ -90,7 +92,7 @@ public class EvaluationService {
      * @return the updated evaluation
      */
     public Evaluation updateEvaluation(UUID id, EvaluationDto dto) {
-        var evaluation = getEvaluation(id);
+        var evaluation = getShallowEvaluation(id);
         if (evaluation.getStatus() == RUNNING) {
             throw new IllegalArgumentException("Can not change an evaluation that is running");
         }
@@ -129,7 +131,7 @@ public class EvaluationService {
      * @return the updated evaluation after preparation
      */
     public Evaluation prepareRun(UUID id) {
-        var evaluation = getEvaluation(id);
+        var evaluation = getEvaluationDeep(id);
         if (evaluation.getStatus() == RUNNING) {
             throw new IllegalArgumentException("The evaluation is already running");
         }
@@ -151,7 +153,7 @@ public class EvaluationService {
      * @param status       the status to persist
      */
     public void updateStatus(UUID evaluationId, EvaluationStatus status) {
-        var evaluation = getEvaluation(evaluationId);
+        var evaluation = getShallowEvaluation(evaluationId);
         evaluation.setStatus(status);
         evaluationRepository.saveShallow(evaluation);
     }
@@ -226,6 +228,6 @@ public class EvaluationService {
     }
 
     public Evaluation saveTotal(Evaluation evaluation) {
-        return evaluationRepository.saveShallow(evaluation);
+        return evaluationRepository.save(evaluation);
     }
 }

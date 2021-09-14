@@ -86,4 +86,24 @@ public interface EvaluationRepository extends Neo4jRepository<Evaluation, UUID> 
             "OPTIONAL MATCH (s)--(ms :Microservice) " +
             "DETACH DELETE e, conf1, conf2, r, c, s, ms")
     void cascadeDelete(UUID evaluationId);
+
+    /**
+     * Tries to find the evaluation with the given ID and returns the full entity including the classes input graph.
+     *
+     * @param id the id of the evaluation to retrieve
+     * @return the evaluation with classes or empty if no evaluation was found
+     * @see #getByIdShallow(UUID)
+     */
+    @Query("MATCH (e :Evaluation) " +
+            "WHERE e.id = $0 " +
+            "WITH e " +
+            "MATCH (e)-[r1]-(conf :SolverConfiguration) " +
+            "OPTIONAL MATCH (e)-[r2]-(r :EvaluationResult) " +
+            "OPTIONAL MATCH (e)-[r3]-(c :AbstractClass) " +
+            "OPTIONAL MATCH (r)-[r4]-(s :Solution) " +
+            "OPTIONAL MATCH (s)-[r5]-(ms :Microservice) " +
+            "OPTIONAL MATCH (c)-[r6]-(:AbstractClass) " +
+            "RETURN e, conf, collect(r), collect(c), collect(s), collect(ms), " +
+            "collect(r1), collect(r2), collect(r3), collect(r4), collect(r5), collect(r6)")
+    Optional<Evaluation> findByIdDeep(UUID id);
 }

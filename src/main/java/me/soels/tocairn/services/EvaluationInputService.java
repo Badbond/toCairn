@@ -7,10 +7,7 @@ import me.soels.tocairn.analysis.evolutionary.EvolutionaryAnalysisInput;
 import me.soels.tocairn.analysis.sources.SourceAnalysis;
 import me.soels.tocairn.analysis.sources.SourceAnalysisContext;
 import me.soels.tocairn.analysis.sources.SourceAnalysisInput;
-import me.soels.tocairn.model.AbstractClass;
-import me.soels.tocairn.model.Evaluation;
-import me.soels.tocairn.model.EvaluationInput;
-import me.soels.tocairn.model.EvaluationInputBuilder;
+import me.soels.tocairn.model.*;
 import me.soels.tocairn.repositories.ClassRepository;
 import me.soels.tocairn.repositories.EvaluationRepository;
 import me.soels.tocairn.repositories.OtherClassRepository;
@@ -60,7 +57,7 @@ public class EvaluationInputService {
      * @param evaluation the evaluation to set the input graph for
      */
     public void populateInputFromDb(Evaluation evaluation) {
-        evaluation.setInputs(classRepository.findAllByEvaluationId(evaluation.getId()));
+        evaluation.setInputs(classRepository.getInputGraph(evaluation.getId()));
     }
 
     /**

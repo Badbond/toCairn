@@ -19,8 +19,13 @@ public interface ClassRepository<T extends AbstractClass> extends Neo4jRepositor
      *
      * @param evaluationId the evaluation to retrieve the classes for
      * @return the classes and their dependencies belonging to the given evaluation
+     * @see <a href="https://docs.spring.io/spring-data/neo4j/docs/current/reference/html/#custom-queries.for-relationships.one.record">Neo4j documentation</a>
      */
-    List<T> findAllByEvaluationId(UUID evaluationId);
+    @Query("MATCH (c :AbstractClass { evaluationId: $0 }) " +
+            "OPTIONAL MATCH (c)-[r1 :InteractsWith]->(x :AbstractClass) " +
+            "OPTIONAL MATCH (c)-[r2 :DataDepends]->(y :DataClass) " +
+            "RETURN c, collect(r1), collect(r2), collect(x), collect(y)")
+    List<T> getInputGraph(UUID evaluationId);
 
     /**
      * Adds a dependency relationship between the two given nodes with the given relationship properties.

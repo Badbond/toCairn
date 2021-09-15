@@ -49,6 +49,8 @@ public class SourceRelationshipAnalysis {
     }
 
     public void analyze(SourceAnalysisContext context) {
+        // TODO: Investigate cause of self-reference
+        // TODO: Investigate cause of OtherClass not having DataDependency to DataClass but InteractsWith
         LOGGER.info("Extracting relationships");
         var start = System.currentTimeMillis();
 
@@ -67,7 +69,7 @@ public class SourceRelationshipAnalysis {
             if (i != 0 && i % 100 == 0) {
                 LOGGER.info("... Processed relationships for {} classes", i);
             }
-            this.storeClassDependencies(context, visitorResults.get(i), methodNameSet, classNameSet);
+            this.constructClassDependencies(context, visitorResults.get(i), methodNameSet, classNameSet);
         }
 
         printResults(context, visitorResults, methodNameSet);
@@ -75,10 +77,10 @@ public class SourceRelationshipAnalysis {
         LOGGER.info("Static method call analysis took {} (H:m:s.millis)", duration);
     }
 
-    private void storeClassDependencies(SourceAnalysisContext context,
-                                        VisitorResult visitorResult,
-                                        Set<String> allMethodNames,
-                                        Set<String> classNameSet) {
+    private void constructClassDependencies(SourceAnalysisContext context,
+                                            VisitorResult visitorResult,
+                                            Set<String> allMethodNames,
+                                            Set<String> classNameSet) {
         var allClasses = context.getResultBuilder().getClasses();
         var relevantNodes = new HashMap<AbstractClass, List<Expression>>();
         relevantNodes.putAll(getRelevantMethodCalls(context, visitorResult, allMethodNames, allClasses));

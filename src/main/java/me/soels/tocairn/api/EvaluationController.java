@@ -103,9 +103,9 @@ public class EvaluationController {
      * @return the updated evaluation
      */
     @PostMapping("/{evaluationId}/run")
-    public EvaluationDto runEvaluation(@PathVariable UUID evaluationId) {
+    public EvaluationDto runEvaluation(@PathVariable UUID evaluationId, @RequestBody String name) {
         var evaluation = service.prepareRun(evaluationId);
-        runner.runEvaluation(evaluation);
+        runner.runEvaluation(evaluation, name);
         return new EvaluationDto(evaluation);
     }
 }

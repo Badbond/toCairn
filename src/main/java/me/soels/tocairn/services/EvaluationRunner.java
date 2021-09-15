@@ -34,7 +34,7 @@ public class EvaluationRunner {
     }
 
     @Async
-    public void runEvaluation(Evaluation evaluation) {
+    public void runEvaluation(Evaluation evaluation, String name) {
         try {
             if (!runnerRunning.compareAndSet(false, true)) {
                 throw new IllegalArgumentException("An evaluation is already running. To make sure an analysis receives " +
@@ -51,6 +51,7 @@ public class EvaluationRunner {
 
             result.setStartDate(start);
             result.setFinishDate(ZonedDateTime.now());
+            result.setName(name);
             resultService.persistResult(result);
             evaluationService.createResultRelationship(evaluation.getId(), result.getId());
 

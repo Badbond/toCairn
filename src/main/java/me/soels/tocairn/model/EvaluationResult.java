@@ -23,6 +23,8 @@ public abstract class EvaluationResult {
     @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)
     private UUID id;
 
+    private String name;
+
     @Relationship("HasSolution")
     private List<Solution> solutions = new ArrayList<>();
 

@@ -26,12 +26,14 @@ import java.util.stream.Collectors;
 @Getter
 public class EvaluationResultDto {
     private final UUID id;
+    private final String name;
     private final List<UUID> solutionIds;
     private final ZonedDateTime startDate;
     private final ZonedDateTime finishDate;
 
     public EvaluationResultDto(EvaluationResult result) {
         this.id = result.getId();
+        this.name = result.getName();
         this.solutionIds = result.getSolutions().stream().map(Solution::getId).collect(Collectors.toList());
         this.startDate = result.getStartDate();
         this.finishDate = result.getFinishDate();

@@ -49,8 +49,6 @@ public class SourceRelationshipAnalysis {
     }
 
     public void analyze(SourceAnalysisContext context) {
-        // TODO: Investigate cause of self-reference
-        // TODO: Investigate cause of OtherClass not having DataDependency to DataClass but InteractsWith
         LOGGER.info("Extracting relationships");
         var start = System.currentTimeMillis();
 
@@ -69,7 +67,7 @@ public class SourceRelationshipAnalysis {
             if (i != 0 && i % 100 == 0) {
                 LOGGER.info("... Processed relationships for {} classes", i);
             }
-            this.constructClassDependencies(context, visitorResults.get(i), methodNameSet, classNameSet);
+            this.storeClassDependencies(context, visitorResults.get(i), methodNameSet, classNameSet);
         }
 
         printResults(context, visitorResults, methodNameSet);
@@ -77,21 +75,26 @@ public class SourceRelationshipAnalysis {
         LOGGER.info("Static method call analysis took {} (H:m:s.millis)", duration);
     }
 
-    private void constructClassDependencies(SourceAnalysisContext context,
-                                            VisitorResult visitorResult,
-                                            Set<String> allMethodNames,
-                                            Set<String> classNameSet) {
+    private void storeClassDependencies(SourceAnalysisContext context,
+                                        VisitorResult visitorResult,
+                                        Set<String> allMethodNames,
+                                        Set<String> classNameSet) {
         var allClasses = context.getResultBuilder().getClasses();
-        var relevantNodes = new HashMap<AbstractClass, List<Expression>>();
-        relevantNodes.putAll(getRelevantMethodCalls(context, visitorResult, allMethodNames, allClasses));
-        relevantNodes.putAll(getRelevantMethodReferences(context, visitorResult, allMethodNames, allClasses));
-        relevantNodes.putAll(getRelevantConstructorCalls(context, visitorResult, allClasses, classNameSet));
-        relevantNodes.putAll(getRelevantFieldAccess(context, visitorResult, allClasses));
-        relevantNodes.putAll(getRelevantStaticImportUsage(context, visitorResult, allClasses));
-        relevantNodes.forEach((key, value) -> storeRelationship(visitorResult.getCaller(), key, value, allClasses, context));
+        var expressionMap = new HashMap<AbstractClass, List<Expression>>();
+        expressionMap.putAll(getRelevantMethodCalls(context, visitorResult, allMethodNames, allClasses));
+        expressionMap.putAll(getRelevantMethodReferences(context, visitorResult, allMethodNames, allClasses));
+        expressionMap.putAll(getRelevantConstructorCalls(context, visitorResult, allClasses, classNameSet));
+        expressionMap.putAll(getRelevantFieldAccess(context, visitorResult, allClasses));
+        expressionMap.putAll(getRelevantStaticImportUsage(context, visitorResult, allClasses));
 
-        getRelevantRemainingImportDecl(context, visitorResult, relevantNodes, allClasses)
-                .forEach(callee -> context.getResultBuilder().addDependency(visitorResult.getCaller(), callee, 1, 0L, 1, Collections.emptyMap()));
+        getRelevantRemainingImportDecl(context, visitorResult, expressionMap, allClasses).stream()
+                // We only want to include a dependency for import statements if we did not yet covered it with different nodes
+                .filter(callee -> !expressionMap.containsKey(callee))
+                // Store dependency as empty list s.t. we can identify it when persisting as an import dependency.
+                .forEach(callee -> expressionMap.put(callee, Collections.emptyList()));
+
+        // Persist the relationships in context
+        expressionMap.forEach((callee, expressions) -> storeRelationshipInContext(context, visitorResult.getCaller(), callee, expressions, allClasses));
     }
 
     private Map<AbstractClass, List<Expression>> getRelevantConstructorCalls(SourceAnalysisContext context,
@@ -184,6 +187,8 @@ public class SourceRelationshipAnalysis {
                 // Include only import statements to classes in analysis.
                 .filter(importDecl -> allClasses.stream().anyMatch(clazz -> clazz.getIdentifier().equals(importDecl.getNameAsString())))
                 .map(importDecl -> executeSideEffect(() -> context.getCounters().matchingImportStatements++, importDecl))
+                // Filter out self-reference (possible with annotation usage in upper class for its inner class)
+                .filter(importDecl -> !importDecl.getNameAsString().equals(visitorResult.getCaller().getIdentifier()))
                 // Filter out only import statements for classes which we have no relationship yet
                 .filter(importDecl -> relevantNodes.keySet().stream()
                         .map(AbstractClass::getIdentifier)
@@ -205,17 +210,17 @@ public class SourceRelationshipAnalysis {
      * {@link DataClass}. To keep the graph simple, we don't mark data-to-data or data-to-other relationships as a
      * data relationship.
      *
+     * @param context       the context to add the relationships to
      * @param caller        the source of the relationship
      * @param callee        the target of the relationship
      * @param relevantNodes the list of AST nodes related to the relationship
      * @param allClasses    the fqn of all classes in our graph
-     * @param context       the context to add the relationships to
      */
-    private void storeRelationship(AbstractClass caller,
-                                   AbstractClass callee,
-                                   List<Expression> relevantNodes,
-                                   List<AbstractClass> allClasses,
-                                   SourceAnalysisContext context) {
+    private void storeRelationshipInContext(SourceAnalysisContext context,
+                                            AbstractClass caller,
+                                            AbstractClass callee,
+                                            List<Expression> relevantNodes,
+                                            List<AbstractClass> allClasses) {
         var dynamicFreq = getDynamicFreq(caller, relevantNodes, context);
         var dynamicFreqSum = dynamicFreq.values().stream()
                 .mapToLong(value -> value)
@@ -230,19 +235,20 @@ public class SourceRelationshipAnalysis {
                 .map(Node::toString)
                 .distinct()
                 .count();
+        var staticFreq = relevantNodes.isEmpty() ? 1 : relevantNodes.size(); // Empty means import dependency
 
         if (caller instanceof OtherClass && callee instanceof DataClass) {
             var type = identifyReadWrite(relevantNodes);
             context.getResultBuilder().addDataRelationship((OtherClass) caller,
                     (DataClass) callee,
                     type,
-                    relevantNodes.size(),
+                    staticFreq,
                     dynamicFreqSum,
                     uniqueConnections,
                     sharedClasses
             );
         } else {
-            context.getResultBuilder().addDependency(caller, callee, relevantNodes.size(), dynamicFreqSum, uniqueConnections, sharedClasses);
+            context.getResultBuilder().addDependency(caller, callee, staticFreq, dynamicFreqSum, uniqueConnections, sharedClasses);
         }
     }
 

@@ -22,6 +22,9 @@ public abstract class AbstractClass {
     protected UUID id;
     private Long size;
 
+    // This is not ideal but necessary to perform efficient queries
+    private UUID evaluationId;
+
     @Relationship("InteractsWith")
     private List<DependenceRelationship> dependenceRelationships = new ArrayList<>();
 

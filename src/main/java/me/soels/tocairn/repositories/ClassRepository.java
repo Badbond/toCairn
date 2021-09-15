@@ -5,9 +5,23 @@ import me.soels.tocairn.model.DependenceRelationship;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface ClassRepository<T extends AbstractClass> extends Neo4jRepository<T, UUID> {
+    /**
+     * Retrieves the input graph for the evaluation with the given ID.
+     * <p>
+     * The Neo4j ORM tries to resolve every relationship and becomes very inefficient when there are cycles in the
+     * graph. For ~100 classes, ~80 solutions and ~3400 microservices, it tries to resolve cycles for the
+     * 100 classes for every microservice. This is too much for Neo4j to handle. Therefore, we retrieve the graph
+     * separately.
+     *
+     * @param evaluationId the evaluation to retrieve the classes for
+     * @return the classes and their dependencies belonging to the given evaluation
+     */
+    List<T> findAllByEvaluationId(UUID evaluationId);
+
     /**
      * Adds a dependency relationship between the two given nodes with the given relationship properties.
      * <p>

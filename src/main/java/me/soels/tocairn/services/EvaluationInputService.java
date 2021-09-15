@@ -12,6 +12,7 @@ import me.soels.tocairn.model.Evaluation;
 import me.soels.tocairn.model.EvaluationInput;
 import me.soels.tocairn.model.EvaluationInputBuilder;
 import me.soels.tocairn.repositories.ClassRepository;
+import me.soels.tocairn.repositories.EvaluationRepository;
 import me.soels.tocairn.repositories.OtherClassRepository;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
@@ -34,7 +35,7 @@ public class EvaluationInputService {
     private final SourceAnalysis sourceAnalysis;
     private final EvolutionaryAnalysis evolutionaryAnalysis;
     private final DynamicAnalysis dynamicAnalysis;
-    private final EvaluationService evaluationService;
+    private final EvaluationRepository evaluationRepository;
     private final ClassRepository<AbstractClass> classRepository;
     private final OtherClassRepository otherClassRepository;
     private final AtomicBoolean sourceAnalysisRunning = new AtomicBoolean(false);
@@ -42,15 +43,24 @@ public class EvaluationInputService {
     public EvaluationInputService(SourceAnalysis sourceAnalysis,
                                   EvolutionaryAnalysis evolutionaryAnalysis,
                                   DynamicAnalysis dynamicAnalysis,
-                                  EvaluationService evaluationService,
+                                  EvaluationRepository evaluationRepository,
                                   @Qualifier("classRepository") ClassRepository<AbstractClass> classRepository,
                                   @Qualifier("otherClassRepository") OtherClassRepository otherClassRepository) {
         this.sourceAnalysis = sourceAnalysis;
         this.evolutionaryAnalysis = evolutionaryAnalysis;
         this.dynamicAnalysis = dynamicAnalysis;
-        this.evaluationService = evaluationService;
+        this.evaluationRepository = evaluationRepository;
         this.classRepository = classRepository;
         this.otherClassRepository = otherClassRepository;
+    }
+
+    /**
+     * Retrieves the input graph from the database and sets it in the given evaluation instance.
+     *
+     * @param evaluation the evaluation to set the input graph for
+     */
+    public void populateInputFromDb(Evaluation evaluation) {
+        evaluation.setInputs(classRepository.findAllByEvaluationId(evaluation.getId()));
     }
 
     /**
@@ -93,9 +103,15 @@ public class EvaluationInputService {
 
         LOGGER.info("Storing nodes");
         evaluation.setInputs(context.getResultBuilder().build().getClasses());
+
+        // Store the evaluation ID on every class as ORM queries have proven to be troublesome. This way, we can more
+        // efficiently query the DB.
+        var evaluationId = evaluation.getId();
+        evaluation.getInputs().forEach(clazz -> clazz.setEvaluationId(evaluationId));
+
         // This has to be done with extreme care since it tries to model check the Java state with that in the DB.
         // ONLY in this case it is fine as we don't have the edges extracted yet.
-        evaluation = evaluationService.saveTotal(evaluation);
+        evaluation = evaluationRepository.save(evaluation);
         LOGGER.info("Stored {} nodes", evaluation.getInputs().size());
     }
 

@@ -25,11 +25,14 @@ import static me.soels.tocairn.solver.metric.MetricType.*;
 public class EvaluationService {
     private final EvaluationRepository evaluationRepository;
     private final SolverConfigurationRepository configurationRepository;
+    private final EvaluationInputService inputService;
 
     public EvaluationService(EvaluationRepository evaluationRepository,
-                             SolverConfigurationRepository configurationRepository) {
+                             SolverConfigurationRepository configurationRepository,
+                             EvaluationInputService inputService) {
         this.evaluationRepository = evaluationRepository;
         this.configurationRepository = configurationRepository;
+        this.inputService = inputService;
     }
 
     /**
@@ -48,10 +51,9 @@ public class EvaluationService {
      * @return the requested evaluation
      */
     public Evaluation getEvaluationDeep(UUID id) {
-        // TODO: Finalize this.. Headache..
-        var result = evaluationRepository.findByIdDeep(id)
+        var result = evaluationRepository.getByIdShallow(id)
                 .orElseThrow(() -> new ResourceNotFoundException(id));
-        var a = 0;
+        inputService.populateInputFromDb(result);
         return result;
     }
 
@@ -225,9 +227,5 @@ public class EvaluationService {
             }
         }
         return configuration;
-    }
-
-    public Evaluation saveTotal(Evaluation evaluation) {
-        return evaluationRepository.save(evaluation);
     }
 }

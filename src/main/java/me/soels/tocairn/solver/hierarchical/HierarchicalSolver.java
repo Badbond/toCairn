@@ -147,8 +147,9 @@ public class HierarchicalSolver implements Solver {
      * @param currentClustering the clustering to merge
      * @return all possible mergers for the given clustering
      */
-    private List<Clustering> getPossibleMergers(Clustering currentClustering) {
-        return currentClustering.getByCluster().keySet().stream()
+    // TODO: Remove unused code
+    private List<Clustering> getPossibleMergersOld(Clustering currentClustering) {
+        return currentClustering.getByCluster().keySet().parallelStream()
                 .flatMap(clusterA -> currentClustering.getByCluster().keySet().stream()
                         // Only cluster A with clusters with a higher number (excluding duplicate pairs and self-ref.)
                         .filter(clusterB -> clusterA < clusterB)
@@ -159,6 +160,42 @@ public class HierarchicalSolver implements Solver {
                             return builder.build();
                         }))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Computes the list of possible clusterings from the given clustering.
+     *
+     * @param currentClustering the clustering to merge
+     * @return all possible mergers for the given clustering
+     * @see <a href="https://www.baeldung.com/java-combinations-algorithm">Algorithm source</a>
+     */
+    public List<Clustering> getPossibleMergers(Clustering currentClustering) {
+        List<int[]> combinations = new ArrayList<>();
+        helper(combinations, new int[2], 0, currentClustering.getByCluster().size() - 1, 0);
+
+        var size = currentClustering.getByCluster().size();
+        if (combinations.size() != currentClustering.getByCluster().keySet().stream().mapToInt(value -> value).sum()) {
+            var a = 1;
+        }
+
+        return combinations.parallelStream()
+                .map(combination -> {
+                    var merger = new ClusteringBuilder(currentClustering);
+                    merger.mergeCluster(combination[0], combination[1]);
+                    return merger.build();
+                })
+                .collect(Collectors.toList());
+    }
+
+    private void helper(List<int[]> combinations, int[] data, int start, int end, int index) {
+        if (index == data.length) {
+            int[] combination = data.clone();
+            combinations.add(combination);
+        } else if (start <= end) {
+            data[index] = start;
+            helper(combinations, data, start + 1, end, index + 1);
+            helper(combinations, data, start + 1, end, index);
+        }
     }
 
     /**

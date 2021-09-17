@@ -103,7 +103,7 @@ public class EvaluationController {
      * @return the updated evaluation
      */
     @PostMapping("/{evaluationId}/run")
-    public EvaluationDto runEvaluation(@PathVariable UUID evaluationId, @RequestBody String name) {
+    public EvaluationDto runEvaluation(@PathVariable UUID evaluationId, @RequestParam String name) {
         var evaluation = service.prepareRun(evaluationId);
         runner.runEvaluation(evaluation, name);
         return new EvaluationDto(evaluation);

@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -164,26 +165,47 @@ public class HierarchicalSolver implements Solver {
 
     /**
      * Computes the list of possible clusterings from the given clustering.
+     * <p>
+     * Note, similar to Clauset, Newman & Moore we only allow merging between microservices that share an edge.
      *
      * @param currentClustering the clustering to merge
      * @return all possible mergers for the given clustering
-     * @see <a href="https://www.baeldung.com/java-combinations-algorithm">Algorithm source</a>
+     * @see <a href="https://www.baeldung.com/java-combinations-algorithm">Partial algorithm source</a>
      */
     public List<Clustering> getPossibleMergers(Clustering currentClustering) {
         List<int[]> combinations = new ArrayList<>();
         helper(combinations, new int[2], 0, currentClustering.getByCluster().size() - 1, 0);
-
-        var size = currentClustering.getByCluster().size();
-        if (combinations.size() != currentClustering.getByCluster().keySet().stream().mapToInt(value -> value).sum()) {
-            var a = 1;
-        }
+        var counterMergers = new AtomicInteger(0);
+        var counterNonMergers = new AtomicInteger(0);
 
         return combinations.parallelStream()
                 .map(combination -> {
-                    var merger = new ClusteringBuilder(currentClustering);
-                    merger.mergeCluster(combination[0], combination[1]);
-                    return merger.build();
+                    if (counterMergers.get() % 100 == 0) {
+                        LOGGER.info("Performed {} mergers", counterMergers.get());
+                    }
+                    if (counterNonMergers.get() % 100 == 0) {
+                        LOGGER.info("Performed {} mergers", counterNonMergers.get());
+                    }
+
+                    var cluster1 = currentClustering.getByCluster().get(combination[0]);
+                    var cluster2 = currentClustering.getByCluster().get(combination[1]);
+                    if (cluster1.stream()
+                            .flatMap(clazz -> clazz.getDependenceRelationships().stream())
+                            .anyMatch(dep -> cluster2.contains(dep.getCallee())) ||
+                            cluster2.stream()
+                                    .flatMap(clazz -> clazz.getDependenceRelationships().stream())
+                                    .anyMatch(dep -> cluster1.contains(dep.getCallee()))) {
+                        // When there is an edge between these two clusters, merge.
+                        var merger = new ClusteringBuilder(currentClustering);
+                        merger.mergeCluster(combination[0], combination[1]);
+                        counterMergers.incrementAndGet();
+                        return merger.build();
+                    } else {
+                        counterNonMergers.incrementAndGet();
+                        return null;
+                    }
                 })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 

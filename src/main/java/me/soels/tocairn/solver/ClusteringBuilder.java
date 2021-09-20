@@ -1,17 +1,16 @@
 package me.soels.tocairn.solver;
 
+import me.soels.tocairn.model.DependenceRelationship;
 import me.soels.tocairn.model.OtherClass;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * A builder for {@link Clustering} to allow for injecting into, merging and normalizing the stored clustering.
  */
 public final class ClusteringBuilder {
     private final Map<Integer, List<OtherClass>> clustering = new HashMap<>();
+    private Long nbTotalCalls;
 
     /**
      * Creates a new {@link Clustering} builder without any data.
@@ -28,6 +27,7 @@ public final class ClusteringBuilder {
      */
     public ClusteringBuilder(Clustering clustering) {
         clustering.getByCluster().forEach((key, value) -> this.clustering.put(key, new ArrayList<>(value)));
+        this.nbTotalCalls = clustering.getNbTotalCalls();
     }
 
     /**
@@ -36,7 +36,10 @@ public final class ClusteringBuilder {
      * @return the normalized clustering
      */
     public Clustering build() {
-        return new Clustering(normalize(clustering));
+        if (this.nbTotalCalls == null) {
+            this.nbTotalCalls = getTotalNbCalls();
+        }
+        return new Clustering(normalize(clustering), nbTotalCalls);
     }
 
     /**
@@ -83,5 +86,18 @@ public final class ClusteringBuilder {
 
         clustering.get(target).addAll(clustering.get(source));
         clustering.remove(source);
+    }
+
+    /**
+     * Returns the total number of calls made in the application between {@link OtherClass}.
+     *
+     * @return the total amount of calls made in the application
+     */
+    private long getTotalNbCalls() {
+        return clustering.values().stream()
+                .flatMap(Collection::stream)
+                .flatMap(clazz -> clazz.getDependenceRelationships().stream())
+                .mapToLong(DependenceRelationship::getStaticFrequency)
+                .sum();
     }
 }

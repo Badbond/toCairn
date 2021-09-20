@@ -33,17 +33,17 @@ public abstract class SelmadjiStructuralBehavior implements Metric {
      *
      * @param i            the first class
      * @param j            the second class
-     * @param totalNbCalls the total amount of method calls within the application
+     * @param nbTotalCalls the total amount of method calls within the application
      * @return the coup value
      */
-    protected Double coup(OtherClass i, OtherClass j, long totalNbCalls) {
+    protected Double coup(OtherClass i, OtherClass j, long nbTotalCalls) {
         var toJ = getNbCalls(i, j);
         var toI = getNbCalls(j, i);
 
         if (toI == 0 && toJ == 0) {
             return null;
         } else {
-            return (toI + toJ) / (double) totalNbCalls;
+            return (toI + toJ) / (double) nbTotalCalls;
         }
     }
 
@@ -85,16 +85,5 @@ public abstract class SelmadjiStructuralBehavior implements Metric {
         return sqrt(variance);
     }
 
-    /**
-     * Returns the total number of calls made in the application between {@link OtherClass}.
-     *
-     * @param clustering the clustering structure
-     * @return the total amount of calls made in the application
-     */
-    protected long getTotalNbCalls(Clustering clustering) {
-        return clustering.getByClass().keySet().stream()
-                .flatMap(clazz -> clazz.getDependenceRelationships().stream())
-                .mapToLong(DependenceRelationship::getStaticFrequency)
-                .sum();
-    }
+
 }

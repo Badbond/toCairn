@@ -23,7 +23,7 @@ public class SelmadjiFOne extends SelmadjiStructuralBehavior {
     @Override
     public double calculate(Clustering clustering) {
         // Calculate total calls first as these are based on the entire application.
-        var nbTotalCalls = getTotalNbCalls(clustering);
+        var nbTotalCalls = clustering.getNbTotalCalls();
 
         // Perform the FOne metric
         return -1 * clustering.getByCluster().values().stream()
@@ -35,17 +35,17 @@ public class SelmadjiFOne extends SelmadjiStructuralBehavior {
      * Calculates interCoup as devised by Selmadji et al. (2020).
      *
      * @param microservice the microservice to perform the measurement for
-     * @param totalNbCalls the total amount of method calls made within the application
+     * @param nbTotalCalls the total amount of method calls made within the application
      * @return the interCoup value for this microservice
      */
-    private double interCoup(List<OtherClass> microservice, long totalNbCalls) {
+    private double interCoup(List<OtherClass> microservice, long nbTotalCalls) {
         var coupValues = microservice.stream()
                 // Get all the pairs of classes in this microservice excluding self-pairs.
                 .flatMap(i -> microservice.stream()
                         .filter(j -> !i.equals(j))
                         .map(j -> Pair.of(i, j)))
                 // Calculate pair coup values
-                .map(pair -> coup(pair.getKey(), pair.getValue(), totalNbCalls))
+                .map(pair -> coup(pair.getKey(), pair.getValue(), nbTotalCalls))
                 .collect(Collectors.toList());
 
         if (coupValues.stream().allMatch(Objects::isNull)) {

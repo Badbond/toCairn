@@ -73,12 +73,7 @@ public class HierarchicalSolver implements Solver {
 
             var possibleClusterings = getPossibleMergers(currentClustering.clustering);
             currentClustering = getBestMerger(possibleClusterings);
-            counter++;
-            if (possibleClusterings.size() > 100 || counter % 10 == 0) {
-                // When we still have more than 100 possible clusters, print every time as it takes a long time.
-                // When it is less than 100, print on every 10th iteration as it will go faster.
-                LOGGER.info("Performed {} steps in the clustering algorithm", counter);
-            }
+            LOGGER.info("Performed step {} in the clustering algorithm", ++counter);
         }
     }
 

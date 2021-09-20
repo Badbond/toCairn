@@ -16,15 +16,21 @@ public final class Clustering {
     private final Map<Integer, List<OtherClass>> byCluster;
     private final Map<OtherClass, Integer> byClass;
 
+    // Data that is calculated once for the whole, regardless of how it is clustered.
+    private final long nbTotalCalls;
+
     /**
      * Constructs the clustering.
      * <p>
      * Note that the internal maps and lists of this data structure are made unmodifiable to have an immutable data
      * representation.
      *
-     * @param clustering the clustering to create
+     * @param clustering   the clustering to create
+     * @param nbTotalCalls the total amount of calls made in the application
      */
-    Clustering(Map<Integer, List<OtherClass>> clustering) {
+    Clustering(Map<Integer, List<OtherClass>> clustering, long nbTotalCalls) {
+        this.nbTotalCalls = nbTotalCalls;
+
         this.byCluster = clustering.entrySet().stream()
                 .map(entry -> Pair.of(entry.getKey(), Collections.unmodifiableList(entry.getValue())))
                 .collect(Collectors.toUnmodifiableMap(Pair::getLeft, Pair::getRight));
@@ -64,5 +70,14 @@ public final class Clustering {
      */
     public Map<OtherClass, Integer> getByClass() {
         return byClass;
+    }
+
+    /**
+     * Returns the total amount of static method calls made in the application.
+     *
+     * @return the amount of static method calls
+     */
+    public long getNbTotalCalls() {
+        return nbTotalCalls;
     }
 }

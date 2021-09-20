@@ -18,9 +18,9 @@ import java.util.stream.Collectors;
 public class SelmadjiFAutonomy extends SelmadjiStructuralBehavior {
     @Override
     public double calculate(Clustering clustering) {
-        var totalNbCalls = getTotalNbCalls(clustering);
+        var nbTotalCalls = clustering.getNbTotalCalls();
         return clustering.getByCluster().values().stream()
-                .mapToDouble(microservice -> exterCoup(microservice, clustering, totalNbCalls))
+                .mapToDouble(microservice -> exterCoup(microservice, clustering, nbTotalCalls))
                 .sum();
     }
 
@@ -29,10 +29,10 @@ public class SelmadjiFAutonomy extends SelmadjiStructuralBehavior {
      *
      * @param microservice the microservice to perform the measurement for
      * @param clustering   the clustering to retrieve external pairs from
-     * @param totalNbCalls the total amount of method calls made within the application
+     * @param nbTotalCalls the total amount of method calls made within the application
      * @return the exterCoup value for this microservice
      */
-    private double exterCoup(List<OtherClass> microservice, Clustering clustering, long totalNbCalls) {
+    private double exterCoup(List<OtherClass> microservice, Clustering clustering, long nbTotalCalls) {
         // Get all the classes that do not belong to this microservice.
         var externalClasses = clustering.getByClass().keySet().stream()
                 .filter(clazz -> !microservice.contains(clazz))
@@ -42,7 +42,7 @@ public class SelmadjiFAutonomy extends SelmadjiStructuralBehavior {
         var coupValues = microservice.stream()
                 .flatMap(i -> externalClasses.stream()
                         .map(j -> Pair.of(i, j)))
-                .map(pair -> coup(pair.getKey(), pair.getValue(), totalNbCalls))
+                .map(pair -> coup(pair.getKey(), pair.getValue(), nbTotalCalls))
                 .collect(Collectors.toList());
 
         if (coupValues.stream().allMatch(Objects::isNull)) {

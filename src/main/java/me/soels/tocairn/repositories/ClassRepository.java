@@ -10,22 +10,19 @@ import java.util.UUID;
 
 public interface ClassRepository<T extends AbstractClass> extends Neo4jRepository<T, UUID> {
     /**
-     * Retrieves the input graph for the evaluation with the given ID.
+     * Retrieves the class nodes for the evaluation with the given ID.
      * <p>
      * The Neo4j ORM tries to resolve every relationship and becomes very inefficient when there are cycles in the
      * graph. For ~100 classes, ~80 solutions and ~3400 microservices, it tries to resolve cycles for the
-     * 100 classes for every microservice. This is too much for Neo4j to handle. Therefore, we retrieve the graph
-     * separately.
+     * 100 classes for every microservice. This is too much for Neo4j to handle. Therefore, we retrieve the nodes
+     * separately first before doing a custom query and custom deserialization.
      *
-     * @param evaluationId the evaluation to retrieve the classes for
-     * @return the classes and their dependencies belonging to the given evaluation
-     * @see <a href="https://docs.spring.io/spring-data/neo4j/docs/current/reference/html/#custom-queries.for-relationships.one.record">Neo4j documentation</a>
+     * @param evaluationId the evaluation id the class should be related to
+     * @return the list of class nodes
+     * @see me.soels.tocairn.services.EvaluationInputService#populateInputFromDb
      */
-    @Query("MATCH (c :AbstractClass { evaluationId: $0 }) " +
-            "OPTIONAL MATCH (c)-[r1 :InteractsWith]->(x :AbstractClass) " +
-            "OPTIONAL MATCH (c)-[r2 :DataDepends]->(y :DataClass) " +
-            "RETURN c, collect(r1), collect(r2), collect(x), collect(y)")
-    List<T> getInputGraph(UUID evaluationId);
+    @Query("MATCH (c :AbstractClass { evaluationId: $0 }) RETURN c")
+    List<T> getInputNodesWithoutRel(UUID evaluationId);
 
     /**
      * Adds a dependency relationship between the two given nodes with the given relationship properties.

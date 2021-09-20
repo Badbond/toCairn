@@ -178,35 +178,36 @@ public class HierarchicalSolver implements Solver {
         var counterMergers = new AtomicInteger(0);
         var counterNonMergers = new AtomicInteger(0);
 
-        return combinations.parallelStream()
+        var result = combinations.parallelStream()
                 .map(combination -> {
-                    if (counterMergers.get() % 100 == 0) {
-                        LOGGER.info("Performed {} mergers", counterMergers.get());
-                    }
-                    if (counterNonMergers.get() % 100 == 0) {
-                        LOGGER.info("Performed {} mergers", counterNonMergers.get());
-                    }
-
                     var cluster1 = currentClustering.getByCluster().get(combination[0]);
                     var cluster2 = currentClustering.getByCluster().get(combination[1]);
-                    if (cluster1.stream()
-                            .flatMap(clazz -> clazz.getDependenceRelationships().stream())
-                            .anyMatch(dep -> cluster2.contains(dep.getCallee())) ||
-                            cluster2.stream()
-                                    .flatMap(clazz -> clazz.getDependenceRelationships().stream())
-                                    .anyMatch(dep -> cluster1.contains(dep.getCallee()))) {
+                    if (clusterHasConnection(cluster1, cluster2) || clusterHasConnection(cluster2, cluster1)) {
                         // When there is an edge between these two clusters, merge.
                         var merger = new ClusteringBuilder(currentClustering);
                         merger.mergeCluster(combination[0], combination[1]);
-                        counterMergers.incrementAndGet();
+                        if (counterMergers.incrementAndGet() % 100 == 0) {
+                            LOGGER.info("Performed {} mergers", counterMergers.get());
+                        }
                         return merger.build();
                     } else {
-                        counterNonMergers.incrementAndGet();
+                        if (counterNonMergers.incrementAndGet() % 100 == 0) {
+                            LOGGER.info("Skipped {} mergers", counterNonMergers.get());
+                        }
                         return null;
                     }
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+        LOGGER.info("Performed {} mergers", counterMergers.get());
+        LOGGER.info("Skipped {} mergers", counterNonMergers.get());
+        return result;
+    }
+
+    private boolean clusterHasConnection(List<OtherClass> first, List<OtherClass> second) {
+        return first.stream()
+                .flatMap(clazz -> clazz.getDependenceRelationships().stream())
+                .anyMatch(dep -> second.contains(dep.getCallee()));
     }
 
     private void helper(List<int[]> combinations, int[] data, int start, int end, int index) {

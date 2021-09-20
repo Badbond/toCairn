@@ -7,11 +7,11 @@ import me.soels.tocairn.solver.Clustering;
 import me.soels.tocairn.solver.ClusteringBuilder;
 import me.soels.tocairn.solver.Solver;
 import me.soels.tocairn.solver.metric.MetricType;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -107,7 +107,6 @@ public class HierarchicalSolver implements Solver {
     private void processClusteringParallel(Clustering clustering,
                                            AtomicReference<Double> bestQuality,
                                            AtomicReference<HierarchicalClustering> bestClustering) {
-
         var metrics = performMetrics(clustering);
         var metricsArray = metrics.values().stream()
                 .flatMapToDouble(Arrays::stream)
@@ -141,84 +140,28 @@ public class HierarchicalSolver implements Solver {
     /**
      * Computes the list of possible clusterings from the given clustering.
      * <p>
-     * Essentially, we will combine every cluster. We do this using the cluster numbers where we match ever lesser
-     * number against every greater number. This ensures all clusters are paired, and only once. This furthermore
-     * prevents merging with oneself.
-     *
-     * @param currentClustering the clustering to merge
-     * @return all possible mergers for the given clustering
-     */
-    // TODO: Remove unused code
-    private List<Clustering> getPossibleMergersOld(Clustering currentClustering) {
-        return currentClustering.getByCluster().keySet().parallelStream()
-                .flatMap(clusterA -> currentClustering.getByCluster().keySet().stream()
-                        // Only cluster A with clusters with a higher number (excluding duplicate pairs and self-ref.)
-                        .filter(clusterB -> clusterA < clusterB)
-                        // Create new clustering and merge the two clusters
-                        .map(clusterB -> {
-                            var builder = new ClusteringBuilder(currentClustering);
-                            builder.mergeCluster(clusterA, clusterB);
-                            return builder.build();
-                        }))
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Computes the list of possible clusterings from the given clustering.
-     * <p>
      * Note, similar to Clauset, Newman & Moore we only allow merging between microservices that share an edge.
      *
      * @param currentClustering the clustering to merge
      * @return all possible mergers for the given clustering
-     * @see <a href="https://www.baeldung.com/java-combinations-algorithm">Partial algorithm source</a>
      */
     public List<Clustering> getPossibleMergers(Clustering currentClustering) {
-        List<int[]> combinations = new ArrayList<>();
-        helper(combinations, new int[2], 0, currentClustering.getByCluster().size() - 1, 0);
-        var counterMergers = new AtomicInteger(0);
-        var counterNonMergers = new AtomicInteger(0);
-
-        var result = combinations.parallelStream()
-                .map(combination -> {
-                    var cluster1 = currentClustering.getByCluster().get(combination[0]);
-                    var cluster2 = currentClustering.getByCluster().get(combination[1]);
-                    if (clusterHasConnection(cluster1, cluster2) || clusterHasConnection(cluster2, cluster1)) {
-                        // When there is an edge between these two clusters, merge.
-                        var merger = new ClusteringBuilder(currentClustering);
-                        merger.mergeCluster(combination[0], combination[1]);
-                        if (counterMergers.incrementAndGet() % 100 == 0) {
-                            LOGGER.info("Performed {} mergers", counterMergers.get());
-                        }
-                        return merger.build();
-                    } else {
-                        if (counterNonMergers.incrementAndGet() % 100 == 0) {
-                            LOGGER.info("Skipped {} mergers", counterNonMergers.get());
-                        }
-                        return null;
-                    }
+        return currentClustering.getByCluster().entrySet().parallelStream()
+                .flatMap(entry -> entry.getValue().stream()
+                        .flatMap(clazz -> clazz.getDependenceRelationships().stream())
+                        .map(rel -> currentClustering.getByClass().get(rel.getCallee()))
+                        .distinct()
+                        .filter(key -> !entry.getKey().equals(key))
+                        .map(other -> other < entry.getKey() ? other + ":" + entry.getKey() : entry.getKey() + ":" + other))
+                .distinct()
+                .map(key -> key.split(":"))
+                .map(parts -> Pair.of(Integer.valueOf(parts[0]), Integer.valueOf(parts[1])))
+                .map(pair -> {
+                    var merger = new ClusteringBuilder(currentClustering);
+                    merger.mergeCluster(pair.getKey(), pair.getValue());
+                    return merger.build();
                 })
-                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-        LOGGER.info("Performed {} mergers", counterMergers.get());
-        LOGGER.info("Skipped {} mergers", counterNonMergers.get());
-        return result;
-    }
-
-    private boolean clusterHasConnection(List<OtherClass> first, List<OtherClass> second) {
-        return first.stream()
-                .flatMap(clazz -> clazz.getDependenceRelationships().stream())
-                .anyMatch(dep -> second.contains(dep.getCallee()));
-    }
-
-    private void helper(List<int[]> combinations, int[] data, int start, int end, int index) {
-        if (index == data.length) {
-            int[] combination = data.clone();
-            combinations.add(combination);
-        } else if (start <= end) {
-            data[index] = start;
-            helper(combinations, data, start + 1, end, index + 1);
-            helper(combinations, data, start + 1, end, index);
-        }
     }
 
     /**

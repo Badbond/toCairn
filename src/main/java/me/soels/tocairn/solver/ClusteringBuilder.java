@@ -40,16 +40,17 @@ public final class ClusteringBuilder {
     }
 
     /**
-     * Normalizes the clustering by cluster label to have cluster label from 0 to {@code n} with {@code n} being
+     * Normalizes the clustering by cluster label to have cluster label from 0 to {@code n - 1} with {@code n} being
      * the amount of clusters.
      *
      * @param clustering the clustering to normalize
      * @return the normalized clustering
      */
     public Map<Integer, List<OtherClass>> normalize(Map<Integer, List<OtherClass>> clustering) {
-        var result = new HashMap<Integer, List<OtherClass>>(clustering.size());
-        for (var i = 0; i < clustering.size(); i++) {
-            result.put(i, new ArrayList<>(clustering.values()).get(i));
+        Map<Integer, List<OtherClass>> result = new HashMap<>();
+        var counter = 0;
+        for (var value : clustering.values()) {
+            result.put(counter++, value);
         }
         return result;
     }

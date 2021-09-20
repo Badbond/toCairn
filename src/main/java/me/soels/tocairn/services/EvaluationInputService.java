@@ -22,7 +22,10 @@ import org.springframework.data.neo4j.core.Neo4jClient;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -34,6 +37,7 @@ import static me.soels.tocairn.model.AnalysisType.*;
  */
 @Service
 public class EvaluationInputService {
+    private static final String SHARED_CLASSES_PREFIX = "sharedClasses";
     private static final Logger LOGGER = LoggerFactory.getLogger(EvaluationInputService.class);
     private final SourceAnalysis sourceAnalysis;
     private final EvolutionaryAnalysis evolutionaryAnalysis;
@@ -71,26 +75,25 @@ public class EvaluationInputService {
      * @param evaluation the evaluation to set the input graph for
      */
     public void populateInputFromDb(Evaluation evaluation) {
-        var nodeList = classRepository.getInputNodesWithoutRel(evaluation.getId()).stream()
+        var nodesByUUID = classRepository.getInputNodesWithoutRel(evaluation.getId()).stream()
                 .collect(Collectors.toMap(AbstractClass::getId, clazz -> clazz));
         var query = client.query("MATCH (c :AbstractClass { evaluationId: '" + evaluation.getId() + "' }) " +
                 "OPTIONAL MATCH (c)-[interactsWith :InteractsWith]->(interactTarget :AbstractClass) " +
                 "OPTIONAL MATCH (c)-[dataDepends :DataDepends]->(dataTarget :DataClass) " +
                 "RETURN c, collect(interactsWith), collect(dataDepends), collect(interactTarget), collect(dataTarget)");
         var queryResult = query.fetch().all();
-        var nodes = queryResult.stream()
+        var nodesById = queryResult.stream()
                 .map(node -> {
                     var c = (InternalNode) node.get("c");
                     return Pair.of(c.id(), UUID.fromString(c.get("id").asString()));
                 })
-                .collect(Collectors.toMap(Pair::getKey, pair -> nodeList.get(pair.getValue())));
-
+                .collect(Collectors.toMap(Pair::getKey, pair -> nodesByUUID.get(pair.getValue())));
         for (var result : queryResult) {
-            var caller = nodes.get(((InternalNode) result.get("c")).id());
-            convertDataDeps(caller, nodes, getRelationship(result, "dataDepends"));
-            convertInteractsWith(caller, nodes, getRelationship(result, "interactsWith"));
+            var caller = nodesById.get(((InternalNode) result.get("c")).id());
+            convertDataDeps(caller, nodesById, getRelationship(result, "dataDepends"));
+            convertInteractsWith(caller, nodesById, getRelationship(result, "interactsWith"));
         }
-        evaluation.setInputs(new ArrayList<>(nodes.values()));
+        evaluation.setInputs(new ArrayList<>(nodesById.values()));
     }
 
     @SuppressWarnings("unchecked") // Safe cast due to modelled relationship and query
@@ -105,11 +108,16 @@ public class EvaluationInputService {
                 continue;
             }
             var callee = (DataClass) nodes.get(rel.endNodeId());
-            var type = DataRelationshipType.valueOf(rel.get("type").asString());
             var staticFreq = rel.get("staticFrequency").asInt();
             var dynamicFreq = rel.get("dynamicFrequency").asLong();
             var connections = rel.get("connections").asInt();
-            var sharedClasses = new HashMap<String, Long>(); // TODO: Shared classes.
+            var type = DataRelationshipType.valueOf(rel.get("type").asString());
+            var sharedClasses = rel.asMap().entrySet().stream()
+                    .filter(entry -> entry.getKey().startsWith(SHARED_CLASSES_PREFIX))
+                    .map(entry -> Pair.of(
+                            entry.getKey().substring(SHARED_CLASSES_PREFIX.length() + 1), // And the .
+                            (Long) entry.getValue()))
+                    .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
             var dao = new DataRelationship(callee, type, staticFreq, dynamicFreq, connections, sharedClasses);
             dao.setId(rel.id());
             // Safe to cast, there is a data relationship which is only possible from other classes.
@@ -117,17 +125,24 @@ public class EvaluationInputService {
         }
     }
 
-    private void convertInteractsWith(AbstractClass caller, Map<Long, AbstractClass> nodes, List<InternalRelationship> interactsWith) {
+    private void convertInteractsWith(AbstractClass caller,
+                                      Map<Long, AbstractClass> nodesById,
+                                      List<InternalRelationship> interactsWith) {
         for (var rel : interactsWith) {
             if (caller.getDependenceRelationships().stream().anyMatch(existing -> existing.getId().equals(rel.id()))) {
                 // Relationship already exists on caller, continuing.
                 continue;
             }
-            var callee = nodes.get(rel.endNodeId());
+            var callee = nodesById.get(rel.endNodeId());
             var staticFreq = rel.get("staticFrequency").asInt();
             var dynamicFreq = rel.get("dynamicFrequency").asLong();
             var connections = rel.get("connections").asInt();
-            var sharedClasses = new HashMap<String, Long>(); // TODO: Shared classes.
+            var sharedClasses = rel.asMap().entrySet().stream()
+                    .filter(entry -> entry.getKey().startsWith(SHARED_CLASSES_PREFIX))
+                    .map(entry -> Pair.of(
+                            entry.getKey().substring(SHARED_CLASSES_PREFIX.length() + 1), // And the .
+                            (Long) entry.getValue()))
+                    .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
             var dao = new DependenceRelationship(callee, staticFreq, dynamicFreq, connections, sharedClasses);
             dao.setId(rel.id());
             caller.getDependenceRelationships().add(dao);

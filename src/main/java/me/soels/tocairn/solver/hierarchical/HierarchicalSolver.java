@@ -102,6 +102,9 @@ public class HierarchicalSolver implements Solver {
     private void processClusteringParallel(Clustering clustering,
                                            AtomicReference<Double> bestQuality,
                                            AtomicReference<HierarchicalClustering> bestClustering) {
+        // TODO: Optimize this. Ideas:
+        //  - Persist metrics for microservice in memory across clusterings see Clustering.
+        //    E.g. FInter and FIntra will not change if the microservice does not change (loses,gains classes).
         var metrics = performMetrics(clustering);
         var metricsArray = metrics.values().stream()
                 .flatMapToDouble(Arrays::stream)

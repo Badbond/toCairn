@@ -1,13 +1,13 @@
 package me.soels.tocairn.solver;
 
-import lombok.Value;
-import me.soels.tocairn.model.AbstractClass;
 import me.soels.tocairn.model.OtherClass;
 import me.soels.tocairn.solver.moea.EncodingType;
 import org.apache.commons.lang3.tuple.Pair;
 import org.moeaframework.core.Solution;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -34,19 +34,9 @@ public final class Clustering {
         this.byCluster = clustering.entrySet().stream()
                 .map(entry -> Pair.of(entry.getKey(), Collections.unmodifiableList(entry.getValue())))
                 .collect(Collectors.toUnmodifiableMap(Pair::getLeft, Pair::getRight));
-
-        var sortedByClass = clustering.entrySet().stream()
+        this.byClass = clustering.entrySet().stream()
                 .flatMap(entry -> entry.getValue().stream().map(clazz -> Pair.of(clazz, entry.getKey())))
-                .collect(Collectors.toMap(
-                        Pair::getKey,
-                        Pair::getValue,
-                        (u, v) -> {
-                            throw new IllegalStateException(String.format("Duplicate key %s", u));
-                        },
-                        () -> new TreeMap<>(Comparator.comparing(AbstractClass::getIdentifier))
-                ));
-        // We use by class also for inspection and visualisation and therefore would like it sorted.
-        this.byClass = Collections.unmodifiableSortedMap(sortedByClass);
+                .collect(Collectors.toUnmodifiableMap(Pair::getKey, Pair::getValue));
     }
 
     /**

@@ -22,35 +22,45 @@ public class SelmadjiFInter extends SelmadjiDataAutonomy {
                 .sum();
     }
 
-    private double finter(List<OtherClass> classes, Clustering clustering) {
+    private double finter(List<OtherClass> microservice, Clustering clustering) {
+        var optimizationKey = microservice.stream().map(clazz -> clazz.getId().toString()).sorted().collect(Collectors.joining(""));
+        var existingValue = clustering.getOptimizationData().getFInter().get(optimizationKey);
+        if (existingValue != null) {
+            return existingValue;
+        }
+
         // Get the cardinality of the set of data classes manipulated by classes in this microservice
-        var nbDataManipulatedInMicro = nbDataManipulatedInMicro(classes);
+        var nbDataManipulatedInMicro = nbDataManipulatedInMicro(microservice);
 
         if (nbDataManipulatedInMicro == 0) {
-            // This class does not modify data. Therefore, it will not have
+            // This class does not modify data. Therefore, it will not have any data autonomy
+            clustering.getOptimizationData().getFInter().put(optimizationKey, 0.0);
             return 0.0;
         }
 
         // Get all the classes that do not belong to this microservice.
         var externalClasses = clustering.getByClass().keySet().stream()
-                .filter(clazz -> !classes.contains(clazz))
+                .filter(clazz -> !microservice.contains(clazz))
                 .collect(Collectors.toList());
 
         if (externalClasses.isEmpty()) {
             // There are no more external classes, we have all classes in one microservice, i.e. monolith.
             // Set FInter to 0.
+            clustering.getOptimizationData().getFInter().put(optimizationKey, 0.0);
             return 0.0;
         }
 
         // Get all the pairs of classes in this microservice with those of external classes.
-        var pairs = classes.stream()
+        var pairs = microservice.stream()
                 .flatMap(i -> externalClasses.stream()
                         .map(j -> Pair.of(i, j)))
                 .collect(Collectors.toList());
 
         // Calculate the metric
-        return pairs.stream()
+        var result = pairs.stream()
                 .mapToDouble(pair -> data(pair.getKey(), pair.getValue(), nbDataManipulatedInMicro))
                 .sum() / pairs.size();
+        clustering.getOptimizationData().getFInter().put(optimizationKey, result);
+        return result;
     }
 }

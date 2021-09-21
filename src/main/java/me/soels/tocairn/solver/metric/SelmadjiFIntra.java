@@ -21,17 +21,23 @@ public class SelmadjiFIntra extends SelmadjiDataAutonomy {
     @Override
     public double calculate(Clustering clustering) {
         return -1 * clustering.getByCluster().values().stream()
-                .mapToDouble(this::fintra)
+                .mapToDouble(ms -> fintra(ms, clustering))
                 .sum();
     }
 
-    private double fintra(List<OtherClass> classes) {
+    private double fintra(List<OtherClass> microservice, Clustering clustering) {
+        var optimizationKey = microservice.stream().map(clazz -> clazz.getId().toString()).sorted().collect(Collectors.joining(""));
+        var existingValue = clustering.getOptimizationData().getFIntra().get(optimizationKey);
+        if (existingValue != null) {
+            return existingValue;
+        }
+
         // Get the cardinality of the set of data classes manipulated by classes in this microservice
-        var nbDataManipulatedInMicro = nbDataManipulatedInMicro(classes);
+        var nbDataManipulatedInMicro = nbDataManipulatedInMicro(microservice);
 
         // Get all the pairs of classes in this microservice excluding self-pairs.
-        var pairs = classes.stream()
-                .flatMap(i -> classes.stream()
+        var pairs = microservice.stream()
+                .flatMap(i -> microservice.stream()
                         .filter(j -> !i.equals(j))
                         .map(j -> Pair.of(i, j)))
                 .collect(Collectors.toList());
@@ -39,12 +45,15 @@ public class SelmadjiFIntra extends SelmadjiDataAutonomy {
         if (pairs.isEmpty()) {
             // We do not have any pairs in this microservice to calculate this metric with.
             // We set the value to 0.0 to favour microservices with at least two classes.
+            clustering.getOptimizationData().getFIntra().put(optimizationKey, 0.0);
             return 0.0;
         }
 
         // Calculate the metric
-        return pairs.stream()
+        var result = pairs.stream()
                 .mapToDouble(pair -> data(pair.getKey(), pair.getValue(), nbDataManipulatedInMicro))
                 .sum() / pairs.size();
+        clustering.getOptimizationData().getFIntra().put(optimizationKey, result);
+        return result;
     }
 }

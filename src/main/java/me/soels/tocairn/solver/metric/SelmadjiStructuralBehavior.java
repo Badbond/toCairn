@@ -2,13 +2,11 @@ package me.soels.tocairn.solver.metric;
 
 import me.soels.tocairn.model.DependenceRelationship;
 import me.soels.tocairn.model.OtherClass;
-import me.soels.tocairn.solver.Clustering;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
 /**
@@ -76,13 +74,21 @@ public abstract class SelmadjiStructuralBehavior implements Metric {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        // Based on https://stackoverflow.com/a/14839593
-        var n = all.size();
+        // Based on https://stackoverflow.com/a/14839142 and https://stackoverflow.com/a/14839593
         var sum = all.stream().mapToDouble(value -> value).sum();
-        var sqSum = all.stream().mapToDouble(value -> pow(value, 2)).sum();
+        var n = all.size();
         var mean = sum / n;
-        var variance = sqSum / n - mean * mean;
-        return sqrt(variance);
+        var sd = 0.0;
+        for (var number : all) {
+            sd += Math.pow(number - mean, 2);
+        }
+        var result = sqrt(sd / (n - 1));
+        if (Double.valueOf(result).isNaN()) {
+            // Happens when n = 1 (division by 0)
+            return 0.0;
+        } else {
+            return result;
+        }
     }
 
 

@@ -25,8 +25,20 @@ public class SelmadjiFOne extends SelmadjiStructuralBehavior {
     public double calculate(Clustering clustering) {
         // Perform the FOne metric
         return -1 * clustering.getByCluster().values().stream()
-                .mapToDouble(microservice -> 0.5 * (interCoup(microservice, clustering.getOptimizationData()) + interCoh(microservice)))
+                .mapToDouble(microservice -> calculateMicroservice(microservice, clustering))
                 .sum();
+    }
+
+    private double calculateMicroservice(List<OtherClass> microservice, Clustering clustering) {
+        var optimizationKey = microservice.stream().map(clazz -> clazz.getId().toString()).sorted().collect(Collectors.joining(""));
+        var existingValue = clustering.getOptimizationData().getFOne().get(optimizationKey);
+        if (existingValue != null) {
+            return existingValue;
+        }
+
+        var result = 0.5 * (interCoup(microservice, clustering.getOptimizationData()) + interCoh(microservice));
+        clustering.getOptimizationData().getFOne().put(optimizationKey, result);
+        return result;
     }
 
     /**

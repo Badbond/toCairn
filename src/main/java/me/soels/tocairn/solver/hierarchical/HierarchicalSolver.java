@@ -7,6 +7,7 @@ import me.soels.tocairn.solver.Clustering;
 import me.soels.tocairn.solver.ClusteringBuilder;
 import me.soels.tocairn.solver.Solver;
 import me.soels.tocairn.solver.metric.MetricType;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +60,7 @@ public class HierarchicalSolver implements Solver {
         var currentClustering = initialClustering;
         int counter = 0;
         while (true) {
+            var start = System.currentTimeMillis();
             allSolutions.add(currentClustering.solution);
 
             if (configuration.getNrClusters().isPresent() &&
@@ -73,7 +75,8 @@ public class HierarchicalSolver implements Solver {
 
             var possibleClusterings = getPossibleMergers(currentClustering.clustering);
             currentClustering = getBestMerger(possibleClusterings);
-            LOGGER.info("Performed step {} in the clustering algorithm", ++counter);
+            var duration = DurationFormatUtils.formatDuration(System.currentTimeMillis() - start, "mm:ss.SSS");
+            LOGGER.info("Performed step {} in the clustering algorithm in {} (m:s.millis)", ++counter, duration);
         }
     }
 
@@ -102,9 +105,6 @@ public class HierarchicalSolver implements Solver {
     private void processClusteringParallel(Clustering clustering,
                                            AtomicReference<Double> bestQuality,
                                            AtomicReference<HierarchicalClustering> bestClustering) {
-        // TODO: Optimize this. Ideas:
-        //  - Persist metrics for microservice in memory across clusterings see Clustering.
-        //    E.g. FInter and FIntra will not change if the microservice does not change (loses,gains classes).
         var metrics = performMetrics(clustering);
         var metricsArray = metrics.values().stream()
                 .flatMapToDouble(Arrays::stream)

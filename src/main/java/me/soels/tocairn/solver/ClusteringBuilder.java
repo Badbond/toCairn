@@ -4,18 +4,20 @@ import me.soels.tocairn.model.DependenceRelationship;
 import me.soels.tocairn.model.OtherClass;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * A builder for {@link Clustering} to allow for injecting into, merging and normalizing the stored clustering.
  */
 public final class ClusteringBuilder {
     private final Map<Integer, List<OtherClass>> clustering = new HashMap<>();
-    private Long nbTotalCalls;
+    private final OptimizationData optimizationData;
 
     /**
      * Creates a new {@link Clustering} builder without any data.
      */
     public ClusteringBuilder() {
+        this.optimizationData = new OptimizationData();
     }
 
     /**
@@ -27,7 +29,7 @@ public final class ClusteringBuilder {
      */
     public ClusteringBuilder(Clustering clustering) {
         clustering.getByCluster().forEach((key, value) -> this.clustering.put(key, new ArrayList<>(value)));
-        this.nbTotalCalls = clustering.getNbTotalCalls();
+        this.optimizationData = clustering.getOptimizationData().copy();
     }
 
     /**
@@ -36,10 +38,10 @@ public final class ClusteringBuilder {
      * @return the normalized clustering
      */
     public Clustering build() {
-        if (this.nbTotalCalls == null) {
-            this.nbTotalCalls = getTotalNbCalls();
+        if (optimizationData.getNbTotalCalls() == null) {
+            optimizationData.setNbTotalCalls(getTotalNbCalls());
         }
-        return new Clustering(normalize(clustering), nbTotalCalls);
+        return new Clustering(normalize(clustering), optimizationData);
     }
 
     /**
@@ -84,7 +86,18 @@ public final class ClusteringBuilder {
             throw new IllegalStateException("Could not find clustering with id " + target);
         }
 
-        clustering.get(target).addAll(clustering.get(source));
+        var targetCluster = clustering.get(target);
+        var sourceCluster = clustering.get(source);
+
+        // To optimize optimization data, clear the merged clusters
+        optimizationData.clearMicroservice(targetCluster.stream()
+                .map(clazz -> clazz.getId().toString()).sorted()
+                .collect(Collectors.joining("")));
+        optimizationData.clearMicroservice(sourceCluster.stream()
+                .map(clazz -> clazz.getId().toString()).sorted()
+                .collect(Collectors.joining("")));
+
+        targetCluster.addAll(sourceCluster);
         clustering.remove(source);
     }
 

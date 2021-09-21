@@ -3,6 +3,7 @@ package me.soels.tocairn.solver.metric;
 import me.soels.tocairn.model.DependenceRelationship;
 import me.soels.tocairn.model.OtherClass;
 import me.soels.tocairn.solver.Clustering;
+import me.soels.tocairn.solver.OptimizationData;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -22,30 +23,27 @@ import java.util.stream.Collectors;
 public class SelmadjiFOne extends SelmadjiStructuralBehavior {
     @Override
     public double calculate(Clustering clustering) {
-        // Calculate total calls first as these are based on the entire application.
-        var nbTotalCalls = clustering.getNbTotalCalls();
-
         // Perform the FOne metric
         return -1 * clustering.getByCluster().values().stream()
-                .mapToDouble(microservice -> 0.5 * (interCoup(microservice, nbTotalCalls) + interCoh(microservice)))
+                .mapToDouble(microservice -> 0.5 * (interCoup(microservice, clustering.getOptimizationData()) + interCoh(microservice)))
                 .sum();
     }
 
     /**
      * Calculates interCoup as devised by Selmadji et al. (2020).
      *
-     * @param microservice the microservice to perform the measurement for
-     * @param nbTotalCalls the total amount of method calls made within the application
+     * @param microservice     the microservice to perform the measurement for
+     * @param optimizationData optimization data from previous calculations
      * @return the interCoup value for this microservice
      */
-    private double interCoup(List<OtherClass> microservice, long nbTotalCalls) {
+    private double interCoup(List<OtherClass> microservice, OptimizationData optimizationData) {
         var coupValues = microservice.stream()
                 // Get all the pairs of classes in this microservice excluding self-pairs.
                 .flatMap(i -> microservice.stream()
                         .filter(j -> !i.equals(j))
                         .map(j -> Pair.of(i, j)))
                 // Calculate pair coup values
-                .map(pair -> coup(pair.getKey(), pair.getValue(), nbTotalCalls))
+                .map(pair -> coup(pair.getKey(), pair.getValue(), optimizationData.getNbTotalCalls()))
                 .collect(Collectors.toList());
 
         if (coupValues.stream().allMatch(Objects::isNull)) {

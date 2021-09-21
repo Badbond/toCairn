@@ -1,5 +1,6 @@
 package me.soels.tocairn.solver;
 
+import lombok.Value;
 import me.soels.tocairn.model.AbstractClass;
 import me.soels.tocairn.model.OtherClass;
 import me.soels.tocairn.solver.moea.EncodingType;
@@ -13,11 +14,10 @@ import java.util.stream.Collectors;
  * The clustering as decoded from the {@link Solution} based on {@link EncodingType}.
  */
 public final class Clustering {
+    // The clustering itself modelled in two ways
     private final Map<Integer, List<OtherClass>> byCluster;
     private final Map<OtherClass, Integer> byClass;
-
-    // Data that is calculated once for the whole, regardless of how it is clustered.
-    private final long nbTotalCalls;
+    private final OptimizationData optimizationData;
 
     /**
      * Constructs the clustering.
@@ -25,11 +25,11 @@ public final class Clustering {
      * Note that the internal maps and lists of this data structure are made unmodifiable to have an immutable data
      * representation.
      *
-     * @param clustering   the clustering to create
-     * @param nbTotalCalls the total amount of calls made in the application
+     * @param clustering       the clustering to create
+     * @param optimizationData optimization data across all clusterings
      */
-    Clustering(Map<Integer, List<OtherClass>> clustering, long nbTotalCalls) {
-        this.nbTotalCalls = nbTotalCalls;
+    Clustering(Map<Integer, List<OtherClass>> clustering, OptimizationData optimizationData) {
+        this.optimizationData = optimizationData;
 
         this.byCluster = clustering.entrySet().stream()
                 .map(entry -> Pair.of(entry.getKey(), Collections.unmodifiableList(entry.getValue())))
@@ -73,11 +73,11 @@ public final class Clustering {
     }
 
     /**
-     * Returns the total amount of static method calls made in the application.
+     * Returns the optimization data for metric calculation.
      *
-     * @return the amount of static method calls
+     * @return optimization data
      */
-    public long getNbTotalCalls() {
-        return nbTotalCalls;
+    public OptimizationData getOptimizationData() {
+        return optimizationData;
     }
 }

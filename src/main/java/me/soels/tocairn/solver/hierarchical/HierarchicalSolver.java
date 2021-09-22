@@ -76,7 +76,8 @@ public class HierarchicalSolver implements Solver {
             var possibleClusterings = getPossibleMergers(currentClustering.clustering);
             currentClustering = getBestMerger(possibleClusterings);
             var duration = DurationFormatUtils.formatDuration(System.currentTimeMillis() - start, "mm:ss.SSS");
-            LOGGER.info("Performed step {} in the clustering algorithm in {} (m:s.millis)", ++counter, duration);
+            LOGGER.info("Performed step {} in the clustering algorithm producing {} microservices in {} (m:s.millis)",
+                    ++counter, currentClustering.getClustering().getByCluster().size(), duration);
         }
     }
 

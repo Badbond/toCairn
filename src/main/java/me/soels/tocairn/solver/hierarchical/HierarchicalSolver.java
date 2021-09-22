@@ -125,7 +125,8 @@ public class HierarchicalSolver implements Solver {
                                                      AtomicReference<Double> bestQuality,
                                                      Map<MetricType, double[]> metrics,
                                                      double quality) {
-        if (bestQuality.get() == null || quality > bestQuality.get()) {
+        // As we negate maximization functions, the best quality is represented by the lowest number. Hence, lesser than.
+        if (bestQuality.get() == null || quality < bestQuality.get()) {
             var solution = new Solution();
             solution.setMetricValues(metrics);
             solution.setMicroservices(clustering.getByCluster().entrySet().stream()

@@ -396,7 +396,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"pathToProjectZip\": \"<<Path to Java source code on server filesystem>>\",\n    \"pathToJaCoCoXml\": \"<<Optional path to Jacoco XML report on server filesystem>>\",\n    \"languageLevel\": \"<<Java version of source code>>\",\n    \"topPackageRegex\": \"<<Top level common package>>\",\n    \"dataClassFqnRegexes\": [\n        \"<<Regex to match fully qualified names of classes to mark as data>>\"\n    ],\n    \"customDataAnnotation\": \"<<Custom annotation present on the class for which to mark is as data>>\",\n    \"fnqExcludeRegexes\": [\n        \"<<List of classes to exclude>>\"\n    ]\n}",
+							"raw": "{\n    \"pathToProjectZip\": \"<<Path to Java source code on server filesystem>>\",\n    \"pathToJaCoCoXml\": \"<<Optional path to Jacoco XML report on server filesystem>>\",\n    \"languageLevel\": \"<<Java version of source code>>\",\n    \"topPackageRegex\": \"<<Top level common package>>\",\n    \"dataClassFqnRegexes\": [\n        \"<<Regex to match fully qualified names of classes to mark as data>>\"\n    ],\n    \"customDataAnnotation\": \"<<Custom annotation present on the class for which to mark is as data>>\",\n    \"pathIncludeRegexes\": [\n        \"<<List of regexes based on file path to include classes upon. Has precedence over fqnExcludeRegexes.>>\"\n    ],\n    \"fqnExcludeRegexes\": [\n        \"<<List of regexes based on FQN to exclude classes upon>>\"\n    ]\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -425,7 +425,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"pathToProjectZip\": \"/tmp/tocairn/code.zip\",\n    \"pathToJaCoCoXml\": \"/tmp/tocairn/jacoco.xml\",\n    \"languageLevel\": \"JAVA_11\",\n    \"topPackageRegex\": \"me\\\\.soels\\\\.tocairn\",\n    \"fnqExcludeRegexes\": [\n        \".*Application\"\n    ],\n    \"dataClassFqnRegexes\": [\n        \".*/model/.*\"\n    ],\n    \"customDataAnnotation\": \"Value\"\n}",
+									"raw": "{\n    \"pathToProjectZip\": \"/tmp/tocairn/code.zip\",\n    \"pathToJaCoCoXml\": \"/tmp/tocairn/jacoco.xml\",\n    \"languageLevel\": \"JAVA_11\",\n    \"topPackageRegex\": \"me\\\\.soels\\\\.tocairn\",\n    \"pathIncludeRegexes\": [\n        \".*\\\\/me\\\\/soels\\\\/tocairn\\\\/.*\"\n    ],\n    \"fqnExcludeRegexes\": [\n        \".*Application\"\n    ],\n    \"dataClassFqnRegexes\": [\n        \".*/model/.*\"\n    ],\n    \"customDataAnnotation\": \"Value\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"

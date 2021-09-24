@@ -59,8 +59,10 @@ public class SourceClassAnalysis {
                 .map(this::printEmptyQualifiers)
                 .filter(Objects::nonNull)
                 .filter(clazz -> clazz.getFullyQualifiedName().isPresent())
+                // Only include classes matching the filter
+                .filter(clazz -> filterIncludeClassBasedOnPathRegex(clazz, context.getInput().getPathIncludeRegexes(), filterCount))
                 // Exclude classes based on input regexes matching FQN
-                .filter(clazz -> filterClassBasedOnRegex(clazz, context.getInput().getFnqExcludeRegexes(), filterCount))
+                .filter(clazz -> filterExcludeClassBasedOnFQNRegex(clazz, context.getInput().getFqnExcludeRegexes(), filterCount))
                 // Create a pair of the type of class and its AST
                 .map(clazz -> Pair.of(clazz, storeClass(clazz, context.getInput(), context, getStorageLocation(clazz))))
                 .filter(pair -> pair.getValue() != null)
@@ -80,8 +82,30 @@ public class SourceClassAnalysis {
         LOGGER.info("Source class analysis took {} (H:m:s.millis)", duration);
     }
 
-    private boolean filterClassBasedOnRegex(ClassOrInterfaceDeclaration clazz, List<String> excludeRegexes, MutableInt count) {
-        if (excludeRegexes.stream().anyMatch(regex -> clazz.getFullyQualifiedName().get().matches(regex))) {
+    private boolean filterIncludeClassBasedOnPathRegex(ClassOrInterfaceDeclaration clazz, List<String> pathIncludeRegexes, MutableInt filterCount) {
+        if (pathIncludeRegexes.isEmpty()) {
+            // When not providing a regex, we allow all classes.
+            return true;
+        }
+
+        var path = clazz.findCompilationUnit()
+                .flatMap(CompilationUnit::getStorage)
+                .map(CompilationUnit.Storage::getPath);
+        if (path.isEmpty()) {
+            LOGGER.warn("Clazz with name {} has no compilation unit or storage associated", clazz.getNameAsString());
+            filterCount.increment();
+            return false;
+        }
+
+        var result = pathIncludeRegexes.stream().anyMatch(regex -> path.get().toString().matches(regex));
+        if (!result) {
+            filterCount.increment();
+        }
+        return result;
+    }
+
+    private boolean filterExcludeClassBasedOnFQNRegex(ClassOrInterfaceDeclaration clazz, List<String> fqnExcludeRegexes, MutableInt count) {
+        if (fqnExcludeRegexes.stream().anyMatch(regex -> clazz.getFullyQualifiedName().get().matches(regex))) {
             count.increment();
             return false;
         }

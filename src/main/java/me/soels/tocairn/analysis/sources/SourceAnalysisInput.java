@@ -19,7 +19,8 @@ public final class SourceAnalysisInput {
     private final ParserConfiguration.LanguageLevel languageLevel;
     private final String topPackageRegex;
     private final String customDataAnnotation;
-    private final List<String> fnqExcludeRegexes;
+    private final List<String> pathIncludeRegexes;
+    private final List<String> fqnExcludeRegexes;
     private final List<String> dataClassFqnRegexes;
 
     /**
@@ -30,7 +31,8 @@ public final class SourceAnalysisInput {
      * @param topPackageRegex      the top-level package definition regex for feature extraction
      * @param languageLevel        the Java language to parse the project with
      * @param customDataAnnotation the custom annotation to apply on classes identifying data
-     * @param fnqExcludeRegexes    a list of regexes to exclude classes in analysis for
+     * @param pathIncludeRegexes   a list of regexes targeting a class' storage path to include in analysis
+     * @param fqnExcludeRegexes    a list of regexes targeting a class' FQN to exclude in analysis
      * @param dataClassFqnRegexes  a list of regex to match classes with to mark them as data
      */
     public SourceAnalysisInput(Path pathToZip,
@@ -38,14 +40,16 @@ public final class SourceAnalysisInput {
                                String topPackageRegex,
                                ParserConfiguration.LanguageLevel languageLevel,
                                String customDataAnnotation,
-                               @Nullable List<String> fnqExcludeRegexes,
+                               @Nullable List<String> pathIncludeRegexes,
+                               @Nullable List<String> fqnExcludeRegexes,
                                @Nullable List<String> dataClassFqnRegexes) {
         this.pathToZip = pathToZip;
         this.pathToJaCoCoXml = pathToJaCoCoXml;
         this.languageLevel = languageLevel;
         this.topPackageRegex = topPackageRegex;
         this.customDataAnnotation = customDataAnnotation;
-        this.fnqExcludeRegexes = fnqExcludeRegexes == null ? new ArrayList<>() : fnqExcludeRegexes;
+        this.pathIncludeRegexes = pathIncludeRegexes == null ? new ArrayList<>() : pathIncludeRegexes;
+        this.fqnExcludeRegexes = fqnExcludeRegexes == null ? new ArrayList<>() : fqnExcludeRegexes;
         this.dataClassFqnRegexes = dataClassFqnRegexes == null ? new ArrayList<>() : dataClassFqnRegexes;
     }
 

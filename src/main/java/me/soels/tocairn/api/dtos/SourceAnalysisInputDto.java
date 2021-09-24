@@ -25,11 +25,13 @@ public final class SourceAnalysisInputDto {
     @Pattern(regexp = ".*\\S+.*") // Don't allow empty. @Pattern allows null.
     private final String customDataAnnotation;
     @Nullable
-    private final List<String> fnqExcludeRegexes;
+    private final List<String> pathIncludeRegexes;
+    @Nullable
+    private final List<String> fqnExcludeRegexes;
     @Nullable
     private final List<String> dataClassFqnRegexes;
 
     public SourceAnalysisInput toDao() {
-        return new SourceAnalysisInput(pathToProjectZip, pathToJaCoCoXml,topPackageRegex, languageLevel, customDataAnnotation, fnqExcludeRegexes, dataClassFqnRegexes);
+        return new SourceAnalysisInput(pathToProjectZip, pathToJaCoCoXml, topPackageRegex, languageLevel, customDataAnnotation, pathIncludeRegexes, fqnExcludeRegexes, dataClassFqnRegexes);
     }
 }

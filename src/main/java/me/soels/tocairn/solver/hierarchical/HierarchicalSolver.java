@@ -73,8 +73,12 @@ public class HierarchicalSolver implements Solver {
                 return Optional.empty();
             }
 
-            var possibleClusterings = getPossibleMergers(currentClustering.clustering);
-            currentClustering = getBestMerger(possibleClusterings);
+            var possibleClusterings = getPossibleMergersWithSharedEdge(currentClustering.clustering);
+            var best = getBestMerger(possibleClusterings);
+            if (best.isEmpty()) {
+                return Optional.empty();
+            }
+            currentClustering = best.get();
             var duration = DurationFormatUtils.formatDuration(System.currentTimeMillis() - start, "mm:ss.SSS");
             LOGGER.info("Performed step {} in the clustering algorithm producing {} microservices in {} (m:s.millis)",
                     ++counter, currentClustering.getClustering().getByCluster().size(), duration);
@@ -84,11 +88,14 @@ public class HierarchicalSolver implements Solver {
     /**
      * Retrieves the best clustering from the given possible clusterings based on the weighed quality function from
      * the configured metrics.
+     * <p>
+     * Returns empty when we could not give the best clustering. In that case, we should safely stop the algorithm
+     * and persist intermittent results for investigation.
      *
      * @param possibleClusterings the possible clusterings
      * @return the best clustering
      */
-    private HierarchicalClustering getBestMerger(List<Clustering> possibleClusterings) {
+    private Optional<HierarchicalClustering> getBestMerger(List<Clustering> possibleClusterings) {
         AtomicReference<Double> bestQuality = new AtomicReference<>();
         AtomicReference<HierarchicalClustering> bestClustering = new AtomicReference<>();
 
@@ -96,11 +103,11 @@ public class HierarchicalSolver implements Solver {
                 .forEach(clustering -> processClusteringParallel(clustering, bestQuality, bestClustering));
 
         if (bestClustering.get() == null) {
-            // This should not happen as we always have at least one clustering which we set it to
-            throw new IllegalStateException("Could not deduce the best clustering");
+            // Apparently, no best clustering is given, return null to stop the algorithm
+            return Optional.empty();
         }
 
-        return bestClustering.get();
+        return Optional.ofNullable(bestClustering.get());
     }
 
     private void processClusteringParallel(Clustering clustering,
@@ -140,12 +147,12 @@ public class HierarchicalSolver implements Solver {
     /**
      * Computes the list of possible clusterings from the given clustering.
      * <p>
-     * Note, similar to Clauset, Newman & Moore we only allow merging between microservices that share an edge.
+     * Note, similar to Clauset, Newman & Moore, here we only allow merging between microservices that share an edge.
      *
      * @param currentClustering the clustering to merge
      * @return all possible mergers for the given clustering
      */
-    public List<Clustering> getPossibleMergers(Clustering currentClustering) {
+    public List<Clustering> getPossibleMergersWithSharedEdge(Clustering currentClustering) {
         return currentClustering.getByCluster().entrySet().parallelStream()
                 .flatMap(entry -> entry.getValue().stream()
                         .flatMap(clazz -> clazz.getDependenceRelationships().stream())
@@ -161,6 +168,28 @@ public class HierarchicalSolver implements Solver {
                     merger.mergeCluster(pair.getKey(), pair.getValue());
                     return merger.build();
                 })
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Computes the list of possible clusterings from the given clustering.
+     * <p>
+     * Note, similar to Clauset, Newman & Moore, here we only allow merging between microservices that share an edge.
+     *
+     * @param currentClustering the clustering to merge
+     * @return all possible mergers for the given clustering
+     */
+    public List<Clustering> getPossibleMergers(Clustering currentClustering) {
+        return currentClustering.getByCluster().keySet().parallelStream()
+                .flatMap(clusterA -> currentClustering.getByCluster().keySet().stream()
+                        // Only cluster A with clusters with a higher number (excluding duplicate pairs and self-ref.)
+                        .filter(clusterB -> clusterA < clusterB)
+                        // Create new clustering and merge the two clusters
+                        .map(clusterB -> {
+                            var builder = new ClusteringBuilder(currentClustering);
+                            builder.mergeCluster(clusterA, clusterB);
+                            return builder.build();
+                        }))
                 .collect(Collectors.toList());
     }
 

@@ -18,7 +18,7 @@ import java.util.UUID;
 public class Microservice {
     private final int microserviceNumber;
     @Relationship("HasClasses")
-    private final List<OtherClass> classes = new ArrayList<>();
+    private List<OtherClass> classes = new ArrayList<>();
     @Id
     @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)
     private UUID id;

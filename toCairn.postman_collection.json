@@ -109,7 +109,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{   \n   \"name\": \"<<Name for the evaluation>>\",\n    \"solverConfiguration\": {\n        \"type\": \"hierarchical\",\n        \"nrClusters\": \"<<The amount of desired clusters to step the clustering algorithm at, represented as a number>>\",\n        \"weights\": [\"<<List of weights matching the number of (underlying) metrics for the given metrics>>\"],\n        \"metrics\": [\"<<List of Metrics to perform>>\"]\n    }\n}",
+							"raw": "{   \n   \"name\": \"<<Name for the evaluation>>\",\n    \"solverConfiguration\": {\n        \"type\": \"hierarchical\",\n        \"minClusters\": \"<<The minimum amount of desired clusters to step the clustering algorithm at, represented as a number. 0 by default.>>\",\n        \"maxClusters\": \"<<The maximum amount of desired clusters to step the clustering algorithm at, represented as a number. The amount of classes to cluster by default.>>\",\n        \"weights\": [\"<<List of weights matching the number of (underlying) metrics for the given metrics>>\"],\n        \"metrics\": [\"<<List of Metrics to perform>>\"]\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -136,7 +136,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{   \n   \"name\": \"My AHCA clusterings of application X\",\n    \"solverConfiguration\": {\n        \"type\": \"hierarchical\",\n        \"weights\": [1,1,1,1],\n        \"metrics\": [\n            \"DATA_AUTONOMY\", \n            \"FOCUSED_ON_ONE\", \n            \"BEHAVIORAL_AUTONOMY\"\n        ],\n        \"nrClusters\": 7\n    }\n}",
+									"raw": "{   \n   \"name\": \"My AHCA clusterings of application X\",\n    \"solverConfiguration\": {\n        \"type\": \"hierarchical\",\n        \"weights\": [1,1,1,1],\n        \"metrics\": [\n            \"DATA_AUTONOMY\", \n            \"FOCUSED_ON_ONE\", \n            \"BEHAVIORAL_AUTONOMY\"\n        ],\n        \"minClusters\": 7,\n        \"maxClusters\": 10\n    }\n}",
 									"options": {
 										"raw": {
 											"language": "json"

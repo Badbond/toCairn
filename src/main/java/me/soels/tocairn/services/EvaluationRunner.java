@@ -47,8 +47,6 @@ public class EvaluationRunner {
             var start = ZonedDateTime.now();
             LOGGER.info("Running evaluation '{}' ({})", evaluation.getName(), evaluation.getId());
             var result = solver.run(input);
-            evaluation.setStatus(EvaluationStatus.DONE);
-
             result.setStartDate(start);
             result.setFinishDate(ZonedDateTime.now());
             result.setName(name);
@@ -57,6 +55,7 @@ public class EvaluationRunner {
 
             var duration = DurationFormatUtils.formatDurationHMS(ChronoUnit.MILLIS.between(start, result.getFinishDate()));
             LOGGER.info("Evaluation run complete. Took {} (H:m:s.millis)", duration);
+            evaluationService.updateStatus(evaluation.getId(), EvaluationStatus.DONE);
             LOGGER.info("Result id: {}, Solutions: {}, Clusters: {}", result.getId(), result.getSolutions().size(),
                     result.getSolutions().stream().mapToInt(sol -> sol.getMicroservices().size()).sum());
         } catch (Exception e) {

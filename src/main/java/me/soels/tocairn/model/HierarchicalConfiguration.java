@@ -19,10 +19,15 @@ import java.util.Optional;
 @Setter
 public class HierarchicalConfiguration extends SolverConfiguration {
     private List<Double> weights = new LinkedList<>();
-    private Integer nrClusters;
+    private Integer minClusters;
+    private Integer maxClusters;
 
-    public Optional<Integer> getNrClusters() {
-        return Optional.ofNullable(nrClusters);
+    public Optional<Integer> getMinClusters() {
+        return Optional.ofNullable(minClusters);
+    }
+
+    public Optional<Integer> getMaxClusters() {
+        return Optional.ofNullable(maxClusters);
     }
 }
 

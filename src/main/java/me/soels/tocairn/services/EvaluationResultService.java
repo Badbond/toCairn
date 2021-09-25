@@ -64,27 +64,44 @@ public class EvaluationResultService {
     }
 
     public void persistResult(EvaluationResult result) {
+        LOGGER.info("Persisting clustering result(s)");
+        LOGGER.info(" - Temporarily storing microservices' classes and resetting them");
         Map<Microservice, List<UUID>> microserviceClasses = new HashMap<>();
-
-        LOGGER.info("Temporary storing microservices' classes and resetting them");
         for (var solution : result.getSolutions()) {
             for (var microservice : solution.getMicroservices()) {
                 // Store the instance of this microservice and the classes it should reference.
                 microserviceClasses.put(microservice, microservice.getClasses().stream()
                         .map(AbstractClass::getId)
                         .collect(Collectors.toCollection(ArrayList::new)));
-                // Remove the class references such that we can persist the EvaluationResult completely.
-                microservice.getClasses().clear();
+                // Remove the class references such that we can persist the microservice completely.
+                microservice.setClasses(Collections.emptyList());
             }
         }
-        LOGGER.info("Persisting results and solutions with links to the microservices");
-        // Store the result, solutions and microservices. The latter does not contain relationships to the classes.
+        LOGGER.info(" - Persisting {} microservices.", microserviceClasses.size());
+        microserviceClasses.keySet().parallelStream().forEach(microserviceRepository::save);
+
+        LOGGER.info(" - Temporarily storing solutions' microservices and resetting them");
+        Map<Solution, List<UUID>> solutionMicroservices = new HashMap<>();
+        for (var solution : result.getSolutions()) {
+            // Store the instance of this solution and the microservices it should reference.
+            solutionMicroservices.put(solution, solution.getMicroservices().stream()
+                    .map(Microservice::getId)
+                    .collect(Collectors.toCollection(ArrayList::new)));
+            // Remove the microservice references such that we can persist the result and solution completely.
+            solution.setMicroservices(Collections.emptyList());
+        }
+
+        LOGGER.info(" - Persisting result and its {} solutions.", solutionMicroservices.size());
         resultRepository.save(result);
 
-        // Create the relationship to the classes.
-        LOGGER.info("Creating links from microservices to the classes");
+        LOGGER.info(" - Creating links from solutions to the microservices");
+        solutionMicroservices.forEach((solution, microservices) ->
+                solutionRepository.createRelationships(solution.getId(), microservices));
+
+        LOGGER.info(" - Creating links from microservices to the classes");
         microserviceClasses.forEach((microservice, classes) ->
                 microserviceRepository.createRelationships(microservice.getId(), classes));
-        LOGGER.info("Done creating links from microservices to the classes");
+
+        LOGGER.info("Done persisting clustering result(s)");
     }
 }

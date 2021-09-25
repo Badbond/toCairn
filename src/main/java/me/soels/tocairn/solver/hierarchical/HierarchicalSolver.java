@@ -31,12 +31,8 @@ public class HierarchicalSolver implements Solver {
     public HierarchicalEvaluationResult run(EvaluationInput input) {
         LOGGER.info("Running hierarchical solver");
         var initialClustering = createInitialSolution(input);
-        var allSolutions = new ArrayList<Solution>();
 
-        var singleSolution = performAlgorithm(initialClustering, allSolutions);
-        var solutions = singleSolution
-                .map(Collections::singletonList)
-                .orElse(allSolutions);
+        var solutions = performAlgorithm(initialClustering);
 
         var result = new HierarchicalEvaluationResult();
         result.setSolutions(solutions);
@@ -46,37 +42,32 @@ public class HierarchicalSolver implements Solver {
 
     /**
      * Performs the agglomorative hierarchical clustering algorithm given an initial clustering.
-     * <p>
-     * This returns either the preferred solution based on the number of clusters or all solutions from all
-     * the intermediate solutions produced by the hierarchical clustering algorithm. The latter includes the
-     * clustering with all classes in their own cluster but not the monolithic application itself (all classes in
-     * one cluster).
      *
      * @param initialClustering the initial clustering
-     * @param allSolutions      a data pass by reference for accumulating all intermittent solutions from the algorithm
      * @return the preferable solution (if present)
      */
-    private Optional<Solution> performAlgorithm(HierarchicalClustering initialClustering, ArrayList<Solution> allSolutions) {
+    private List<Solution> performAlgorithm(HierarchicalClustering initialClustering) {
+        var solutionsToPersist = new ArrayList<Solution>();
         var currentClustering = initialClustering;
         int counter = 0;
+        int minClusters = configuration.getMinClusters().orElse(1);
+        int maxClusters = configuration.getMaxClusters().orElse(initialClustering.clustering.getByClass().size());
+
         while (true) {
             var start = System.currentTimeMillis();
-            allSolutions.add(currentClustering.solution);
 
-            if (configuration.getNrClusters().isPresent() &&
-                    configuration.getNrClusters().get() == currentClustering.solution.getMicroservices().size()) {
-                // Our last iteration was one where the amount of clusters equals that configured. Return it as the single
-                // solution.
-                return Optional.of(currentClustering.solution);
-            } else if (currentClustering.solution.getMicroservices().size() == 1) {
-                // We reached the end of the algorithm, thus we did not have a preferable solution
-                return Optional.empty();
+            var size = currentClustering.solution.getMicroservices().size();
+            if (size >= minClusters && size <= maxClusters) {
+                solutionsToPersist.add(currentClustering.solution);
+            } else if (size > maxClusters) {
+                return solutionsToPersist;
             }
 
-            var possibleClusterings = getPossibleMergersWithSharedEdge(currentClustering.clustering);
+            var possibleClusterings = getPossibleClusters(currentClustering);
             var best = getBestMerger(possibleClusterings);
             if (best.isEmpty()) {
-                return Optional.empty();
+                LOGGER.info("No best next cluster found in {} possible clusterings. Stopping.", possibleClusterings.size());
+                return solutionsToPersist;
             }
             currentClustering = best.get();
             var duration = DurationFormatUtils.formatDuration(System.currentTimeMillis() - start, "mm:ss.SSS");
@@ -141,6 +132,15 @@ public class HierarchicalSolver implements Solver {
                     .collect(Collectors.toList()));
             bestClustering.set(new HierarchicalClustering(clustering, solution));
             bestQuality.set(quality);
+        }
+    }
+
+    private List<Clustering> getPossibleClusters(HierarchicalClustering currentClustering) {
+        var sharingAnEdge = getPossibleMergersWithSharedEdge(currentClustering.clustering);
+        if (!sharingAnEdge.isEmpty()) {
+            return sharingAnEdge;
+        } else {
+            return getPossibleMergers(currentClustering.clustering);
         }
     }
 

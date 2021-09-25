@@ -13,19 +13,22 @@ import java.util.stream.Collectors;
 @Getter
 public class HierarchicalConfigurationDto extends SolverConfigurationDto {
     private final List<Double> weights;
-    private final Integer nrClusters;
+    private final Integer minClusters;
+    private final Integer maxClusters;
 
     public HierarchicalConfigurationDto(HierarchicalConfiguration dao) {
         super(dao.getMetrics());
         this.weights = dao.getWeights();
-        this.nrClusters = dao.getNrClusters().orElse(null);
+        this.minClusters = dao.getMinClusters().orElse(null);
+        this.maxClusters = dao.getMaxClusters().orElse(null);
     }
 
     @JsonCreator
-    public HierarchicalConfigurationDto(List<MetricType> metrics, List<Double> weights, Integer nrClusters) {
+    public HierarchicalConfigurationDto(List<MetricType> metrics, List<Double> weights, Integer minClusters, Integer maxClusters) {
         super(metrics);
         this.weights = weights;
-        this.nrClusters = nrClusters;
+        this.minClusters = minClusters;
+        this.maxClusters = maxClusters;
 
         var underlyingMetrics = metrics.stream()
                 .flatMap(metricType -> metricType.getMetrics().stream())
@@ -42,11 +45,16 @@ public class HierarchicalConfigurationDto extends SolverConfigurationDto {
         var dao = new HierarchicalConfiguration();
         dao.setMetrics(getMetrics());
         dao.setWeights(weights);
-        dao.setNrClusters(nrClusters);
+        dao.setMinClusters(minClusters);
+        dao.setMaxClusters(maxClusters);
         return dao;
     }
 
-    public Optional<Integer> getNrClusters() {
-        return Optional.ofNullable(nrClusters);
+    public Optional<Integer> getMinClusters() {
+        return Optional.ofNullable(minClusters);
+    }
+
+    public Optional<Integer> getMaxClusters() {
+        return Optional.ofNullable(maxClusters);
     }
 }

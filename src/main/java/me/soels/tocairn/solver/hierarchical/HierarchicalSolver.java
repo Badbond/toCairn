@@ -63,10 +63,10 @@ public class HierarchicalSolver implements Solver {
                 return solutionsToPersist;
             }
 
-            var possibleClusterings = getPossibleClusters(currentClustering);
-            var best = getBestMerger(possibleClusterings);
+            var possibleMergers = getPossibleMergers(currentClustering);
+            var best = getBestMerger(possibleMergers, currentClustering);
             if (best.isEmpty()) {
-                LOGGER.info("No best next cluster found in {} possible clusterings. Stopping.", possibleClusterings.size());
+                LOGGER.info("No best next cluster found in {} possible clusterings. Stopping.", possibleMergers.size());
                 return solutionsToPersist;
             }
             currentClustering = best.get();
@@ -83,14 +83,20 @@ public class HierarchicalSolver implements Solver {
      * Returns empty when we could not give the best clustering. In that case, we should safely stop the algorithm
      * and persist intermittent results for investigation.
      *
-     * @param possibleClusterings the possible clusterings
+     * @param possibleMergers   the possible pairs of keys to merge
+     * @param currentClustering the previous step's best clustering
      * @return the best clustering
      */
-    private Optional<HierarchicalClustering> getBestMerger(List<Clustering> possibleClusterings) {
+    private Optional<HierarchicalClustering> getBestMerger(List<Pair<Integer, Integer>> possibleMergers, HierarchicalClustering currentClustering) {
         AtomicReference<Double> bestQuality = new AtomicReference<>();
         AtomicReference<HierarchicalClustering> bestClustering = new AtomicReference<>();
 
-        possibleClusterings.parallelStream()
+        possibleMergers.parallelStream()
+                .map(pair -> {
+                    var merger = new ClusteringBuilder(currentClustering.clustering);
+                    merger.mergeCluster(pair.getKey(), pair.getValue());
+                    return merger.build();
+                })
                 .forEach(clustering -> processClusteringParallel(clustering, bestQuality, bestClustering));
 
         if (bestClustering.get() == null) {
@@ -135,7 +141,7 @@ public class HierarchicalSolver implements Solver {
         }
     }
 
-    private List<Clustering> getPossibleClusters(HierarchicalClustering currentClustering) {
+    private List<Pair<Integer, Integer>> getPossibleMergers(HierarchicalClustering currentClustering) {
         var sharingAnEdge = getPossibleMergersWithSharedEdge(currentClustering.clustering);
         if (!sharingAnEdge.isEmpty()) {
             return sharingAnEdge;
@@ -152,7 +158,7 @@ public class HierarchicalSolver implements Solver {
      * @param currentClustering the clustering to merge
      * @return all possible mergers for the given clustering
      */
-    public List<Clustering> getPossibleMergersWithSharedEdge(Clustering currentClustering) {
+    public List<Pair<Integer, Integer>> getPossibleMergersWithSharedEdge(Clustering currentClustering) {
         return currentClustering.getByCluster().entrySet().parallelStream()
                 .flatMap(entry -> entry.getValue().stream()
                         .flatMap(clazz -> clazz.getDependenceRelationships().stream())
@@ -163,11 +169,6 @@ public class HierarchicalSolver implements Solver {
                 .distinct()
                 .map(key -> key.split(":"))
                 .map(parts -> Pair.of(Integer.valueOf(parts[0]), Integer.valueOf(parts[1])))
-                .map(pair -> {
-                    var merger = new ClusteringBuilder(currentClustering);
-                    merger.mergeCluster(pair.getKey(), pair.getValue());
-                    return merger.build();
-                })
                 .collect(Collectors.toList());
     }
 
@@ -179,18 +180,24 @@ public class HierarchicalSolver implements Solver {
      * @param currentClustering the clustering to merge
      * @return all possible mergers for the given clustering
      */
-    public List<Clustering> getPossibleMergers(Clustering currentClustering) {
-        return currentClustering.getByCluster().keySet().parallelStream()
-                .flatMap(clusterA -> currentClustering.getByCluster().keySet().stream()
-                        // Only cluster A with clusters with a higher number (excluding duplicate pairs and self-ref.)
-                        .filter(clusterB -> clusterA < clusterB)
-                        // Create new clustering and merge the two clusters
-                        .map(clusterB -> {
-                            var builder = new ClusteringBuilder(currentClustering);
-                            builder.mergeCluster(clusterA, clusterB);
-                            return builder.build();
-                        }))
+    public List<Pair<Integer, Integer>> getPossibleMergers(Clustering currentClustering) {
+        List<int[]> combinations = new ArrayList<>();
+        helper(combinations, new int[2], 0, currentClustering.getByCluster().size() - 1, 0);
+
+        return combinations.stream()
+                .map(combination -> Pair.of(combination[0], combination[1]))
                 .collect(Collectors.toList());
+    }
+
+    private void helper(List<int[]> combinations, int[] data, int start, int end, int index) {
+        if (index == data.length) {
+            int[] combination = data.clone();
+            combinations.add(combination);
+        } else if (start <= end) {
+            data[index] = start;
+            helper(combinations, data, start + 1, end, index + 1);
+            helper(combinations, data, start + 1, end, index);
+        }
     }
 
     /**

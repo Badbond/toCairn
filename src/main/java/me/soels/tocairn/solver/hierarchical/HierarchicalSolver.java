@@ -41,7 +41,7 @@ public class HierarchicalSolver implements Solver {
     }
 
     /**
-     * Performs the agglomorative hierarchical clustering algorithm given an initial clustering.
+     * Performs the agglomerative hierarchical clustering algorithm given an initial clustering.
      *
      * @param initialClustering the initial clustering
      * @return the preferable solution (if present)
@@ -50,16 +50,17 @@ public class HierarchicalSolver implements Solver {
         var solutionsToPersist = new ArrayList<Solution>();
         var currentClustering = initialClustering;
         int counter = 0;
-        int minClusters = configuration.getMinClusters().orElse(1);
-        int maxClusters = configuration.getMaxClusters().orElse(initialClustering.clustering.getByClass().size());
+        int minClusters = configuration.getMinClusterAmount().orElse(1);
+        int maxClusters = configuration.getMaxClusterAmount().orElse(initialClustering.clustering.getByClass().size());
 
         while (true) {
             var start = System.currentTimeMillis();
 
             var size = currentClustering.solution.getMicroservices().size();
-            if (size >= minClusters && size <= maxClusters) {
+            if (size <= maxClusters) {
                 solutionsToPersist.add(currentClustering.solution);
-            } else if (size > maxClusters) {
+            }
+            if (size == minClusters) {
                 return solutionsToPersist;
             }
 
@@ -77,8 +78,8 @@ public class HierarchicalSolver implements Solver {
     }
 
     /**
-     * Retrieves the best clustering from the given possible clusterings based on the weighed quality function from
-     * the configured metrics.
+     * Retrieves the best clustering from the given possible mergers for the current clustering based on the weighed
+     * quality function from the configured metrics.
      * <p>
      * Returns empty when we could not give the best clustering. In that case, we should safely stop the algorithm
      * and persist intermittent results for investigation.
@@ -98,12 +99,6 @@ public class HierarchicalSolver implements Solver {
                     return merger.build();
                 })
                 .forEach(clustering -> processClusteringParallel(clustering, bestQuality, bestClustering));
-
-        if (bestClustering.get() == null) {
-            // Apparently, no best clustering is given, return null to stop the algorithm
-            return Optional.empty();
-        }
-
         return Optional.ofNullable(bestClustering.get());
     }
 
@@ -120,7 +115,7 @@ public class HierarchicalSolver implements Solver {
             var metric = metricsArray[i];
             quality += metric * weight;
         }
-        quality = 1 / (double) metricsArray.length * quality;
+        quality = quality / configuration.getWeights().stream().mapToDouble(v -> v).sum();
         checkAndSetBestQuality(clustering, bestClustering, bestQuality, metrics, quality);
     }
 
@@ -153,12 +148,18 @@ public class HierarchicalSolver implements Solver {
     /**
      * Computes the list of possible clusterings from the given clustering.
      * <p>
+     * Returns an empty list if {@link HierarchicalConfiguration#getOptimizationOnSharedEdges()} is set to {@code false}.
+     * <p>
      * Note, similar to Clauset, Newman & Moore, here we only allow merging between microservices that share an edge.
      *
      * @param currentClustering the clustering to merge
      * @return all possible mergers for the given clustering
      */
     public List<Pair<Integer, Integer>> getPossibleMergersWithSharedEdge(Clustering currentClustering) {
+        if (!configuration.getOptimizationOnSharedEdges()) {
+            return Collections.emptyList();
+        }
+
         return currentClustering.getByCluster().entrySet().parallelStream()
                 .flatMap(entry -> entry.getValue().stream()
                         .flatMap(clazz -> clazz.getDependenceRelationships().stream())

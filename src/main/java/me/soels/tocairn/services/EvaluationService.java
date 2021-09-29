@@ -2,7 +2,10 @@ package me.soels.tocairn.services;
 
 import me.soels.tocairn.api.ResourceNotFoundException;
 import me.soels.tocairn.api.dtos.EvaluationDto;
-import me.soels.tocairn.model.*;
+import me.soels.tocairn.model.AnalysisType;
+import me.soels.tocairn.model.Evaluation;
+import me.soels.tocairn.model.EvaluationStatus;
+import me.soels.tocairn.model.SolverConfiguration;
 import me.soels.tocairn.repositories.EvaluationRepository;
 import me.soels.tocairn.repositories.SolverConfigurationRepository;
 import me.soels.tocairn.solver.metric.MetricType;
@@ -217,14 +220,11 @@ public class EvaluationService {
      * @return the validated configuration
      */
     private SolverConfiguration validateConfiguration(@Valid SolverConfiguration configuration) {
-        if (configuration instanceof MOEAConfiguration) {
-            var moeaConfiguration = (MOEAConfiguration) configuration;
-            var boundViolation = moeaConfiguration.getClusterCountLowerBound()
-                    .flatMap(lower -> moeaConfiguration.getClusterCountUpperBound())
-                    .filter(upper -> upper < moeaConfiguration.getClusterCountLowerBound().get());
-            if (boundViolation.isPresent()) {
-                throw new IllegalArgumentException("Cluster count upper bound needs to be greater than its lower bound");
-            }
+        var boundViolation = configuration.getMinClusterAmount()
+                .flatMap(min -> configuration.getMaxClusterAmount())
+                .filter(max -> configuration.getMinClusterAmount().get() > max);
+        if (boundViolation.isPresent()) {
+            throw new IllegalArgumentException("maxClusterAmount needs to be greater than minClusterAmount");
         }
         return configuration;
     }

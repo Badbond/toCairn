@@ -33,7 +33,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{   \n    \"name\": \"<<Name for the evaluation>>\",\n    \"solverConfiguration\": {\n        \"type\": \"moea\",\n        \"algorithm\": \"<<Multi objective evolutionary algorithm to use>>\",\n        \"maxEvaluations\": \"<<Amount of evaluations to perform at most, represented as a number (not a string)>>\",\n        \"maxTime\": \"<<Optional amount of milliseconds to run at most. Not providing this value results in running until maxEvaluations has been reached>>\",\n        \"clusterCountLowerBound\": \"<<Optional minimum amount of clusters to allow in the solutions, represented as a number. Omitting this value allows cluster sizes from 1 up to clusterCountUpperBound. Works only with CLUSTER_LABEL encoding.>>\",\n        \"clusterCountUpperBound\": \"<<Optional maximum amount of clusters to allow in the solutions, represented as a number. Omitting this value allows cluster sizes from clusterCountLowerBound up to the number of other classes. Works only withCLUSTER_LABEL encoding.>>\",\n        \"metrics\": [\"<<List of Metrics to perform>>\"],\n        \"encodingType\": \"<<Multi objective evolutionary encoding to use; either CLUSTER_LABEL or GRAPH_ADJACENCY>>\"\n    }\n}",
+							"raw": "{   \n    \"name\": \"<<Name for the evaluation>>\",\n    \"solverConfiguration\": {\n        \"type\": \"moea\",\n        \"algorithm\": \"<<Multi objective evolutionary algorithm to use>>\",\n        \"maxEvaluations\": \"<<Amount of evaluations to perform at most, represented as a number (not a string)>>\",\n        \"maxTime\": \"<<Optional amount of milliseconds to run at most. Not providing this value results in running until maxEvaluations has been reached>>\",\n        \"minClusterAmount\": \"<<Optional minimum amount of clusters to allow in the solutions, represented as a number. Omitting this value allows cluster sizes from 1 up to maxClusterAmount. Only benefits in optimization with CLUSTER_LABEL encoding.>>\",\n        \"maxClusterAmount\": \"<<Optional maximum amount of clusters to allow in the solutions, represented as a number. Omitting this value allows cluster sizes from minClusterAmount up to the number of other classes.  Only benefits in optimization with CLUSTER_LABEL encoding.>>\",\n        \"metrics\": [\"<<List of Metrics to perform>>\"],\n        \"encodingType\": \"<<Multi objective evolutionary encoding to use; either CLUSTER_LABEL or GRAPH_ADJACENCY>>\"\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -60,7 +60,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{   \n    \"name\": \"My MOEA clusterings of application X\",\n    \"solverConfiguration\": {\n        \"type\": \"moea\",\n        \"algorithm\": \"NSGA-II\",\n        \"maxEvaluations\": 1000000,\n        \"maxTime\": 21600000,\n        \"clusterCountLowerBound\": 5,\n        \"clusterCountUpperBound\": 10,\n        \"metrics\": [\n            \"DATA_AUTONOMY\", \n            \"REUSABLE\", \n            \"DECOUPLED_COHESIVE\", \n            \"LIMITED_COMMUNICATION_OVERHEAD\", \n            \"MODULARIZED_FEATURES\"\n        ],\n        \"encodingType\": \"CLUSTER_LABEL\"\n    }\n}",
+									"raw": "{   \n    \"name\": \"My MOEA clusterings of application X\",\n    \"solverConfiguration\": {\n        \"type\": \"moea\",\n        \"algorithm\": \"NSGA-II\",\n        \"maxEvaluations\": 1000000,\n        \"maxTime\": 21600000,\n        \"minClusterAmount\": 5,\n        \"maxClusterAmount\": 10,\n        \"metrics\": [\n            \"DATA_AUTONOMY\", \n            \"REUSABLE\", \n            \"DECOUPLED_COHESIVE\", \n            \"LIMITED_COMMUNICATION_OVERHEAD\", \n            \"MODULARIZED_FEATURES\"\n        ],\n        \"encodingType\": \"CLUSTER_LABEL\"\n    }\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -109,7 +109,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{   \n   \"name\": \"<<Name for the evaluation>>\",\n    \"solverConfiguration\": {\n        \"type\": \"hierarchical\",\n        \"minClusters\": \"<<The minimum amount of desired clusters to step the clustering algorithm at, represented as a number. 0 by default.>>\",\n        \"maxClusters\": \"<<The maximum amount of desired clusters to step the clustering algorithm at, represented as a number. The amount of classes to cluster by default.>>\",\n        \"weights\": [\"<<List of weights matching the number of (underlying) metrics for the given metrics>>\"],\n        \"metrics\": [\"<<List of Metrics to perform>>\"]\n    }\n}",
+							"raw": "{   \n   \"name\": \"<<Name for the evaluation>>\",\n    \"solverConfiguration\": {\n        \"type\": \"hierarchical\",\n        \"optimizationOnSharedEdges\": \"<<Whether to optimize the clustering algorithm to at first only merge microservices sharing an edge. Default: true>>\",\n        \"minClusterAmount\": \"<<The minimum amount of desired clusters to step the clustering algorithm at, represented as a number. 0 by default.>>\",\n        \"maxClusterAmount\": \"<<The maximum amount of desired clusters to step the clustering algorithm at, represented as a number. The amount of classes to cluster by default.>>\",\n        \"weights\": [\"<<List of weights matching the number of (underlying) metrics for the given metrics>>\"],\n        \"metrics\": [\"<<List of Metrics to perform>>\"]\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -136,7 +136,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{   \n   \"name\": \"My AHCA clusterings of application X\",\n    \"solverConfiguration\": {\n        \"type\": \"hierarchical\",\n        \"weights\": [1,1,1,1],\n        \"metrics\": [\n            \"DATA_AUTONOMY\", \n            \"FOCUSED_ON_ONE\", \n            \"BEHAVIORAL_AUTONOMY\"\n        ],\n        \"minClusters\": 7,\n        \"maxClusters\": 10\n    }\n}",
+									"raw": "{   \n   \"name\": \"My AHCA clusterings of application X\",\n    \"solverConfiguration\": {\n        \"type\": \"hierarchical\",\n        \"weights\": [1,1,1,1],\n        \"metrics\": [\n            \"DATA_AUTONOMY\", \n            \"FOCUSED_ON_ONE\", \n            \"BEHAVIORAL_AUTONOMY\"\n        ],\n        \"minClusterAmount\": 7,\n        \"maxClusterAmount\": 10,\n        \"optimizationOnSharedEdges\": false\n    }\n}",
 									"options": {
 										"raw": {
 											"language": "json"

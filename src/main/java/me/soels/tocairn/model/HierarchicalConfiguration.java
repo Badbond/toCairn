@@ -6,7 +6,6 @@ import org.springframework.data.neo4j.core.schema.Node;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Models the configuration of an evaluation.
@@ -19,15 +18,6 @@ import java.util.Optional;
 @Setter
 public class HierarchicalConfiguration extends SolverConfiguration {
     private List<Double> weights = new LinkedList<>();
-    private Integer minClusters;
-    private Integer maxClusters;
-
-    public Optional<Integer> getMinClusters() {
-        return Optional.ofNullable(minClusters);
-    }
-
-    public Optional<Integer> getMaxClusters() {
-        return Optional.ofNullable(maxClusters);
-    }
+    private Boolean optimizationOnSharedEdges = true;
 }
 

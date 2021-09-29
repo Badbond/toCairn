@@ -13,10 +13,10 @@ public final class DataClass extends AbstractClass {
     /**
      * Construct an instance of a data class.
      *
-     * @param identifier               the identifier for this data class (FQN)
-     * @param humanReadableName        the human-readable name for this data class
-     * @param location                 the location of the source file for this class
-     * @param features                 the features this class implements
+     * @param identifier        the identifier for this data class (FQN)
+     * @param humanReadableName the human-readable name for this data class
+     * @param location          the location of the source file for this class
+     * @param features          the features this class implements
      */
     public DataClass(String identifier, String humanReadableName, String location, Set<String> features) {
         super(identifier, humanReadableName, location, features);

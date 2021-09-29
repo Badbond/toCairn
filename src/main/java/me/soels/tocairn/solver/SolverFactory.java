@@ -5,8 +5,8 @@ import me.soels.tocairn.model.EvaluationInput;
 import me.soels.tocairn.model.HierarchicalConfiguration;
 import me.soels.tocairn.model.MOEAConfiguration;
 import me.soels.tocairn.solver.hierarchical.HierarchicalSolver;
-import me.soels.tocairn.solver.moea.ClusteringProblem;
 import me.soels.tocairn.solver.moea.MOEASolver;
+import me.soels.tocairn.solver.moea.MOECAProblem;
 import me.soels.tocairn.solver.moea.VariableDecoder;
 import org.moeaframework.Executor;
 import org.moeaframework.core.Problem;
@@ -48,7 +48,7 @@ public class SolverFactory {
         var metrics = configuration.getMetrics().stream()
                 .flatMap(metricType -> metricType.getMetrics().stream())
                 .collect(Collectors.toUnmodifiableList());
-        return new ClusteringProblem(metrics, input, configuration, variableDecoder);
+        return new MOECAProblem(metrics, input, configuration, variableDecoder);
     }
 
     private Executor createExecutor(Problem problem, MOEAConfiguration configuration) {

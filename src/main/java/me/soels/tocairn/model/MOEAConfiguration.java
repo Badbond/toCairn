@@ -7,7 +7,6 @@ import org.springframework.data.neo4j.core.schema.Node;
 
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import java.util.Optional;
 
 /**
@@ -32,23 +31,7 @@ public class MOEAConfiguration extends SolverConfiguration {
     @Nullable
     private Long maxTime;
 
-    @Nullable
-    @Size(min = 1)
-    private Integer clusterCountLowerBound;
-
-    @Nullable
-    @Size(min = 1)
-    private Integer clusterCountUpperBound;
-
     public Optional<Long> getMaxTime() {
         return Optional.ofNullable(maxTime);
-    }
-
-    public Optional<Integer> getClusterCountLowerBound() {
-        return Optional.ofNullable(clusterCountLowerBound);
-    }
-
-    public Optional<Integer> getClusterCountUpperBound() {
-        return Optional.ofNullable(clusterCountUpperBound);
     }
 }

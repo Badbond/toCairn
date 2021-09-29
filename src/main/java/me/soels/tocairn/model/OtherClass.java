@@ -12,10 +12,10 @@ import java.util.Set;
 @Node
 @Getter
 public final class OtherClass extends AbstractClass {
-    @Relationship("DataDepends")
-    private List<DataRelationship> dataRelationships = new ArrayList<>();
     private final int methodCount;
     private final boolean isExecutedAPIClass;
+    @Relationship("DataDepends")
+    private List<DataRelationship> dataRelationships = new ArrayList<>();
 
     public OtherClass(String identifier, String humanReadableName, String location, Set<String> features, int methodCount, boolean isExecutedAPIClass) {
         super(identifier, humanReadableName, location, features);

@@ -27,31 +27,21 @@ public class MOEAConfigurationDto extends SolverConfigurationDto {
     @Size(min = 1000)
     private final Long maxTime;
 
-    @Size(min = 1)
-    private final Integer clusterCountLowerBound;
-
-    @Size(min = 1)
-    private final Integer clusterCountUpperBound;
-
     public MOEAConfigurationDto(MOEAConfiguration dao) {
-        super(dao.getMetrics());
+        super(dao);
         this.algorithm = dao.getAlgorithm();
         this.encodingType = dao.getEncodingType();
         this.maxEvaluations = dao.getMaxEvaluations();
         this.maxTime = dao.getMaxTime().orElse(null);
-        this.clusterCountLowerBound = dao.getClusterCountLowerBound().orElse(null);
-        this.clusterCountUpperBound = dao.getClusterCountUpperBound().orElse(null);
     }
 
     @JsonCreator
-    public MOEAConfigurationDto(List<MetricType> metrics, EvolutionaryAlgorithm algorithm, EncodingType encodingType, int maxEvaluations, Long maxTime, Integer clusterCountLowerBound, Integer clusterCountUpperBound) {
-        super(metrics);
+    public MOEAConfigurationDto(List<MetricType> metrics, Integer minClusterAmount, Integer maxClusterAmount, EvolutionaryAlgorithm algorithm, EncodingType encodingType, int maxEvaluations, Long maxTime) {
+        super(metrics, minClusterAmount, maxClusterAmount);
         this.algorithm = algorithm;
         this.encodingType = encodingType;
         this.maxEvaluations = maxEvaluations;
         this.maxTime = maxTime;
-        this.clusterCountLowerBound = clusterCountLowerBound;
-        this.clusterCountUpperBound = clusterCountUpperBound;
     }
 
     @Override
@@ -62,20 +52,12 @@ public class MOEAConfigurationDto extends SolverConfigurationDto {
         dao.setMaxEvaluations(maxEvaluations);
         dao.setMaxTime(maxTime);
         dao.setMetrics(getMetrics());
-        dao.setClusterCountLowerBound(clusterCountLowerBound);
-        dao.setClusterCountUpperBound(clusterCountUpperBound);
+        dao.setMinClusterAmount(getMinClusterAmount().orElse(null));
+        dao.setMaxClusterAmount(getMaxClusterAmount().orElse(null));
         return dao;
     }
 
     public Optional<Long> getMaxTime() {
         return Optional.ofNullable(maxTime);
-    }
-
-    public Optional<Integer> getClusterCountLowerBound() {
-        return Optional.ofNullable(clusterCountLowerBound);
-    }
-
-    public Optional<Integer> getClusterCountUpperBound() {
-        return Optional.ofNullable(clusterCountUpperBound);
     }
 }

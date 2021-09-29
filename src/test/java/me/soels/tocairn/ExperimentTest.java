@@ -6,7 +6,7 @@ import me.soels.tocairn.model.*;
 import me.soels.tocairn.solver.metric.CarvalhoCohesion;
 import me.soels.tocairn.solver.metric.CarvalhoCoupling;
 import me.soels.tocairn.solver.metric.Metric;
-import me.soels.tocairn.solver.moea.ClusteringProblem;
+import me.soels.tocairn.solver.moea.MOECAProblem;
 import me.soels.tocairn.solver.moea.EncodingType;
 import me.soels.tocairn.solver.moea.VariableDecoder;
 import org.apache.commons.io.IOUtils;
@@ -100,7 +100,7 @@ class ExperimentTest {
         // TODO: As suggested by Carvalho et al., try to disable crossover operators but only allow for mutation
         //  operators. Currently SBX and PM is enabled.
         NondominatedPopulation result = new Executor()
-                .withProblem(new ClusteringProblem(metrics, input, config, variableDecoder))
+                .withProblem(new MOECAProblem(metrics, input, config, variableDecoder))
                 .withAlgorithm("NSGAII")
                 .distributeOnAllCores()
                 .withMaxEvaluations(1000000)

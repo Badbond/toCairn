@@ -12,7 +12,7 @@ import org.moeaframework.util.distributed.DistributedProblem;
 import java.util.List;
 
 /**
- * Models the clustering problem.
+ * Models the multi objective evolutionary clustering algorithm's problem.
  * <p>
  * This model is responsible for defining the encoding of genes used by the evolutionary algorithm. This is configurable
  * through the {@link EncodingType} provided.
@@ -22,7 +22,7 @@ import java.util.List;
  *
  * @see EncodingType
  */
-public class ClusteringProblem extends AbstractProblem {
+public class MOECAProblem extends AbstractProblem {
     private final List<Metric> metrics;
     private final EvaluationInput evaluationInput;
     private final MOEAConfiguration configuration;
@@ -36,7 +36,7 @@ public class ClusteringProblem extends AbstractProblem {
      * @param configuration   the configuration for the problem
      * @param variableDecoder the decoder service to decode the solution with
      */
-    public ClusteringProblem(List<Metric> metrics, EvaluationInput analysisInput, MOEAConfiguration configuration, VariableDecoder variableDecoder) {
+    public MOECAProblem(List<Metric> metrics, EvaluationInput analysisInput, MOEAConfiguration configuration, VariableDecoder variableDecoder) {
         super(analysisInput.getOtherClasses().size(), metrics.size());
         this.metrics = metrics;
         this.evaluationInput = analysisInput;
@@ -56,12 +56,12 @@ public class ClusteringProblem extends AbstractProblem {
     public void evaluate(Solution solution) {
         var decodedClustering = variableDecoder.decode(solution, evaluationInput, configuration);
 
-        if (configuration.getClusterCountLowerBound().isPresent() &&
-                decodedClustering.getByCluster().size() < configuration.getClusterCountLowerBound().get()) {
+        if (configuration.getMinClusterAmount().isPresent() &&
+                decodedClustering.getByCluster().size() < configuration.getMinClusterAmount().get()) {
             solution.setConstraint(0, -1); // Too few clusters
             return;
-        } else if (configuration.getClusterCountUpperBound().isPresent() &&
-                decodedClustering.getByCluster().size() > configuration.getClusterCountUpperBound().get()) {
+        } else if (configuration.getMaxClusterAmount().isPresent() &&
+                decodedClustering.getByCluster().size() > configuration.getMaxClusterAmount().get()) {
             solution.setConstraint(0, 1); // Too many clusters
             return;
         }
@@ -102,9 +102,11 @@ public class ClusteringProblem extends AbstractProblem {
     }
 
     private int getUpperbound() {
-        if (configuration.getEncodingType() == EncodingType.CLUSTER_LABEL &&
-                configuration.getClusterCountUpperBound().isPresent()) {
-            return Integer.min(configuration.getClusterCountUpperBound().get(), getNumberOfVariables()) - 1;
+        if (configuration.getEncodingType() == EncodingType.CLUSTER_LABEL) {
+            return Integer.min(
+                    configuration.getMaxClusterAmount().orElse(getNumberOfVariables()),
+                    getNumberOfVariables())
+                    - 1;
         }
         return getNumberOfVariables() - 1;
     }

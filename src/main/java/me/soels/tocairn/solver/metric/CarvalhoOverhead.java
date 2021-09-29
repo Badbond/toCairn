@@ -1,15 +1,13 @@
 package me.soels.tocairn.solver.metric;
 
+import static me.soels.tocairn.util.Constants.PRIMITIVE_STRING;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 import me.soels.tocairn.model.AbstractClass;
 import me.soels.tocairn.model.OtherClass;
 import me.soels.tocairn.solver.Clustering;
 import org.apache.commons.lang3.tuple.Pair;
-
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static me.soels.tocairn.util.Constants.PRIMITIVE_STRING;
 
 /**
  * Overhead measurement by Carvalho et al. (2020).
@@ -45,7 +43,7 @@ public class CarvalhoOverhead implements Metric {
      * @param averageSize  the average measured size of the classes in the application
      * @return the total overhead introduced by this microservice
      */
-    private double overhead(List<OtherClass> microservice, Set<OtherClass> allClasses, double averageSize) {
+    private double overhead(Set<OtherClass> microservice, Set<OtherClass> allClasses, double averageSize) {
         // Get all the classes that do not belong to this microservice.
         var externalClasses = allClasses.stream()
                 .filter(clazz -> !microservice.contains(clazz))

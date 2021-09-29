@@ -74,7 +74,7 @@ public class EvaluationResultService {
                         .map(AbstractClass::getId)
                         .collect(Collectors.toCollection(ArrayList::new)));
                 // Remove the class references such that we can persist the microservice completely.
-                microservice.setClasses(Collections.emptyList());
+                microservice.setClasses(Collections.emptySet());
             }
         }
         LOGGER.info(" - Persisting {} microservices.", microserviceClasses.size());

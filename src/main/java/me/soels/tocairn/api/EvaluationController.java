@@ -93,6 +93,12 @@ public class EvaluationController {
         service.deleteEvaluation(evaluationId);
     }
 
+    @DeleteMapping("/all")
+    @ResponseStatus(NO_CONTENT)
+    public void deleteAllEvaluations() {
+        getAllEvaluations().stream().map(EvaluationDto::getId).forEach(service::deleteEvaluation);
+    }
+
     /**
      * Runs the evaluation with the given {@code id}.
      * <p>

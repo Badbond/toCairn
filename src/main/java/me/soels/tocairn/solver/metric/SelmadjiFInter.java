@@ -1,11 +1,10 @@
 package me.soels.tocairn.solver.metric;
 
+import java.util.Set;
+import java.util.stream.Collectors;
 import me.soels.tocairn.model.OtherClass;
 import me.soels.tocairn.solver.Clustering;
 import org.apache.commons.lang3.tuple.Pair;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * FInter metric as proposed by Selmadji et al. (2020).
@@ -22,7 +21,7 @@ public class SelmadjiFInter extends SelmadjiDataAutonomy {
                 .sum();
     }
 
-    private double finter(List<OtherClass> microservice, Clustering clustering) {
+    private double finter(Set<OtherClass> microservice, Clustering clustering) {
         var optimizationKey = microservice.stream().map(clazz -> clazz.getId().toString()).sorted().collect(Collectors.joining(""));
         var existingValue = clustering.getOptimizationData().getFInter().get(optimizationKey);
         if (existingValue != null) {

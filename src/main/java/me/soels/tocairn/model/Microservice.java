@@ -1,5 +1,7 @@
 package me.soels.tocairn.model;
 
+import java.util.HashSet;
+import java.util.Set;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
@@ -18,12 +20,12 @@ import java.util.UUID;
 public class Microservice {
     private final int microserviceNumber;
     @Relationship("HasClasses")
-    private List<OtherClass> classes = new ArrayList<>();
+    private Set<OtherClass> classes = new HashSet<>();
     @Id
     @GeneratedValue(generatorClass = GeneratedValue.UUIDGenerator.class)
     private UUID id;
 
-    public Microservice(int microserviceNumber, List<OtherClass> classes) {
+    public Microservice(int microserviceNumber, Set<OtherClass> classes) {
         this.microserviceNumber = microserviceNumber;
         this.classes.addAll(classes);
     }

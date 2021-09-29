@@ -4,6 +4,8 @@ import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.nodeTypes.NodeWithArguments;
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import me.soels.tocairn.analysis.sources.CustomClassOrInterfaceVisitor.VisitorResult;
 import me.soels.tocairn.model.AbstractClass;
 import me.soels.tocairn.model.DataClass;
@@ -20,6 +22,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static java.util.stream.Collectors.groupingBy;
 import static me.soels.tocairn.model.DataRelationshipType.READ;
 import static me.soels.tocairn.model.DataRelationshipType.WRITE;
@@ -58,10 +61,10 @@ public class SourceRelationshipAnalysis {
         var methodNameSet = visitorResults.stream()
                 .flatMap(visitorResult -> visitorResult.getDeclaredMethods().stream())
                 .map(NodeWithSimpleName::getNameAsString)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(HashSet::new));
         var classNameSet = context.getTypesAndClasses().stream()
                 .map(pair -> pair.getKey().getNameAsString())
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(HashSet::new));
 
         for (int i = 0; i < visitorResults.size(); i++) {
             if (i != 0 && i % 100 == 0) {
@@ -268,12 +271,12 @@ public class SourceRelationshipAnalysis {
         }
         var allFqns = allClasses.stream()
                 .map(AbstractClass::getIdentifier)
-                .collect(Collectors.toList());
+                .collect(toImmutableMap(x->x, x->x));
         Spliterator<Expression> spliterator = ((NodeWithArguments) expr).getArguments().spliterator();
         return StreamSupport.stream(spliterator, false)
                 .map(arg -> getFqnFromType(arg, expr).orElse(null))
                 .filter(Objects::nonNull)
-                .filter(allFqns::contains)
+                .filter(allFqns::containsKey)
                 .collect(Collectors.toMap(fqn -> fqn, fqn -> dynamicFreq, Long::sum));
     }
 

@@ -18,6 +18,6 @@ import java.util.List;
 @Setter
 public class HierarchicalConfiguration extends SolverConfiguration {
     private List<Double> weights = new LinkedList<>();
-    private Boolean optimizationOnSharedEdges = true;
+    private boolean optimizationOnSharedEdges = true;
 }
 

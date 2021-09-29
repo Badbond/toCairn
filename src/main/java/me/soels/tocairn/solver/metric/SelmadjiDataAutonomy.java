@@ -1,14 +1,14 @@
 package me.soels.tocairn.solver.metric;
 
-import static java.lang.Math.pow;
-import static java.lang.Math.sqrt;
-import static me.soels.tocairn.model.DataRelationshipType.WRITE;
-
-import java.util.ArrayList;
-import java.util.Set;
 import me.soels.tocairn.model.DataRelationship;
 import me.soels.tocairn.model.OtherClass;
 import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.ArrayList;
+import java.util.Set;
+
+import static me.soels.tocairn.model.DataRelationshipType.WRITE;
+import static me.soels.tocairn.util.SigmaCalculator.getSigma;
 
 /**
  * Functional interface to identify a metric for the {@link MetricType#DATA_AUTONOMY} objective.
@@ -81,13 +81,7 @@ public abstract class SelmadjiDataAutonomy implements Metric {
     private double freq(DataRelationship i, DataRelationship j) {
         var freqI = i.getStaticFrequency() + i.getDynamicFrequency().orElse(0L);
         var freqJ = j.getStaticFrequency() + j.getDynamicFrequency().orElse(0L);
-
-        // Based on https://stackoverflow.com/a/14839593
-        var sum = freqI + freqJ;
-        var sqSum = pow(freqI, 2) + pow(freqJ, 2);
-        var mean = sum / (double) 2;
-        var variance = sqSum / 2 - mean * mean;
-        return freqI + freqJ - sqrt(variance);
+        return freqI + freqJ - getSigma(List.of(freqI, freqJ));
     }
 
     /**

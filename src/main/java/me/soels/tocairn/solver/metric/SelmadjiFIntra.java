@@ -33,6 +33,11 @@ public class SelmadjiFIntra extends SelmadjiDataAutonomy {
 
         // Get the cardinality of the set of data classes manipulated by classes in this microservice
         var nbDataManipulatedInMicro = nbDataManipulatedInMicro(microservice);
+        if (nbDataManipulatedInMicro == 0) {
+            // This microservice does not modify data. Therefore, it will not have any data autonomy
+            clustering.getOptimizationData().getFIntra().put(optimizationKey, 0.0);
+            return 0.0;
+        }
 
         // Get all the pairs of classes in this microservice excluding self-pairs.
         var pairs = microservice.stream()

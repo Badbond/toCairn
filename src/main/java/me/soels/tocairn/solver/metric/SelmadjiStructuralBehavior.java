@@ -27,7 +27,7 @@ public abstract class SelmadjiStructuralBehavior implements Metric {
      * Returns the {@code coup} value between two classes.
      * <p>
      * Returns {@code null} when these two classes do not have a connection with each other s.t. they can be filtered
-     * out from average calculations.
+     * out from sigma calculations.
      *
      * @param i            the first class
      * @param j            the second class
@@ -59,37 +59,4 @@ public abstract class SelmadjiStructuralBehavior implements Metric {
                 .map(DependenceRelationship::getStaticFrequency)
                 .orElse(0);
     }
-
-    /**
-     * Returns the sigma of a list of (coup) values.
-     * <p>
-     * The given double list is allowed to have {@code null} values which will be filtered out. With that, the input
-     * list can still be used to calculate the number of possible pairs.
-     *
-     * @param allValues all values
-     * @return the sigma of all values
-     */
-    protected double getSigma(List<Double> allValues) {
-        var all = allValues.stream()
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-
-        // Based on https://stackoverflow.com/a/14839142 and https://stackoverflow.com/a/14839593
-        var sum = all.stream().mapToDouble(value -> value).sum();
-        var n = all.size();
-        var mean = sum / n;
-        var sd = 0.0;
-        for (var number : all) {
-            sd += Math.pow(number - mean, 2);
-        }
-        var result = sqrt(sd / (n - 1));
-        if (Double.valueOf(result).isNaN()) {
-            // Happens when n = 1 (division by 0)
-            return 0.0;
-        } else {
-            return result;
-        }
-    }
-
-
 }

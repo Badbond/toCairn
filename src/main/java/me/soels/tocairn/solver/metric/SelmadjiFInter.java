@@ -30,9 +30,8 @@ public class SelmadjiFInter extends SelmadjiDataAutonomy {
 
         // Get the cardinality of the set of data classes manipulated by classes in this microservice
         var nbDataManipulatedInMicro = nbDataManipulatedInMicro(microservice);
-
         if (nbDataManipulatedInMicro == 0) {
-            // This class does not modify data. Therefore, it will not have any data autonomy
+            // This microservice does not modify data. Therefore, it will not have any data autonomy
             clustering.getOptimizationData().getFInter().put(optimizationKey, 0.0);
             return 0.0;
         }
@@ -41,7 +40,6 @@ public class SelmadjiFInter extends SelmadjiDataAutonomy {
         var externalClasses = clustering.getByClass().keySet().stream()
                 .filter(clazz -> !microservice.contains(clazz))
                 .collect(Collectors.toList());
-
         if (externalClasses.isEmpty()) {
             // There are no more external classes, we have all classes in one microservice, i.e. monolith.
             // Set FInter to 0.

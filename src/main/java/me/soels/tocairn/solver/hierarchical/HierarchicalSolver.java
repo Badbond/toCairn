@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Solver implementation using the agglomorative hierarchical clustering algorithm.
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 public class HierarchicalSolver implements Solver {
     private static final Logger LOGGER = LoggerFactory.getLogger(HierarchicalSolver.class);
     private final HierarchicalConfiguration configuration;
+    private Map<OtherClass, Set<OtherClass>> classConnectionsThroughData;
 
     public HierarchicalSolver(HierarchicalConfiguration configuration) {
         this.configuration = configuration;
@@ -30,6 +32,7 @@ public class HierarchicalSolver implements Solver {
     @Override
     public HierarchicalEvaluationResult run(EvaluationInput input) {
         LOGGER.info("Running hierarchical solver");
+        classConnectionsThroughData = calculateDataClassConnectedness(input);
         var initialClustering = createInitialSolution(input);
 
         var solutions = performAlgorithm(initialClustering);
@@ -141,14 +144,14 @@ public class HierarchicalSolver implements Solver {
         if (!sharingAnEdge.isEmpty()) {
             return sharingAnEdge;
         } else {
-            return getPossibleMergers(currentClustering.clustering);
+            return getAllPossibleMergers(currentClustering.clustering);
         }
     }
 
     /**
      * Computes the list of possible clusterings from the given clustering.
      * <p>
-     * Returns an empty list if {@link HierarchicalConfiguration#getOptimizationOnSharedEdges()} is set to {@code false}.
+     * Returns an empty list if {@link HierarchicalConfiguration#isOptimizationOnSharedEdges()} is set to {@code false}.
      * <p>
      * Note, similar to Clauset, Newman & Moore, here we only allow merging between microservices that share an edge.
      *
@@ -156,21 +159,70 @@ public class HierarchicalSolver implements Solver {
      * @return all possible mergers for the given clustering
      */
     public List<Pair<Integer, Integer>> getPossibleMergersWithSharedEdge(Clustering currentClustering) {
-        if (!configuration.getOptimizationOnSharedEdges()) {
+        if (!configuration.isOptimizationOnSharedEdges()) {
             return Collections.emptyList();
         }
 
-        return currentClustering.getByCluster().entrySet().parallelStream()
+        var dataConnectedMicroservices = new HashMap<DataClass, List<Integer>>();
+        currentClustering.getByCluster()
+                .forEach((microserviceLabel, microservice) -> microservice.stream()
+                        .flatMap(otherClass -> otherClass.getDataRelationships().stream())
+                        .map(DataRelationship::getCallee)
+                        .forEach(dataClass -> {
+                            var existing = dataConnectedMicroservices.computeIfAbsent(dataClass, d -> new ArrayList<>());
+                            existing.add(microserviceLabel);
+                        })
+                );
+
+        var directStream = currentClustering.getByCluster().entrySet().parallelStream()
                 .flatMap(entry -> entry.getValue().stream()
                         .flatMap(clazz -> clazz.getDependenceRelationships().stream())
                         .map(rel -> currentClustering.getByClass().get(rel.getCallee()))
                         .distinct()
                         .filter(key -> !entry.getKey().equals(key))
-                        .map(other -> other < entry.getKey() ? other + ":" + entry.getKey() : entry.getKey() + ":" + other))
-                .distinct()
+                        .map(other -> other < entry.getKey() ? other + ":" + entry.getKey() : entry.getKey() + ":" + other));
+
+        var viaDataStream = currentClustering.getByCluster().entrySet().parallelStream()
+                .flatMap(entry -> {
+                    var connectedMss = findOtherMicroservicesViaDataRelationship(entry.getValue(), currentClustering);
+                    return connectedMss.stream()
+                            .distinct()
+                            // Do not include self.
+                            .filter(ms -> !entry.getKey().equals(ms))
+                            // Sort keys from smaller to greater for removing duplicates.
+                            .map(ms -> ms < entry.getKey() ? ms + ":" + entry.getKey() : entry.getKey() + ":" + ms);
+                });
+
+        return Stream.concat(directStream, viaDataStream)
                 .map(key -> key.split(":"))
                 .map(parts -> Pair.of(Integer.valueOf(parts[0]), Integer.valueOf(parts[1])))
+                .distinct()
                 .collect(Collectors.toList());
+    }
+
+    private List<Integer> findOtherMicroservicesViaDataRelationship(List<OtherClass> microservice, Clustering clustering) {
+        return microservice.stream()
+                .flatMap(clazz -> clazz.getDataRelationships().stream())
+                .map(DataRelationship::getCallee)
+                .flatMap(dataClass -> traverseDataClass(dataClass, clustering, new ArrayList<>()).stream())
+                .collect(Collectors.toList());
+    }
+
+    private List<Integer> traverseDataClass(DataClass dataClass, Clustering clustering, List<DataClass> seen) {
+        if (seen.contains(dataClass)) {
+            return Collections.emptyList();
+        }
+        seen.add(dataClass);
+        var microservices = new ArrayList<Integer>();
+        for (var depRel : dataClass.getDependenceRelationships()) {
+            if (depRel.getCallee() instanceof OtherClass) {
+                microservices.add(clustering.getByClass().get(depRel.getCallee()));
+            } else {
+                microservices.addAll(traverseDataClass((DataClass) depRel.getCallee(), clustering, seen));
+            }
+        }
+        // TODO: Check recursive dependencies
+        return microservices;
     }
 
     /**
@@ -181,7 +233,7 @@ public class HierarchicalSolver implements Solver {
      * @param currentClustering the clustering to merge
      * @return all possible mergers for the given clustering
      */
-    public List<Pair<Integer, Integer>> getPossibleMergers(Clustering currentClustering) {
+    public List<Pair<Integer, Integer>> getAllPossibleMergers(Clustering currentClustering) {
         List<int[]> combinations = new ArrayList<>();
         helper(combinations, new int[2], 0, currentClustering.getByCluster().size() - 1, 0);
 
@@ -243,6 +295,68 @@ public class HierarchicalSolver implements Solver {
                 .collect(Collectors.toList()));
 
         return new HierarchicalClustering(clustering, solution);
+    }
+
+    private Map<OtherClass, Set<OtherClass>> calculateDataClassConnectedness(EvaluationInput input) {
+        Map<OtherClass, Set<OtherClass>> result = input.getOtherClasses().stream()
+                .collect(Collectors.toMap(dataClass -> dataClass, v -> new HashSet<>()));
+        Map<DataClass, Set<OtherClass>> dataConnections = input.getDataClasses().stream()
+                .collect(Collectors.toMap(dataClass -> dataClass, v -> new HashSet<>()));
+        Map<DataClass, Set<DataClass>> relatedDataClasses = input.getDataClasses().stream()
+                .collect(Collectors.toMap(dataClass -> dataClass, v -> new HashSet<>()));
+
+        // Direct relationships
+        input.getOtherClasses().forEach(clazz ->
+                result.get(clazz).addAll(clazz.getDependenceRelationships().stream()
+                        .map(DependenceRelationship::getCallee)
+                        .map(OtherClass.class::cast) // Guaranteed by relationship from originating other class
+                        .collect(Collectors.toSet()))
+        );
+
+        // Add incoming relationships to data classes
+        input.getOtherClasses().forEach(otherClass ->
+                otherClass.getDataRelationships().stream()
+                        .map(DataRelationship::getCallee)
+                        .forEach(dataClass -> dataConnections.get(dataClass).add(otherClass)));
+
+        // Add outgoing relationships to data classes
+        input.getDataClasses().forEach(dataClass ->
+                dataClass.getDependenceRelationships().stream()
+                        .map(DependenceRelationship::getCallee)
+                        .filter(OtherClass.class::isInstance)
+                        .map(OtherClass.class::cast)
+                        .forEach(otherClass -> dataConnections.get(dataClass).add(otherClass)));
+
+        // Add data class to data class relationships
+        input.getDataClasses().forEach(dataClass ->
+                dataClass.getDependenceRelationships().stream()
+                        .map(DependenceRelationship::getCallee)
+                        .filter(DataClass.class::isInstance)
+                        .map(DataClass.class::cast)
+                        .forEach(dataClass2 -> relatedDataClasses.get(dataClass).add(dataClass2)));
+
+
+        // Add  other class to other class relationships from (recursive) data relationship classes
+        input.getDataClasses().stream()
+                .map(dataClass -> getRecursiveOtherClassesForDataClass(dataClass, dataConnections, relatedDataClasses))
+                .forEach(connectedOtherClasses -> connectedOtherClasses.forEach(
+                        otherClass -> result.get(otherClass).addAll(connectedOtherClasses.stream()
+                                .filter(connectedClass -> !connectedClass.equals(otherClass))
+                                .collect(Collectors.toSet()))));
+
+        return result;
+    }
+
+    private Set<OtherClass> getRecursiveOtherClassesForDataClass(DataClass dataClass,
+                                                                 Map<DataClass, Set<OtherClass>> dataConnections,
+                                                                 Map<DataClass, Set<DataClass>> relatedDataClasses) {
+        // TODO: Implement
+        return Collections.emptySet();
+    }
+
+    private Set<DataClass> getConnectedDataClass(DataClass dataClass, Map<DataClass, Set<DataClass>> relatedDataClasses) {
+        // TODO: Implement
+        return Collections.emptySet();
     }
 
     @Getter

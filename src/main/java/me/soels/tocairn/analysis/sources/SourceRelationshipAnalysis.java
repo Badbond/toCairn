@@ -404,7 +404,7 @@ public class SourceRelationshipAnalysis {
                         "\n\tMatching import statements:        {}" +
                         "\n\tRelevant import statements:        {}" +
                         "\n\tTotal dependence relationships:    {}" +
-                        "\n\tOf which data relationships:       {}",
+                        "\n\tTotal data relationships:       {}",
                 visitorResults.stream().mapToInt(res -> res.getObjectCreationExpressions().size()).sum(),
                 counters.matchingConstructorCalls,
                 counters.relevantConstructorCalls,

@@ -1,13 +1,16 @@
 package me.soels.tocairn.solver.metric;
 
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 import me.soels.tocairn.model.DependenceRelationship;
 import me.soels.tocairn.model.OtherClass;
 import me.soels.tocairn.solver.Clustering;
 import me.soels.tocairn.solver.OptimizationData;
 import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static me.soels.tocairn.util.SigmaCalculator.getSigma;
 
 /**
  * FOne metric as proposed by Selmadji et al. (2020).
@@ -63,11 +66,9 @@ public class SelmadjiFOne extends SelmadjiStructuralBehavior {
             coupValues.add(0.0);
         }
 
-        // Calculate the standard deviation of these coup values
-        double sigma = getSigma(coupValues);
-
         // Perform the interCoup measurement
-        return (coupValues.stream().filter(Objects::nonNull).mapToDouble(value -> value).sum() - sigma) / coupValues.size();
+        var coupSum = coupValues.stream().filter(Objects::nonNull).mapToDouble(value -> value).sum();
+        return (coupSum - getSigma(coupValues)) / coupValues.size();
     }
 
     /**

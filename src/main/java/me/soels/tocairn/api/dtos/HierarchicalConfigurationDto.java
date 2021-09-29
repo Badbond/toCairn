@@ -12,12 +12,12 @@ import java.util.stream.Collectors;
 @Getter
 public class HierarchicalConfigurationDto extends SolverConfigurationDto {
     private final List<Double> weights;
-    private final Boolean optimizationOnSharedEdges;
+    private final boolean optimizationOnSharedEdges;
 
     public HierarchicalConfigurationDto(HierarchicalConfiguration dao) {
         super(dao);
         this.weights = dao.getWeights();
-        this.optimizationOnSharedEdges = dao.getOptimizationOnSharedEdges();
+        this.optimizationOnSharedEdges = dao.isOptimizationOnSharedEdges();
     }
 
     @JsonCreator
@@ -43,6 +43,7 @@ public class HierarchicalConfigurationDto extends SolverConfigurationDto {
         dao.setMinClusterAmount(getMinClusterAmount().orElse(null));
         dao.setMaxClusterAmount(getMaxClusterAmount().orElse(null));
         dao.setWeights(weights);
+        dao.setOptimizationOnSharedEdges(optimizationOnSharedEdges);
         return dao;
     }
 }

@@ -1,19 +1,21 @@
 package me.soels.tocairn.solver;
 
-import static com.google.common.collect.ImmutableMap.toImmutableMap;
-
 import com.google.common.collect.ImmutableMap;
-import java.util.Map;
-import java.util.Set;
 import me.soels.tocairn.model.OtherClass;
 import me.soels.tocairn.solver.moea.EncodingType;
 import org.apache.commons.lang3.tuple.Pair;
 import org.moeaframework.core.Solution;
 
+import java.util.Map;
+import java.util.Set;
+
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+
 /**
  * The clustering as decoded from the {@link Solution} based on {@link EncodingType}.
  */
 public final class Clustering {
+    // TODO: See if, instead of doing keySet() followed by a contains(), I could do containsKey().
     // The clustering itself modelled in two ways
     private final Map<Integer, Set<OtherClass>> byCluster;
     private final Map<OtherClass, Integer> byClass;

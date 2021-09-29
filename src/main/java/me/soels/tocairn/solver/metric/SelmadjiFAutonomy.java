@@ -1,11 +1,14 @@
 package me.soels.tocairn.solver.metric;
 
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 import me.soels.tocairn.model.OtherClass;
 import me.soels.tocairn.solver.Clustering;
 import org.apache.commons.lang3.tuple.Pair;
+
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static me.soels.tocairn.util.SigmaCalculator.getSigma;
 
 /**
  * FAutonomy metric as proposed by Selmadji et al. (2020).
@@ -57,11 +60,9 @@ public class SelmadjiFAutonomy extends SelmadjiStructuralBehavior {
             return 0.0;
         }
 
-        // Calculate the standard deviation of these coup values
-        double sigma = getSigma(coupValues);
-
         // Perform the exterCoup measurement
-        var result = (coupValues.stream().filter(Objects::nonNull).mapToDouble(value -> value).sum() - sigma) / coupValues.size();
+        var coupSum = coupValues.stream().filter(Objects::nonNull).mapToDouble(value -> value).sum();
+        var result = (coupSum - getSigma(coupValues)) / coupValues.size();
         clustering.getOptimizationData().getFAutonomy().put(optimizationKey, result);
         return result;
     }

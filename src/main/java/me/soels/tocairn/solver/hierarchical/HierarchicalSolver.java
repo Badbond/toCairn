@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Solver implementation using the agglomorative hierarchical clustering algorithm.
@@ -23,7 +22,7 @@ import java.util.stream.Stream;
 public class HierarchicalSolver implements Solver {
     private static final Logger LOGGER = LoggerFactory.getLogger(HierarchicalSolver.class);
     private final HierarchicalConfiguration configuration;
-    private Map<OtherClass, Set<OtherClass>> classConnectionsThroughData;
+    private Map<OtherClass, Set<OtherClass>> classConnections;
 
     public HierarchicalSolver(HierarchicalConfiguration configuration) {
         this.configuration = configuration;
@@ -32,7 +31,7 @@ public class HierarchicalSolver implements Solver {
     @Override
     public HierarchicalEvaluationResult run(EvaluationInput input) {
         LOGGER.info("Running hierarchical solver");
-        classConnectionsThroughData = calculateDataClassConnectedness(input);
+        classConnections = calculateClassConnectedness(input);
         var initialClustering = createInitialSolution(input);
 
         var solutions = performAlgorithm(initialClustering);
@@ -163,66 +162,14 @@ public class HierarchicalSolver implements Solver {
             return Collections.emptyList();
         }
 
-        var dataConnectedMicroservices = new HashMap<DataClass, List<Integer>>();
-        currentClustering.getByCluster()
-                .forEach((microserviceLabel, microservice) -> microservice.stream()
-                        .flatMap(otherClass -> otherClass.getDataRelationships().stream())
-                        .map(DataRelationship::getCallee)
-                        .forEach(dataClass -> {
-                            var existing = dataConnectedMicroservices.computeIfAbsent(dataClass, d -> new ArrayList<>());
-                            existing.add(microserviceLabel);
-                        })
-                );
-
-        var directStream = currentClustering.getByCluster().entrySet().parallelStream()
+        return currentClustering.getByCluster().entrySet().stream()
                 .flatMap(entry -> entry.getValue().stream()
-                        .flatMap(clazz -> clazz.getDependenceRelationships().stream())
-                        .map(rel -> currentClustering.getByClass().get(rel.getCallee()))
-                        .distinct()
-                        .filter(key -> !entry.getKey().equals(key))
-                        .map(other -> other < entry.getKey() ? other + ":" + entry.getKey() : entry.getKey() + ":" + other));
-
-        var viaDataStream = currentClustering.getByCluster().entrySet().parallelStream()
-                .flatMap(entry -> {
-                    var connectedMss = findOtherMicroservicesViaDataRelationship(entry.getValue(), currentClustering);
-                    return connectedMss.stream()
-                            .distinct()
-                            // Do not include self.
-                            .filter(ms -> !entry.getKey().equals(ms))
-                            // Sort keys from smaller to greater for removing duplicates.
-                            .map(ms -> ms < entry.getKey() ? ms + ":" + entry.getKey() : entry.getKey() + ":" + ms);
-                });
-
-        return Stream.concat(directStream, viaDataStream)
-                .map(key -> key.split(":"))
-                .map(parts -> Pair.of(Integer.valueOf(parts[0]), Integer.valueOf(parts[1])))
+                        .flatMap(clazz -> classConnections.get(clazz).stream())
+                        .map(connectedClass -> currentClustering.getByClass().get(connectedClass))
+                        .filter(ms -> !entry.getKey().equals(ms))
+                        .map(ms -> entry.getKey() < ms ? Pair.of(entry.getKey(), ms) : Pair.of(ms, entry.getKey())))
                 .distinct()
                 .collect(Collectors.toList());
-    }
-
-    private List<Integer> findOtherMicroservicesViaDataRelationship(List<OtherClass> microservice, Clustering clustering) {
-        return microservice.stream()
-                .flatMap(clazz -> clazz.getDataRelationships().stream())
-                .map(DataRelationship::getCallee)
-                .flatMap(dataClass -> traverseDataClass(dataClass, clustering, new ArrayList<>()).stream())
-                .collect(Collectors.toList());
-    }
-
-    private List<Integer> traverseDataClass(DataClass dataClass, Clustering clustering, List<DataClass> seen) {
-        if (seen.contains(dataClass)) {
-            return Collections.emptyList();
-        }
-        seen.add(dataClass);
-        var microservices = new ArrayList<Integer>();
-        for (var depRel : dataClass.getDependenceRelationships()) {
-            if (depRel.getCallee() instanceof OtherClass) {
-                microservices.add(clustering.getByClass().get(depRel.getCallee()));
-            } else {
-                microservices.addAll(traverseDataClass((DataClass) depRel.getCallee(), clustering, seen));
-            }
-        }
-        // TODO: Check recursive dependencies
-        return microservices;
     }
 
     /**
@@ -297,7 +244,17 @@ public class HierarchicalSolver implements Solver {
         return new HierarchicalClustering(clustering, solution);
     }
 
-    private Map<OtherClass, Set<OtherClass>> calculateDataClassConnectedness(EvaluationInput input) {
+    /**
+     * Returns a map representing the connected {@link OtherClass} for one {@link OtherClass}.
+     * <p>
+     * This not only contains those defined by the class' {@link OtherClass#getDependenceRelationships()}, but also
+     * those linked through (recursive) {@link OtherClass#getDataRelationships()}. This recursiveness is based
+     * on both incoming and outgoing data dependencies.
+     *
+     * @param input the input to base this structure upon
+     * @return the map representing the connectedness of classes to cluster
+     */
+    private Map<OtherClass, Set<OtherClass>> calculateClassConnectedness(EvaluationInput input) {
         Map<OtherClass, Set<OtherClass>> result = input.getOtherClasses().stream()
                 .collect(Collectors.toMap(dataClass -> dataClass, v -> new HashSet<>()));
         Map<DataClass, Set<OtherClass>> dataConnections = input.getDataClasses().stream()
@@ -333,30 +290,44 @@ public class HierarchicalSolver implements Solver {
                         .map(DependenceRelationship::getCallee)
                         .filter(DataClass.class::isInstance)
                         .map(DataClass.class::cast)
-                        .forEach(dataClass2 -> relatedDataClasses.get(dataClass).add(dataClass2)));
+                        .forEach(dataClass2 -> {
+                            relatedDataClasses.get(dataClass).add(dataClass2);
+                            relatedDataClasses.get(dataClass2).add(dataClass);
+                        }));
 
-
-        // Add  other class to other class relationships from (recursive) data relationship classes
+        // Add other class to other class relationships from (recursive) data relationship classes
         input.getDataClasses().stream()
-                .map(dataClass -> getRecursiveOtherClassesForDataClass(dataClass, dataConnections, relatedDataClasses))
+                .flatMap(dataClass -> getConnectedDataClasses(dataClass, relatedDataClasses).stream()
+                        .map(dataConnections::get))
                 .forEach(connectedOtherClasses -> connectedOtherClasses.forEach(
                         otherClass -> result.get(otherClass).addAll(connectedOtherClasses.stream()
+                                // Make sure that we don't interpret an edge to itself.
                                 .filter(connectedClass -> !connectedClass.equals(otherClass))
                                 .collect(Collectors.toSet()))));
 
         return result;
     }
 
-    private Set<OtherClass> getRecursiveOtherClassesForDataClass(DataClass dataClass,
-                                                                 Map<DataClass, Set<OtherClass>> dataConnections,
-                                                                 Map<DataClass, Set<DataClass>> relatedDataClasses) {
-        // TODO: Implement
-        return Collections.emptySet();
-    }
+    /**
+     * Returns the set of data classes that the given starting data class is implicitly and recursively connected to.
+     *
+     * @param startClass         the data class to define the connected data classes for
+     * @param relatedDataClasses the structure of connected data classes
+     * @return the data classes connected to the given data class
+     */
+    private Set<DataClass> getConnectedDataClasses(DataClass startClass, Map<DataClass, Set<DataClass>> relatedDataClasses) {
+        var seen = new HashSet<DataClass>();
+        var toVisit = new ArrayDeque<>(Set.of(startClass));
+        while (!toVisit.isEmpty()) {
+            var dataClass = toVisit.pop();
+            if (seen.contains(dataClass)) {
+                continue;
+            }
 
-    private Set<DataClass> getConnectedDataClass(DataClass dataClass, Map<DataClass, Set<DataClass>> relatedDataClasses) {
-        // TODO: Implement
-        return Collections.emptySet();
+            seen.add(dataClass);
+            toVisit.addAll(relatedDataClasses.get(dataClass));
+        }
+        return seen;
     }
 
     @Getter

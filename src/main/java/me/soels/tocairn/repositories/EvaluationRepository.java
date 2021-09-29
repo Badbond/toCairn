@@ -15,9 +15,9 @@ public interface EvaluationRepository extends Neo4jRepository<Evaluation, UUID> 
     List<Evaluation> findAllShallow();
 
     @Query("MATCH (eval :Evaluation)-[c]-(config :SolverConfiguration) " +
+            "WHERE eval.id = $0 " +
             "WITH eval, c, config " +
             "OPTIONAL MATCH (eval: Evaluation)-[r]-(result :EvaluationResult) " +
-            "WHERE eval.id = $0 " +
             "RETURN eval, collect(c), collect(config), collect(r), collect(result) " +
             "LIMIT 1")
     Optional<Evaluation> getByIdShallow(UUID evaluationId);

@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class HierarchicalSolver implements Solver {
     private static final Logger LOGGER = LoggerFactory.getLogger(HierarchicalSolver.class);
     private final HierarchicalConfiguration configuration;
-    private Map<OtherClass, Set<OtherClass>> classConnections;
+    private Map<OtherClass, List<OtherClass>> classConnections;
 
     public HierarchicalSolver(HierarchicalConfiguration configuration) {
         this.configuration = configuration;
@@ -30,7 +30,7 @@ public class HierarchicalSolver implements Solver {
 
     @Override
     public HierarchicalEvaluationResult run(EvaluationInput input) {
-        LOGGER.info("Running hierarchical solver");
+        LOGGER.info("Running agglomerative hierarchical clustering algorithm");
         classConnections = calculateClassConnectedness(input);
         var initialClustering = createInitialSolution(input);
 
@@ -67,15 +67,19 @@ public class HierarchicalSolver implements Solver {
             }
 
             var possibleMergers = getPossibleMergers(currentClustering);
-            var best = getBestMerger(possibleMergers, currentClustering);
+
+            AtomicReference<Double> bestQuality = new AtomicReference<>();
+            var best = getBestMerger(possibleMergers, currentClustering, bestQuality);
             if (best.isEmpty()) {
                 LOGGER.info("No best next cluster found in {} possible clusterings. Stopping.", possibleMergers.size());
                 return solutionsToPersist;
             }
             currentClustering = best.get();
             var duration = DurationFormatUtils.formatDuration(System.currentTimeMillis() - start, "mm:ss.SSS");
-            LOGGER.info("Performed step {} in the clustering algorithm producing {} microservices in {} (m:s.millis)",
-                    ++counter, currentClustering.getClustering().getByCluster().size(), duration);
+            LOGGER.info("Step: {}/{}. Possible mergers: {}. Microservices: {}. Quality: {}. Duration: {} (m:s.millis)",
+                    ++counter, initialClustering.getSolution().getMicroservices().size(),
+                    possibleMergers.size(), currentClustering.getClustering().getByCluster().size(),
+                    String.format("%.2f", bestQuality.get()), duration);
         }
     }
 
@@ -88,10 +92,10 @@ public class HierarchicalSolver implements Solver {
      *
      * @param possibleMergers   the possible pairs of keys to merge
      * @param currentClustering the previous step's best clustering
+     * @param bestQuality       the atomic reference to the currently known best quality
      * @return the best clustering
      */
-    private Optional<HierarchicalClustering> getBestMerger(Set<Pair<Integer, Integer>> possibleMergers, HierarchicalClustering currentClustering) {
-        AtomicReference<Double> bestQuality = new AtomicReference<>();
+    private Optional<HierarchicalClustering> getBestMerger(List<Pair<Integer, Integer>> possibleMergers, HierarchicalClustering currentClustering, AtomicReference<Double> bestQuality) {
         AtomicReference<HierarchicalClustering> bestClustering = new AtomicReference<>();
 
         possibleMergers.parallelStream()
@@ -138,7 +142,7 @@ public class HierarchicalSolver implements Solver {
         }
     }
 
-    private Set<Pair<Integer, Integer>> getPossibleMergers(HierarchicalClustering currentClustering) {
+    private List<Pair<Integer, Integer>> getPossibleMergers(HierarchicalClustering currentClustering) {
         var sharingAnEdge = getPossibleMergersWithSharedEdge(currentClustering.clustering);
         if (!sharingAnEdge.isEmpty()) {
             return sharingAnEdge;
@@ -157,18 +161,19 @@ public class HierarchicalSolver implements Solver {
      * @param currentClustering the clustering to merge
      * @return all possible mergers for the given clustering
      */
-    public Set<Pair<Integer, Integer>> getPossibleMergersWithSharedEdge(Clustering currentClustering) {
+    public List<Pair<Integer, Integer>> getPossibleMergersWithSharedEdge(Clustering currentClustering) {
         if (!configuration.isOptimizationOnSharedEdges()) {
-            return Collections.emptySet();
+            return Collections.emptyList();
         }
 
-        return currentClustering.getByCluster().entrySet().stream()
+        return currentClustering.getByCluster().entrySet().parallelStream()
                 .flatMap(entry -> entry.getValue().stream()
                         .flatMap(clazz -> classConnections.get(clazz).stream())
                         .map(connectedClass -> currentClustering.getByClass().get(connectedClass))
                         .filter(ms -> !entry.getKey().equals(ms))
                         .map(ms -> entry.getKey() < ms ? Pair.of(entry.getKey(), ms) : Pair.of(ms, entry.getKey())))
-                .collect(Collectors.toSet());
+                .distinct()
+                .collect(Collectors.toList());
     }
 
     /**
@@ -180,13 +185,13 @@ public class HierarchicalSolver implements Solver {
      * @return all possible mergers for the given clustering
      * @see <a href="https://www.baeldung.com/java-combinations-algorithm">Baeldung Java combinations algorithm</a>
      */
-    public Set<Pair<Integer, Integer>> getAllPossibleMergers(Clustering currentClustering) {
+    public List<Pair<Integer, Integer>> getAllPossibleMergers(Clustering currentClustering) {
         List<int[]> combinations = new ArrayList<>();
         helper(combinations, new int[2], 0, currentClustering.getByCluster().size() - 1, 0);
 
         return combinations.stream()
                 .map(combination -> Pair.of(combination[0], combination[1]))
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
     }
 
     private void helper(List<int[]> combinations, int[] data, int start, int end, int index) {
@@ -254,20 +259,20 @@ public class HierarchicalSolver implements Solver {
      * @param input the input to base this structure upon
      * @return the map representing the connectedness of classes to cluster
      */
-    private Map<OtherClass, Set<OtherClass>> calculateClassConnectedness(EvaluationInput input) {
-        Map<OtherClass, Set<OtherClass>> result = input.getOtherClasses().stream()
-                .collect(Collectors.toMap(dataClass -> dataClass, v -> new HashSet<>()));
-        Map<DataClass, Set<OtherClass>> dataConnections = input.getDataClasses().stream()
-                .collect(Collectors.toMap(dataClass -> dataClass, v -> new HashSet<>()));
-        Map<DataClass, Set<DataClass>> relatedDataClasses = input.getDataClasses().stream()
-                .collect(Collectors.toMap(dataClass -> dataClass, v -> new HashSet<>()));
+    private Map<OtherClass, List<OtherClass>> calculateClassConnectedness(EvaluationInput input) {
+        Map<OtherClass, List<OtherClass>> result = input.getOtherClasses().stream()
+                .collect(Collectors.toMap(dataClass -> dataClass, v -> new ArrayList<>()));
+        Map<DataClass, List<OtherClass>> dataConnections = input.getDataClasses().stream()
+                .collect(Collectors.toMap(dataClass -> dataClass, v -> new ArrayList<>()));
+        Map<DataClass, List<DataClass>> relatedDataClasses = input.getDataClasses().stream()
+                .collect(Collectors.toMap(dataClass -> dataClass, v -> new ArrayList<>()));
 
         // Direct relationships
         input.getOtherClasses().forEach(clazz ->
                 result.get(clazz).addAll(clazz.getDependenceRelationships().stream()
                         .map(DependenceRelationship::getCallee)
                         .map(OtherClass.class::cast) // Guaranteed by relationship from originating other class
-                        .collect(Collectors.toSet()))
+                        .collect(Collectors.toList()))
         );
 
         // Add incoming relationships to data classes
@@ -303,7 +308,7 @@ public class HierarchicalSolver implements Solver {
                         otherClass -> result.get(otherClass).addAll(connectedOtherClasses.stream()
                                 // Make sure that we don't interpret an edge to itself.
                                 .filter(connectedClass -> !connectedClass.equals(otherClass))
-                                .collect(Collectors.toSet()))));
+                                .collect(Collectors.toList()))));
 
         return result;
     }
@@ -315,7 +320,7 @@ public class HierarchicalSolver implements Solver {
      * @param relatedDataClasses the structure of connected data classes
      * @return the data classes connected to the given data class
      */
-    private Set<DataClass> getConnectedDataClasses(DataClass startClass, Map<DataClass, Set<DataClass>> relatedDataClasses) {
+    private Set<DataClass> getConnectedDataClasses(DataClass startClass, Map<DataClass, List<DataClass>> relatedDataClasses) {
         var seen = new HashSet<DataClass>();
         var toVisit = new ArrayDeque<>(Set.of(startClass));
         while (!toVisit.isEmpty()) {

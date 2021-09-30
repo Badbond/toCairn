@@ -90,7 +90,7 @@ public class HierarchicalSolver implements Solver {
      * @param currentClustering the previous step's best clustering
      * @return the best clustering
      */
-    private Optional<HierarchicalClustering> getBestMerger(List<Pair<Integer, Integer>> possibleMergers, HierarchicalClustering currentClustering) {
+    private Optional<HierarchicalClustering> getBestMerger(Set<Pair<Integer, Integer>> possibleMergers, HierarchicalClustering currentClustering) {
         AtomicReference<Double> bestQuality = new AtomicReference<>();
         AtomicReference<HierarchicalClustering> bestClustering = new AtomicReference<>();
 
@@ -138,7 +138,7 @@ public class HierarchicalSolver implements Solver {
         }
     }
 
-    private List<Pair<Integer, Integer>> getPossibleMergers(HierarchicalClustering currentClustering) {
+    private Set<Pair<Integer, Integer>> getPossibleMergers(HierarchicalClustering currentClustering) {
         var sharingAnEdge = getPossibleMergersWithSharedEdge(currentClustering.clustering);
         if (!sharingAnEdge.isEmpty()) {
             return sharingAnEdge;
@@ -148,18 +148,18 @@ public class HierarchicalSolver implements Solver {
     }
 
     /**
-     * Computes the list of possible clusterings from the given clustering.
+     * Computes the set of possible clusterings from the given clustering.
      * <p>
-     * Returns an empty list if {@link HierarchicalConfiguration#isOptimizationOnSharedEdges()} is set to {@code false}.
+     * Returns an empty set if {@link HierarchicalConfiguration#isOptimizationOnSharedEdges()} is set to {@code false}.
      * <p>
      * Note, similar to Clauset, Newman & Moore, here we only allow merging between microservices that share an edge.
      *
      * @param currentClustering the clustering to merge
      * @return all possible mergers for the given clustering
      */
-    public List<Pair<Integer, Integer>> getPossibleMergersWithSharedEdge(Clustering currentClustering) {
+    public Set<Pair<Integer, Integer>> getPossibleMergersWithSharedEdge(Clustering currentClustering) {
         if (!configuration.isOptimizationOnSharedEdges()) {
-            return Collections.emptyList();
+            return Collections.emptySet();
         }
 
         return currentClustering.getByCluster().entrySet().stream()
@@ -168,25 +168,25 @@ public class HierarchicalSolver implements Solver {
                         .map(connectedClass -> currentClustering.getByClass().get(connectedClass))
                         .filter(ms -> !entry.getKey().equals(ms))
                         .map(ms -> entry.getKey() < ms ? Pair.of(entry.getKey(), ms) : Pair.of(ms, entry.getKey())))
-                .distinct()
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
 
     /**
-     * Computes the list of possible clusterings from the given clustering.
+     * Computes the set of all possible clusterings from the given clustering.
      * <p>
-     * Note, similar to Clauset, Newman & Moore, here we only allow merging between microservices that share an edge.
+     * This creates a set of pairs of integers indicating which pair of microservices
      *
      * @param currentClustering the clustering to merge
      * @return all possible mergers for the given clustering
+     * @see <a href="https://www.baeldung.com/java-combinations-algorithm">Baeldung Java combinations algorithm</a>
      */
-    public List<Pair<Integer, Integer>> getAllPossibleMergers(Clustering currentClustering) {
+    public Set<Pair<Integer, Integer>> getAllPossibleMergers(Clustering currentClustering) {
         List<int[]> combinations = new ArrayList<>();
         helper(combinations, new int[2], 0, currentClustering.getByCluster().size() - 1, 0);
 
         return combinations.stream()
                 .map(combination -> Pair.of(combination[0], combination[1]))
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
 
     private void helper(List<int[]> combinations, int[] data, int start, int end, int index) {

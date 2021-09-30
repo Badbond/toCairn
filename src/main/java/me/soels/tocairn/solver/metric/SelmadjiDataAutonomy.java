@@ -5,6 +5,7 @@ import me.soels.tocairn.model.OtherClass;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import static me.soels.tocairn.model.DataRelationshipType.WRITE;

@@ -1,21 +1,21 @@
 package me.soels.tocairn.solver;
 
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+
+import com.google.common.collect.ImmutableMap;
+import java.util.Map;
+import java.util.Set;
 import me.soels.tocairn.model.OtherClass;
 import me.soels.tocairn.solver.moea.EncodingType;
 import org.apache.commons.lang3.tuple.Pair;
 import org.moeaframework.core.Solution;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * The clustering as decoded from the {@link Solution} based on {@link EncodingType}.
  */
 public final class Clustering {
     // The clustering itself modelled in two ways
-    private final Map<Integer, List<OtherClass>> byCluster;
+    private final Map<Integer, Set<OtherClass>> byCluster;
     private final Map<OtherClass, Integer> byClass;
     private final OptimizationData optimizationData;
 
@@ -28,15 +28,12 @@ public final class Clustering {
      * @param clustering       the clustering to create
      * @param optimizationData optimization data across all clusterings
      */
-    Clustering(Map<Integer, List<OtherClass>> clustering, OptimizationData optimizationData) {
+    Clustering(Map<Integer, Set<OtherClass>> clustering, OptimizationData optimizationData) {
         this.optimizationData = optimizationData;
-
-        this.byCluster = clustering.entrySet().stream()
-                .map(entry -> Pair.of(entry.getKey(), Collections.unmodifiableList(entry.getValue())))
-                .collect(Collectors.toUnmodifiableMap(Pair::getLeft, Pair::getRight));
+        this.byCluster = ImmutableMap.copyOf(clustering);
         this.byClass = clustering.entrySet().stream()
                 .flatMap(entry -> entry.getValue().stream().map(clazz -> Pair.of(clazz, entry.getKey())))
-                .collect(Collectors.toUnmodifiableMap(Pair::getKey, Pair::getValue));
+                .collect(toImmutableMap(Pair::getKey, Pair::getValue));
     }
 
     /**
@@ -47,7 +44,7 @@ public final class Clustering {
      *
      * @return the clustering by cluster
      */
-    public Map<Integer, List<OtherClass>> getByCluster() {
+    public Map<Integer, Set<OtherClass>> getByCluster() {
         return byCluster;
     }
 

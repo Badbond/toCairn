@@ -1,12 +1,11 @@
 package me.soels.tocairn.solver.metric;
 
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import me.soels.tocairn.model.OtherClass;
 import me.soels.tocairn.solver.Clustering;
 import org.apache.commons.lang3.tuple.Pair;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * FAutonomy metric as proposed by Selmadji et al. (2020).
@@ -30,7 +29,7 @@ public class SelmadjiFAutonomy extends SelmadjiStructuralBehavior {
      * @param clustering   the clustering to retrieve external pairs from
      * @return the exterCoup value for this microservice
      */
-    private double exterCoup(List<OtherClass> microservice, Clustering clustering) {
+    private double exterCoup(Set<OtherClass> microservice, Clustering clustering) {
         var optimizationKey = microservice.stream().map(clazz -> clazz.getId().toString()).sorted().collect(Collectors.joining(""));
         var existingValue = clustering.getOptimizationData().getFAutonomy().get(optimizationKey);
         if (existingValue != null) {

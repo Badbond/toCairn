@@ -1,16 +1,19 @@
 package me.soels.tocairn.solver;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import me.soels.tocairn.model.DependenceRelationship;
 import me.soels.tocairn.model.OtherClass;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * A builder for {@link Clustering} to allow for injecting into, merging and normalizing the stored clustering.
  */
 public final class ClusteringBuilder {
-    private final Map<Integer, List<OtherClass>> clustering = new HashMap<>();
+    private final Map<Integer, Set<OtherClass>> clustering = new HashMap<>();
     private final OptimizationData optimizationData;
 
     /**
@@ -28,7 +31,7 @@ public final class ClusteringBuilder {
      * @param clustering the clustering
      */
     public ClusteringBuilder(Clustering clustering) {
-        clustering.getByCluster().forEach((key, value) -> this.clustering.put(key, new ArrayList<>(value)));
+        clustering.getByCluster().forEach((key, value) -> this.clustering.put(key, new HashSet<>(value)));
         this.optimizationData = clustering.getOptimizationData().copy();
     }
 
@@ -51,8 +54,8 @@ public final class ClusteringBuilder {
      * @param clustering the clustering to normalize
      * @return the normalized clustering
      */
-    public Map<Integer, List<OtherClass>> normalize(Map<Integer, List<OtherClass>> clustering) {
-        Map<Integer, List<OtherClass>> result = new HashMap<>();
+    public Map<Integer, Set<OtherClass>> normalize(Map<Integer, Set<OtherClass>> clustering) {
+        Map<Integer, Set<OtherClass>> result = new HashMap<>();
         var counter = 0;
         for (var value : clustering.values()) {
             result.put(counter++, value);
@@ -67,10 +70,8 @@ public final class ClusteringBuilder {
      * @param clusterNumber the cluster to add the class to
      */
     public void addToCluster(OtherClass otherClass, int clusterNumber) {
-        var cluster = clustering.computeIfAbsent(clusterNumber, key -> new ArrayList<>());
-        if (!cluster.contains(otherClass)) {
-            cluster.add(otherClass);
-        }
+        var cluster = clustering.computeIfAbsent(clusterNumber, key -> new HashSet<>());
+        cluster.add(otherClass);
     }
 
     /**

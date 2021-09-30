@@ -1,11 +1,14 @@
 package me.soels.tocairn.solver.metric;
 
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import me.soels.tocairn.model.OtherClass;
 import me.soels.tocairn.solver.Clustering;
 import org.apache.commons.lang3.tuple.Pair;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Feature modularization measurement by Carvalho et al. (2020).
@@ -51,7 +54,7 @@ public class CarvalhoFeatureModularization implements Metric {
      * @param microservice the classes identifying the suggested microservice boundary
      * @return the feature modularization and predominant feature for this microservice
      */
-    private Pair<String, Double> featureModularization(List<OtherClass> microservice) {
+    private Pair<String, Double> featureModularization(Set<OtherClass> microservice) {
         var msaFeatureSet = getFeatureSet(microservice);
 
         var predominantFeature = msaFeatureSet.entrySet().stream()
@@ -66,7 +69,7 @@ public class CarvalhoFeatureModularization implements Metric {
                 (double) msaFeatureSet.values().stream().mapToInt(value -> value).sum());
     }
 
-    private Map<String, Integer> getFeatureSet(List<OtherClass> microservice) {
+    private Map<String, Integer> getFeatureSet(Set<OtherClass> microservice) {
         var result = new HashMap<String, Integer>();
         microservice.stream()
                 .flatMap(clazz -> clazz.getFeatures().stream())

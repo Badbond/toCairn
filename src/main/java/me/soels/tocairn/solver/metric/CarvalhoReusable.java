@@ -1,9 +1,8 @@
 package me.soels.tocairn.solver.metric;
 
+import java.util.Set;
 import me.soels.tocairn.model.OtherClass;
 import me.soels.tocairn.solver.Clustering;
-
-import java.util.List;
 
 /**
  * Reusability measurement by Carvalho et al. (2020).
@@ -29,7 +28,7 @@ public class CarvalhoReusable implements Metric {
                 .sum() / (double) clustering.getByCluster().values().size();
     }
 
-    private int r(Integer clusterNumber, List<OtherClass> microservice, Clustering clustering) {
+    private int r(Integer clusterNumber, Set<OtherClass> microservice, Clustering clustering) {
         var mdu = microservice.stream().anyMatch(OtherClass::isExecutedAPIClass);
         var sc = clustering.getByCluster().entrySet().stream()
                 .filter(cluster -> !cluster.getKey().equals(clusterNumber))

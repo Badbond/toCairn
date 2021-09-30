@@ -7,6 +7,7 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.nodeTypes.NodeWithName;
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy;
 import com.github.javaparser.utils.SourceRoot;
+import java.util.HashSet;
 import me.soels.tocairn.model.AbstractClass;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
@@ -158,7 +159,7 @@ public class SourceClassAnalysis {
 
         return Arrays.stream(packageName.split("\\."))
                 .filter(StringUtils::isNotEmpty)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(HashSet::new));
     }
 
     private boolean isDataClass(ClassOrInterfaceDeclaration clazz, SourceAnalysisInput input) {

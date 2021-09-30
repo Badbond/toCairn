@@ -1,15 +1,14 @@
 package me.soels.tocairn.solver.metric;
 
-import me.soels.tocairn.model.DataRelationship;
-import me.soels.tocairn.model.OtherClass;
-import org.apache.commons.lang3.tuple.Pair;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 import static me.soels.tocairn.model.DataRelationshipType.WRITE;
+
+import java.util.ArrayList;
+import java.util.Set;
+import me.soels.tocairn.model.DataRelationship;
+import me.soels.tocairn.model.OtherClass;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Functional interface to identify a metric for the {@link MetricType#DATA_AUTONOMY} objective.
@@ -97,7 +96,7 @@ public abstract class SelmadjiDataAutonomy implements Metric {
      * @param classes the classes representing the microservice
      * @return the amount of data classes linked to the classes
      */
-    protected long nbDataManipulatedInMicro(List<OtherClass> classes) {
+    protected long nbDataManipulatedInMicro(Set<OtherClass> classes) {
         return classes.stream()
                 .flatMap(clazz -> clazz.getDataRelationships().stream())
                 .map(DataRelationship::getCallee)

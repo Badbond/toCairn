@@ -1,10 +1,9 @@
 package me.soels.tocairn.solver.metric;
 
+import java.util.Set;
 import me.soels.tocairn.model.AbstractClass;
 import me.soels.tocairn.model.DependenceRelationship;
 import me.soels.tocairn.solver.Clustering;
-
-import java.util.List;
 
 /**
  * Coupling as measured by Carvalho et al. (2020) based off of metrics in the work of Chidamber and Kemerer (1994).
@@ -28,7 +27,7 @@ public class CarvalhoCoupling implements Metric {
                 .sum();
     }
 
-    private double calculateCoupling(List<? extends AbstractClass> microservice) {
+    private double calculateCoupling(Set<? extends AbstractClass> microservice) {
         return microservice.stream()
                 .flatMap(clazz -> clazz.getDependenceRelationships().stream()
                         // Only include relationships to other clusters

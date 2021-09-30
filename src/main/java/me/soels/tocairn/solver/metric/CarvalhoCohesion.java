@@ -1,10 +1,9 @@
 package me.soels.tocairn.solver.metric;
 
+import java.util.Set;
 import me.soels.tocairn.model.AbstractClass;
 import me.soels.tocairn.solver.Clustering;
 import org.apache.commons.lang3.tuple.Pair;
-
-import java.util.List;
 
 /**
  * Cohesion as measured by Carvalho et al. (2020) based off of metrics in the work of Chidamber and Kemerer (1994).
@@ -48,7 +47,7 @@ public class CarvalhoCohesion implements Metric {
         return pair.getValue() / (pair.getKey() * (pair.getKey() - 1)) / 2;
     }
 
-    private double countInnerRelations(List<? extends AbstractClass> classes) {
+    private double countInnerRelations(Set<? extends AbstractClass> classes) {
         // We do not use the frequency of the dependency here as Carvalho et al. also made this binary.
         return classes.stream()
                 .flatMap(clazz -> clazz.getDependenceRelationships().stream()

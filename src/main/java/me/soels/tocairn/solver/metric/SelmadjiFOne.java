@@ -1,14 +1,13 @@
 package me.soels.tocairn.solver.metric;
 
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import me.soels.tocairn.model.DependenceRelationship;
 import me.soels.tocairn.model.OtherClass;
 import me.soels.tocairn.solver.Clustering;
 import me.soels.tocairn.solver.OptimizationData;
 import org.apache.commons.lang3.tuple.Pair;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * FOne metric as proposed by Selmadji et al. (2020).
@@ -29,7 +28,7 @@ public class SelmadjiFOne extends SelmadjiStructuralBehavior {
                 .sum();
     }
 
-    private double calculateMicroservice(List<OtherClass> microservice, Clustering clustering) {
+    private double calculateMicroservice(Set<OtherClass> microservice, Clustering clustering) {
         var optimizationKey = microservice.stream().map(clazz -> clazz.getId().toString()).sorted().collect(Collectors.joining(""));
         var existingValue = clustering.getOptimizationData().getFOne().get(optimizationKey);
         if (existingValue != null) {
@@ -48,7 +47,7 @@ public class SelmadjiFOne extends SelmadjiStructuralBehavior {
      * @param optimizationData optimization data from previous calculations
      * @return the interCoup value for this microservice
      */
-    private double interCoup(List<OtherClass> microservice, OptimizationData optimizationData) {
+    private double interCoup(Set<OtherClass> microservice, OptimizationData optimizationData) {
         var coupValues = microservice.stream()
                 // Get all the pairs of classes in this microservice excluding self-pairs.
                 .flatMap(i -> microservice.stream()
@@ -80,7 +79,7 @@ public class SelmadjiFOne extends SelmadjiStructuralBehavior {
      * @param microservice the classes in the microservice
      * @return the inter cohesion value for this microservice
      */
-    private double interCoh(List<OtherClass> microservice) {
+    private double interCoh(Set<OtherClass> microservice) {
         var nbDirectConnections = microservice.stream()
                 .flatMap(clazz -> clazz.getDependenceRelationships().stream())
                 .filter(dep -> microservice.contains(dep.getCallee()))
